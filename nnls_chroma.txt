@@ -1,0 +1,11 @@
+basschroma.n3
+bothchroma.n3
+chroma.n3
+inconsistency.n3
+inconsistencysegment.n3
+localtuning.n3
+logfreqspec.n3
+semitonespectrum.n3
+simplechord.n3
+tunedlogfreqspec.n3
+tuning.n3

@@ -1,0 +1,24 @@
+@prefix xsd:      <http://www.w3.org/2001/XMLSchema#> .
+@prefix vamp:     <http://purl.org/ontology/vamp/> .
+@prefix :         <#> .
+
+:transform_plugin a vamp:Plugin ;
+    vamp:identifier "nnls_chroma" .
+
+:transform_library a vamp:PluginLibrary ;
+    vamp:identifier "matthiasm" ;
+    vamp:available_plugin :transform_plugin .
+
+:transform a vamp:Transform ;
+    vamp:plugin :transform_plugin ;
+    vamp:step_size "2048"^^xsd:int ; 
+    vamp:block_size "16384"^^xsd:int ; 
+    vamp:parameter_binding [
+        vamp:parameter [ vamp:identifier "notedict" ] ;
+        vamp:value "0"^^xsd:float ;
+    ] ;
+    vamp:parameter_binding [
+        vamp:parameter [ vamp:identifier "tuningmode" ] ;
+        vamp:value "0"^^xsd:float ;
+    ] ;
+    vamp:output [ vamp:identifier "simplechord" ] .
