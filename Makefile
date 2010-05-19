@@ -18,7 +18,7 @@ PLUGIN_LIBRARY_NAME = matthiasm
 
 # Edit this to list one .o file for each .cpp file in your plugin project
 #
-PLUGIN_CODE_OBJECTS = NNLSChroma.o plugins.o
+PLUGIN_CODE_OBJECTS = NNLSChroma.o plugins.o nnls.o
 
 # Edit this to the location of the Vamp plugin SDK, relative to your
 # project directory
@@ -27,7 +27,7 @@ VAMP_SDK_DIR = ../vamp-plugin-sdk
 # LAPACK_DIR = ../lapack
 QMDSP_DIR = ../qm-dsp/build/osx/20091028
 FFT_DIR = ../qm-dsp/dsp/transforms
-NNLS_DIR = ../nnls
+NNLS_DIR = ../nnls_suvrit
 
 
 

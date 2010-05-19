@@ -6,6 +6,7 @@
 #include <sstream>
 #include <cassert>
 #include <cstdio>
+#include "nnls.h"
 // #include "cblas.h"
 #include "chorddict.cpp"
 using namespace std;
@@ -93,7 +94,7 @@ bool logFreqMatrix(int fs, int blocksize, float *outmatrix) {
 	int binspersemitone = 3; // this must be 3
 	int minoctave = 0; // this must be 0
 	int maxoctave = 7; // this must be 7
-	int oversampling = 20;
+	int oversampling = 80;
 	
 	// linear frequency vector
 	vector<float> fft_f;
@@ -123,20 +124,7 @@ bool logFreqMatrix(int fs, int blocksize, float *outmatrix) {
 	cq_f.push_back(440 * pow(2.0,0.083333 * (minMIDI-oob-69)));
 	cq_f.push_back(440 * pow(2.0,0.083333 * (maxMIDI-69)));
 
-	// limit the linear vectors to the frequencies used
-	float maxfreq = *cq_f.end() * pow(2.0,0.083333);
-	while (*oversampled_f.end() > maxfreq) {
-		oversampled_f.pop_back();
-	}
-	while (*fft_f.end() > maxfreq) {
-		fft_f.pop_back();
-	}
-	
 	int nFFT = fft_f.size();
-	
-	// for (int i = 0; i < 100; i++) {
-	// 	cerr << oversampled_f[i] << " " << cospuls(oversampled_f[i],fft_f[1],fft_width) << endl;
-	// }
 	
 	vector<float> fft_activation;
 	for (int iOS = 0; iOS < 2 * oversampling; ++iOS) {
@@ -153,7 +141,7 @@ bool logFreqMatrix(int fs, int blocksize, float *outmatrix) {
 		// cerr << oversampled_f[curr_start] << " " << fft_f[iFFT] << " " << oversampled_f[curr_end] << endl;
 		for (unsigned iCQ = 0; iCQ < cq_f.size(); ++iCQ) {
 			outmatrix[iFFT + nFFT * iCQ] = 0;
-			if (cq_f[iCQ] * pow(2.0, 0.084) + fft_width/2 > fft_f[iFFT] && cq_f[iCQ] * pow(2.0, -0.084 * 2) - fft_width/2 < fft_f[iFFT]) { // within a generous neighbourhood
+			if (cq_f[iCQ] * pow(2.0, 0.084) + fft_width > fft_f[iFFT] && cq_f[iCQ] * pow(2.0, -0.084 * 2) - fft_width < fft_f[iFFT]) { // within a generous neighbourhood
 				for (int iOS = curr_start; iOS < curr_end; ++iOS) {
 					cq_activation = pitchCospuls(oversampled_f[iOS],cq_f[iCQ],binspersemitone*12);
 					// cerr << oversampled_f[iOS] << " " << cq_f[iCQ] << " " << cq_activation << endl;
@@ -166,6 +154,50 @@ bool logFreqMatrix(int fs, int blocksize, float *outmatrix) {
 		}
 	}
 	return true;	
+}
+
+bool dictionaryMatrix(double* dm) {
+	int binspersemitone = 3; // this must be 3
+	int minoctave = 0; // this must be 0
+	int maxoctave = 7; // this must be 7
+	float s_param = 0.6;
+	
+	// pitch-spaced frequency vector
+	int minMIDI = 21 + minoctave * 12 - 1; // this includes one additional semitone!
+	int maxMIDI = 21 + maxoctave * 12; // this includes one additional semitone!
+	vector<float> cq_f;
+	float oob = 1.0/binspersemitone; // one over binspersemitone
+	cq_f.push_back(440 * pow(2.0,0.083333 * (minMIDI-69))); // 0.083333 is approx 1/12
+	cq_f.push_back(440 * pow(2.0,0.083333 * (minMIDI+oob-69)));
+	for (int i = minMIDI + 1; i < maxMIDI; ++i) {
+		for (int k = -1; k < 2; ++k)	 {
+			cq_f.push_back(440 * pow(2.0,0.083333333333 * (i+oob*k-69)));
+		}
+	}
+	cq_f.push_back(440 * pow(2.0,0.083333 * (minMIDI-oob-69)));
+	cq_f.push_back(440 * pow(2.0,0.083333 * (maxMIDI-69)));
+
+	// make out frequency vector
+	vector<float> out_f;
+
+	float curr_f;
+	float floatbin;
+	float curr_amp;
+	// now for every combination calculate the matrix element
+	unsigned countElement = 0;
+	for (unsigned iOut = 0; iOut < 12 * (maxoctave - minoctave); ++iOut) {
+		for (unsigned iHarm = 1; iHarm <= 20; ++iHarm) {
+			curr_f = 440 * pow(2,(minMIDI-69+iOut)*1.0/12) * iHarm;
+			if (curr_f > cq_f[nNote-1])  break;
+			floatbin = (iOut * binspersemitone + 1) + binspersemitone * 12 * log2(iHarm);
+			curr_amp = pow(s_param,float(iHarm-1));
+			for (unsigned iNote = 0; iNote < nNote; ++iNote) {
+				// cerr << dm[countElement] << endl;
+				dm[countElement] = cospuls(iNote+1.0, floatbin, binspersemitone + 0.0);
+				countElement++;
+			}
+	   }
+	}
 }
 
 
@@ -186,16 +218,20 @@ NNLSChroma::NNLSChroma(float inputSampleRate) :
   m_kernelValue(0),
   m_kernelFftIndex(0),
   m_kernelNoteIndex(0),
+  m_dict(0),
   m_tuneLocal(false),
   m_dictID(0)
 {
 	if (debug_on) cerr << "--> NNLSChroma" << endl;
+	m_dict = new double[nNote * 84];
+	dictionaryMatrix(m_dict);
 }
 
 
 NNLSChroma::~NNLSChroma()
 {
 		if (debug_on) cerr << "--> ~NNLSChroma" << endl;
+		delete [] m_dict;
 }
 
 string
@@ -297,12 +333,12 @@ NNLSChroma::getParameterDescriptors() const
     d0.description = "Notes in different note dictionaries differ by their spectral shapes.";
     d0.unit = "";
     d0.minValue = 0;
-    d0.maxValue = 2;
+    d0.maxValue = 1;
     d0.defaultValue = 0;
     d0.isQuantized = true;
     d0.valueNames.push_back("s = 0.6");
-    d0.valueNames.push_back("s = 0.9");
-    d0.valueNames.push_back("s linearly spaced");
+    // d0.valueNames.push_back("s = 0.9");
+    // d0.valueNames.push_back("s linearly spaced");
     d0.valueNames.push_back("no NNLS");
     d0.quantizeStep = 1.0;
     list.push_back(d0);
@@ -422,7 +458,7 @@ NNLSChroma::getOutputDescriptors() const
         }
     }
     
-	int nNote = 84;
+	// int nNote = 84;
 
     // See OutputDescriptor documentation for the possibilities here.
     // Every plugin must have at least one output.
@@ -543,52 +579,52 @@ NNLSChroma::getOutputDescriptors() const
     d7.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
     list.push_back(d7);
     
-    OutputDescriptor d8;
-    d8.identifier = "inconsistency";
-    d8.name = "Harmonic inconsistency value";
-    d8.description = "Harmonic inconsistency. Indicates music if low, non-music or speech when high.";
-    d8.unit = "";
-    d8.hasFixedBinCount = true;
-    d8.binCount = 1;
-    d8.hasKnownExtents = false;
-    d8.isQuantized = false;
-    d8.sampleType = OutputDescriptor::FixedSampleRate;
-    d8.hasDuration = false;
-    d8.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
-    list.push_back(d8);
-    
-    OutputDescriptor d9;
-    d9.identifier = "inconsistencysegment";
-    d9.name = "Harmonic inconsistency segmenter";
-    d9.description = "Segments the audio based on the harmonic inconsistency value into speech and music.";
-    d9.unit = "";
-    d9.hasFixedBinCount = true;
-    d9.binCount = 0;
-    d9.hasKnownExtents = true;
-    d9.minValue = 0.1;
-	d9.maxValue = 0.9;
-    d9.isQuantized = false;
-    d9.sampleType = OutputDescriptor::VariableSampleRate;
-    d9.hasDuration = false;
-    d9.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
-    list.push_back(d9);
-
-    OutputDescriptor d10;
-    d10.identifier = "localtuning";
-    d10.name = "Local tuning";
-    d10.description = "";
-    d10.unit = "Hz";
-    d10.hasFixedBinCount = true;
-    d10.binCount = 1;
-    d10.hasKnownExtents = true;
-	d10.minValue = 427.47;
-	d10.maxValue = 452.89;
-    d10.isQuantized = false;
-    d10.sampleType = OutputDescriptor::OneSamplePerStep;
-    d10.hasDuration = false;
-    d10.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
-    list.push_back(d10);
-
+  	//   OutputDescriptor d8;
+  	//     d8.identifier = "inconsistency";
+  	//     d8.name = "Harmonic inconsistency value";
+  	//     d8.description = "Harmonic inconsistency. Indicates music if low, non-music or speech when high.";
+  	//     d8.unit = "";
+  	//     d8.hasFixedBinCount = true;
+  	//     d8.binCount = 1;
+  	//     d8.hasKnownExtents = false;
+  	//     d8.isQuantized = false;
+  	//     d8.sampleType = OutputDescriptor::FixedSampleRate;
+  	//     d8.hasDuration = false;
+  	//     d8.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
+  	//     list.push_back(d8);
+  	//     
+  	//     OutputDescriptor d9;
+  	//     d9.identifier = "inconsistencysegment";
+  	//     d9.name = "Harmonic inconsistency segmenter";
+  	//     d9.description = "Segments the audio based on the harmonic inconsistency value into speech and music.";
+  	//     d9.unit = "";
+  	//     d9.hasFixedBinCount = true;
+  	//     d9.binCount = 0;
+  	//     d9.hasKnownExtents = true;
+  	//     d9.minValue = 0.1;
+  	// d9.maxValue = 0.9;
+  	//     d9.isQuantized = false;
+  	//     d9.sampleType = OutputDescriptor::VariableSampleRate;
+  	//     d9.hasDuration = false;
+  	//     d9.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
+  	//     list.push_back(d9);
+  	// 
+  	OutputDescriptor d10;
+  	    d10.identifier = "localtuning";
+  	    d10.name = "Local tuning";
+  	    d10.description = "";
+  	    d10.unit = "Hz";
+  	    d10.hasFixedBinCount = true;
+  	    d10.binCount = 1;
+  	    d10.hasKnownExtents = true;
+		d10.minValue = 427.47;
+  		d10.maxValue = 452.89;
+  	    d10.isQuantized = false;
+  	    d10.sampleType = OutputDescriptor::OneSamplePerStep;
+  	    d10.hasDuration = false;
+  	    d10.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
+  	    list.push_back(d10);
+  
     return list;
 }
 
@@ -596,38 +632,42 @@ NNLSChroma::getOutputDescriptors() const
 bool
 NNLSChroma::initialise(size_t channels, size_t stepSize, size_t blockSize)
 {	
-		if (debug_on) cerr << "--> initialise";
+	if (debug_on) {
+		cerr << "--> initialise";
+	}
+	
     if (channels < getMinChannelCount() ||
 	channels > getMaxChannelCount()) return false;
     m_blockSize = blockSize;
     m_stepSize = stepSize;
     frameCount = 0;
 	int tempn = 256 * m_blockSize/2;
-	cerr << tempn;
-	float *tempkernel = new float[tempn];
-	
-	// vector<float> m_kernelValue;
-	// vector<int> m_kernelFftIndex;
-	// vector<int> m_kernelNoteIndex;
-	
-	
-	logFreqMatrix(m_inputSampleRate, m_blockSize, tempkernel);
+	cerr << "length of tempkernel : " <<  tempn << endl;
+	float *tempkernel;
 
+	tempkernel = new float[tempn];
+
+	logFreqMatrix(m_inputSampleRate, m_blockSize, tempkernel);
+	m_kernelValue.clear();
+	m_kernelFftIndex.clear();
+	m_kernelNoteIndex.clear();
+	int countNonzero = 0;
 	for (unsigned iNote = 0; iNote < nNote; ++iNote) { // I don't know if this is wise: manually making a sparse matrix
-			for (unsigned iFFT = 0; iFFT < blockSize/2; ++iFFT) {
+		for (unsigned iFFT = 0; iFFT < blockSize/2; ++iFFT) {
+			if (tempkernel[iFFT + blockSize/2 * iNote] > 0) {
+				m_kernelValue.push_back(tempkernel[iFFT + blockSize/2 * iNote]);
 				if (tempkernel[iFFT + blockSize/2 * iNote] > 0) {
-					m_kernelValue.push_back(tempkernel[iFFT + blockSize/2 * iNote]);
-					m_kernelFftIndex.push_back(iFFT);
-					m_kernelNoteIndex.push_back(iNote);				
+					countNonzero++;
 				}
+				m_kernelFftIndex.push_back(iFFT);
+				m_kernelNoteIndex.push_back(iNote);				
 			}
 		}
-	delete tempkernel;
-	// int count = 0;
-	// for (vector<float>::iterator it = m_kernelValue.begin(); it != m_kernelValue.end(); ++it) {
-	// 	cerr << m_kernelFftIndex[count] << " -- " << m_kernelNoteIndex[count] << " -- " << m_kernelValue[count] << endl;
-	// 	count++;
-	// }
+	}
+	cerr << "nonzero count : " << countNonzero << endl;
+	delete [] tempkernel;
+
+
     return true;
 }
 
@@ -638,6 +678,9 @@ NNLSChroma::reset()
     // Clear buffers, reset stored values, etc
 	    frameCount = 0;
         m_dictID = 0;
+		m_kernelValue.clear();
+		m_kernelFftIndex.clear();
+		m_kernelNoteIndex.clear();
 }
 
 NNLSChroma::FeatureSet
@@ -657,6 +700,7 @@ NNLSChroma::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
 	for (size_t iBin = 0; iBin < m_blockSize/2; iBin++) {
 		magnitude[iBin] = sqrt(fbuf[2 * iBin] * fbuf[2 * iBin] + 
 			fbuf[2 * iBin + 1] * fbuf[2 * iBin + 1]);
+		// magnitude[iBin] = (iBin == frameCount - 1 || frameCount < 2) ? 1.0 : 0.0;
 	}
 	
 	
@@ -668,11 +712,12 @@ NNLSChroma::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
 	int binCount = 0;
 	for (vector<float>::iterator it = m_kernelValue.begin(); it != m_kernelValue.end(); ++it) {
 		// cerr << ".";
-		nm[m_kernelNoteIndex[binCount]] += magnitude[m_kernelFftIndex[binCount]] * m_kernelValue[binCount];	
+		nm[m_kernelNoteIndex[binCount]] += magnitude[m_kernelFftIndex[binCount]] * m_kernelValue[binCount];
+		// cerr << m_kernelFftIndex[binCount] << " -- " << magnitude[m_kernelFftIndex[binCount]] << " -- "<< m_kernelValue[binCount] << endl;
 		binCount++;	
 	}
-	cerr << nm[20];
-	cerr << endl;
+	// cerr << nm[20];
+	// cerr << endl;
 	
 	
     float one_over_N = 1.0/frameCount;
@@ -725,164 +770,191 @@ NNLSChroma::getRemainingFeatures()
 		if (debug_on) cerr << "--> getRemainingFeatures" << endl;
     FeatureSet fsOut;
 	// 
-	// /**  Calculate Tuning
-	// calculate tuning from (using the angle of the complex number defined by the 
-	// cumulative mean real and imag values)
-	// **/
-	// float meanTuningImag = sinvalue * m_meanTuning1 - sinvalue * m_meanTuning2;
-	//     float meanTuningReal = m_meanTuning0 + cosvalue * m_meanTuning1 + cosvalue * m_meanTuning2;
-	//     float cumulativetuning = 440 * pow(2,atan2(meanTuningImag, meanTuningReal)/(24*M_PI));
-	//     float normalisedtuning = atan2(meanTuningImag, meanTuningReal)/(2*M_PI);
-	//     int intShift = floor(normalisedtuning * 3);
-	//     float intFactor = normalisedtuning * 3 - intShift; // intFactor is a really bad name for this
-	//     
-	//     char buffer0 [50];
-	// 
-	//     sprintf(buffer0, "estimated tuning: %0.1f Hz", cumulativetuning);
-	//     
-	//     // cerr << "normalisedtuning: " << normalisedtuning << '\n';
-	//     
-	//     // push tuning to FeatureSet fsOut
-	// Feature f0; // tuning
-	// f0.hasTimestamp = true;
-	//     f0.timestamp = Vamp::RealTime::frame2RealTime(0, lrintf(m_inputSampleRate));;
-	//     f0.label = buffer0;
-	//     fsOut[0].push_back(f0);  
-	//     
-	//     /** Tune Log-Frequency Spectrogram
-	//     calculate a tuned log-frequency spectrogram (f2): use the tuning estimated above (kinda f0) to 
-	//     perform linear interpolation on the existing log-frequency spectrogram (kinda f1).
-	//     **/    
-	// 
-	//     float tempValue = 0;
-	//     float dbThreshold = 0; // relative to the background spectrum
-	//     float thresh = pow(10,dbThreshold/20);
-	//     // cerr << "tune local ? " << m_tuneLocal << endl;
-	//     int count = 0;
-	// 
-	//     for (FeatureList::iterator i = m_fl.begin(); i != m_fl.end(); ++i) {
-	//         Feature f1 = *i;
-	//         Feature f2; // tuned log-frequency spectrum
-	//         f2.hasTimestamp = true;
-	//         f2.timestamp = f1.timestamp;
-	//         f2.values.push_back(0.0); f2.values.push_back(0.0); // set lower edge to zero
-	// 
-	//         if (m_tuneLocal) {
-	//             intShift = floor(m_localTuning[count] * 3);
-	//             intFactor = m_localTuning[count] * 3 - intShift; // intFactor is a really bad name for this
-	//         }
-	//         
-	//         // cerr << intShift << " " << intFactor << endl;
-	//         
-	//         for (int k = 2; k < f1.values.size() - 3; ++k) { // interpolate all inner bins
-	//             tempValue = f1.values[k + intShift] * (1-intFactor) + f1.values[k+intShift+1] * intFactor;
-	//             f2.values.push_back(tempValue);
-	//         }
-	//         
-	//         f2.values.push_back(0.0); f2.values.push_back(0.0); f2.values.push_back(0.0); // upper edge
-	//         vector<float> runningmean = SpecialConvolution(f2.values,hw);
-	//         vector<float> runningstd;
-	//         for (int i = 0; i < 256; i++) { // first step: squared values into vector (variance)
-	//             runningstd.push_back((f2.values[i] - runningmean[i]) * (f2.values[i] - runningmean[i]));
-	//         }
-	//         runningstd = SpecialConvolution(runningstd,hw); // second step convolve
-	//         for (int i = 0; i < 256; i++) { 
-	//             runningstd[i] = sqrt(runningstd[i]); // square root to finally have running std
-	//             if (runningstd[i] > 0) {
-	//                 f2.values[i] = (f2.values[i] / runningmean[i]) > thresh ? 
-	//                     (f2.values[i] - runningmean[i]) / pow(runningstd[i],m_paling) : 0;
-	//             }
-	//             if (f2.values[i] < 0) {
-	//                 cerr << "ERROR: negative value in logfreq spectrum" << endl;
-	//             }
-	//         }
-	//         fsOut[2].push_back(f2);
-	//         count++;
-	//     }
-	//     
-	//     /** Semitone spectrum and chromagrams
-	//     Semitone-spaced log-frequency spectrum derived from the tuned log-freq spectrum above. the spectrum
-	//     is inferred using a non-negative least squares algorithm.
-	//     Three different kinds of chromagram are calculated, "treble", "bass", and "both" (which means 
-	//     bass and treble stacked onto each other).
-	//     **/
-	//     // taucs_ccs_matrix* A_original_ordering = taucs_construct_sorted_ccs_matrix(nnlsdict06, nnls_m, nnls_n);
-	//     
-	//     vector<vector<float> > chordogram;
-	//     vector<float> oldchroma = vector<float>(12,0);
-	//     vector<float> oldbasschroma = vector<float>(12,0);
-	//     count = 0;
-	// 
-	//     for (FeatureList::iterator it = fsOut[2].begin(); it != fsOut[2].end(); ++it) {
-	//         Feature f2 = *it; // logfreq spectrum
-	//         Feature f3; // semitone spectrum
-	//         Feature f4; // treble chromagram
-	//         Feature f5; // bass chromagram
-	//         Feature f6; // treble and bass chromagram
-	// 
-	//         f3.hasTimestamp = true;
-	//         f3.timestamp = f2.timestamp;
-	//         
-	//         f4.hasTimestamp = true;
-	//         f4.timestamp = f2.timestamp;
-	//         
-	//         f5.hasTimestamp = true;
-	//         f5.timestamp = f2.timestamp;
-	//         
-	//         f6.hasTimestamp = true;
-	//         f6.timestamp = f2.timestamp;
-	//         
-	// 	float b[256];
-	// 
-	//         bool some_b_greater_zero = false;
-	//         for (int i = 0; i < 256; i++) {
-	//             b[i] = f2.values[i];
-	//             if (b[i] > 0) {
-	//                 some_b_greater_zero = true;
-	//             }            
-	//         }
-	//     
-	//         // here's where the non-negative least squares algorithm calculates the note activation x
-	// 
-	//         vector<float> chroma = vector<float>(12, 0);
-	//         vector<float> basschroma = vector<float>(12, 0);
-	//         if (some_b_greater_zero) {
-	//         }
-	// 
-	//         f4.values = chroma;
-	//         f5.values = basschroma;
-	//         chroma.insert(chroma.begin(), basschroma.begin(), basschroma.end()); // just stack the both chromas 
-	//         f6.values = chroma; 
-	//         
-	//         // local chord estimation
-	//         vector<float> currentChordSalience;
-	//         float tempchordvalue = 0;
-	//         float sumchordvalue = 0;
-	//         int nChord = nChorddict / 24;
-	//         for (int iChord = 0; iChord < nChord; iChord++) {
-	//             tempchordvalue = 0;
-	//             for (int iBin = 0; iBin < 12; iBin++) {
-	//                 tempchordvalue += chorddict[24 * iChord + iBin] * chroma[iBin];
-	//             }
-	//             for (int iBin = 12; iBin < 24; iBin++) {
-	//                 tempchordvalue += chorddict[24 * iChord + iBin] * chroma[iBin];
-	//             }
-	//             sumchordvalue+=tempchordvalue;
-	//             currentChordSalience.push_back(tempchordvalue);
-	//         }
-	//         for (int iChord = 0; iChord < nChord; iChord++) {
-	//             currentChordSalience[iChord] /= sumchordvalue;
-	//         }
-	//         chordogram.push_back(currentChordSalience);
-	//         
-	//         fsOut[3].push_back(f3);
-	//         fsOut[4].push_back(f4);
-	//         fsOut[5].push_back(f5);
-	//         fsOut[6].push_back(f6);
-	// // if (x) free(x);
-	//         // delete[] b;
-	//         count++;
-	//     }
+	/**  Calculate Tuning
+		calculate tuning from (using the angle of the complex number defined by the 
+		cumulative mean real and imag values)
+		**/
+		float meanTuningImag = sinvalue * m_meanTuning1 - sinvalue * m_meanTuning2;
+		    float meanTuningReal = m_meanTuning0 + cosvalue * m_meanTuning1 + cosvalue * m_meanTuning2;
+		    float cumulativetuning = 440 * pow(2,atan2(meanTuningImag, meanTuningReal)/(24*M_PI));
+		    float normalisedtuning = atan2(meanTuningImag, meanTuningReal)/(2*M_PI);
+		    int intShift = floor(normalisedtuning * 3);
+		    float intFactor = normalisedtuning * 3 - intShift; // intFactor is a really bad name for this
+		    
+		    char buffer0 [50];
+		
+		    sprintf(buffer0, "estimated tuning: %0.1f Hz", cumulativetuning);
+		    
+		    // cerr << "normalisedtuning: " << normalisedtuning << '\n';
+		    
+		    // push tuning to FeatureSet fsOut
+		Feature f0; // tuning
+		f0.hasTimestamp = true;
+		    f0.timestamp = Vamp::RealTime::frame2RealTime(0, lrintf(m_inputSampleRate));;
+		    f0.label = buffer0;
+		    fsOut[0].push_back(f0);  
+		    
+		    /** Tune Log-Frequency Spectrogram
+		    calculate a tuned log-frequency spectrogram (f2): use the tuning estimated above (kinda f0) to 
+		    perform linear interpolation on the existing log-frequency spectrogram (kinda f1).
+		    **/    
+		
+		    float tempValue = 0;
+		    float dbThreshold = 0; // relative to the background spectrum
+		    float thresh = pow(10,dbThreshold/20);
+		    // cerr << "tune local ? " << m_tuneLocal << endl;
+		    int count = 0;
+		
+		    for (FeatureList::iterator i = m_fl.begin(); i != m_fl.end(); ++i) {
+		        Feature f1 = *i;
+		        Feature f2; // tuned log-frequency spectrum
+		        f2.hasTimestamp = true;
+		        f2.timestamp = f1.timestamp;
+		        f2.values.push_back(0.0); f2.values.push_back(0.0); // set lower edge to zero
+		
+		        if (m_tuneLocal) {
+		            intShift = floor(m_localTuning[count] * 3);
+		            intFactor = m_localTuning[count] * 3 - intShift; // intFactor is a really bad name for this
+		        }
+		        
+		        // cerr << intShift << " " << intFactor << endl;
+		        
+		        for (int k = 2; k < f1.values.size() - 3; ++k) { // interpolate all inner bins
+		            tempValue = f1.values[k + intShift] * (1-intFactor) + f1.values[k+intShift+1] * intFactor;
+		            f2.values.push_back(tempValue);
+		        }
+		        
+		        f2.values.push_back(0.0); f2.values.push_back(0.0); f2.values.push_back(0.0); // upper edge
+		        vector<float> runningmean = SpecialConvolution(f2.values,hw);
+		        vector<float> runningstd;
+		        for (int i = 0; i < 256; i++) { // first step: squared values into vector (variance)
+		            runningstd.push_back((f2.values[i] - runningmean[i]) * (f2.values[i] - runningmean[i]));
+		        }
+		        runningstd = SpecialConvolution(runningstd,hw); // second step convolve
+		        for (int i = 0; i < 256; i++) { 
+		            runningstd[i] = sqrt(runningstd[i]); // square root to finally have running std
+		            if (runningstd[i] > 0) {
+		                // f2.values[i] = (f2.values[i] / runningmean[i]) > thresh ? 
+		                // 		                    (f2.values[i] - runningmean[i]) / pow(runningstd[i],m_paling) : 0;
+						f2.values[i] = (f2.values[i] - runningmean[i]) > 0 ?
+		                    (f2.values[i] - runningmean[i]) / pow(runningstd[i],m_paling) : 0;
+		            }
+		            if (f2.values[i] < 0) {
+		                cerr << "ERROR: negative value in logfreq spectrum" << endl;
+		            }
+		        }
+		        fsOut[2].push_back(f2);
+		        count++;
+		    }
+	    
+	    /** Semitone spectrum and chromagrams
+	    Semitone-spaced log-frequency spectrum derived from the tuned log-freq spectrum above. the spectrum
+	    is inferred using a non-negative least squares algorithm.
+	    Three different kinds of chromagram are calculated, "treble", "bass", and "both" (which means 
+	    bass and treble stacked onto each other).
+	    **/
+	    // taucs_ccs_matrix* A_original_ordering = taucs_construct_sorted_ccs_matrix(nnlsdict06, nnls_m, nnls_n);
+	    
+	    vector<vector<float> > chordogram;
+	    vector<float> oldchroma = vector<float>(12,0);
+	    vector<float> oldbasschroma = vector<float>(12,0);
+	    count = 0;
+	
+	    for (FeatureList::iterator it = fsOut[2].begin(); it != fsOut[2].end(); ++it) {
+	        Feature f2 = *it; // logfreq spectrum
+	        Feature f3; // semitone spectrum
+	        Feature f4; // treble chromagram
+	        Feature f5; // bass chromagram
+	        Feature f6; // treble and bass chromagram
+	
+	        f3.hasTimestamp = true;
+	        f3.timestamp = f2.timestamp;
+	        
+	        f4.hasTimestamp = true;
+	        f4.timestamp = f2.timestamp;
+	        
+	        f5.hasTimestamp = true;
+	        f5.timestamp = f2.timestamp;
+	        
+	        f6.hasTimestamp = true;
+	        f6.timestamp = f2.timestamp;
+	        
+			double b[256];
+	
+	        bool some_b_greater_zero = false;
+	        for (int i = 0; i < 256; i++) {
+	            b[i] = f2.values[i];
+	            if (b[i] > 0) {
+	                some_b_greater_zero = true;
+	            }            
+	        }
+	    
+	        // here's where the non-negative least squares algorithm calculates the note activation x
+	
+	        vector<float> chroma = vector<float>(12, 0);
+	        vector<float> basschroma = vector<float>(12, 0);
+			float currval;
+			unsigned iSemitone = 0;
+			
+			if (some_b_greater_zero) {
+				if (m_dictID == 0) {
+					for (unsigned iNote = 2; iNote < nNote - 2; iNote += 3) {
+						currval = 0;
+						for (unsigned iBin = 0; iBin < 3; ++iBin) {
+							currval += b[iNote + iBin];						
+						}
+						f3.values.push_back(currval);
+						chroma[iSemitone % 12] += currval * treblewindow[iSemitone];
+						basschroma[iSemitone % 12] += currval * basswindow[iSemitone];
+						iSemitone++;
+					}
+		        
+				} else {
+					double x[84+1] = {1.0};
+				    double rnorm;
+				    double w[84+1];
+				    double zz[84+1];
+				    int indx[84+2];
+				    int mode;
+				  
+					nnls(m_dict, nNote, nNote, 84, b, x, &rnorm, w, zz, indx, &mode);
+				}	
+			}
+	
+	        f4.values = chroma;
+	        f5.values = basschroma;
+	        chroma.insert(chroma.begin(), basschroma.begin(), basschroma.end()); // just stack the both chromas 
+	        f6.values = chroma; 
+	        
+	        // local chord estimation
+	        vector<float> currentChordSalience;
+	        float tempchordvalue = 0;
+	        float sumchordvalue = 0;
+	        int nChord = nChorddict / 24;
+	        for (int iChord = 0; iChord < nChord; iChord++) {
+	            tempchordvalue = 0;
+	            for (int iBin = 0; iBin < 12; iBin++) {
+	                tempchordvalue += chorddict[24 * iChord + iBin] * chroma[iBin];
+	            }
+	            for (int iBin = 12; iBin < 24; iBin++) {
+	                tempchordvalue += chorddict[24 * iChord + iBin] * chroma[iBin];
+	            }
+	            sumchordvalue+=tempchordvalue;
+	            currentChordSalience.push_back(tempchordvalue);
+	        }
+	        for (int iChord = 0; iChord < nChord; iChord++) {
+	            currentChordSalience[iChord] /= sumchordvalue;
+	        }
+	        chordogram.push_back(currentChordSalience);
+	        
+	        fsOut[3].push_back(f3);
+	        fsOut[4].push_back(f4);
+	        fsOut[5].push_back(f5);
+	        fsOut[6].push_back(f6);
+	// if (x) free(x);
+	        // delete[] b;
+	        count++;
+	    }
 	//     // cerr << m_stepSize << endl<< endl;
 	//     count = 0;
 	//     int kernelwidth = (49 * 2048) / m_stepSize;

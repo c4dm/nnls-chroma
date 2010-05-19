@@ -69,6 +69,7 @@ protected:
 	vector<float> m_kernelValue;
 	vector<int> m_kernelFftIndex;
 	vector<int> m_kernelNoteIndex;
+	double *m_dict;
     bool m_tuneLocal;
     int m_dictID;
     // list< vector< double > > *logfreqSpecList;
