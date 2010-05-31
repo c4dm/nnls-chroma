@@ -65,14 +65,15 @@ protected:
     float m_localTuning1;
     float m_localTuning2;
     float m_paling;
+	float m_preset;
     vector<float> m_localTuning;
 	vector<float> m_kernelValue;
 	vector<int> m_kernelFftIndex;
 	vector<int> m_kernelNoteIndex;
-	double *m_dict;
+	float *m_dict;
     bool m_tuneLocal;
     int m_dictID;
-    // list< vector< double > > *logfreqSpecList;
+    // list< vector< float > > *logfreqSpecList;
 };
 
 

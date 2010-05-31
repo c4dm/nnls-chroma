@@ -3,6 +3,7 @@
 #include <cmath>
 #include <list>
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #include <cassert>
 #include <cstdio>
@@ -156,7 +157,7 @@ bool logFreqMatrix(int fs, int blocksize, float *outmatrix) {
 	return true;	
 }
 
-bool dictionaryMatrix(double* dm) {
+bool dictionaryMatrix(float* dm) {
 	int binspersemitone = 3; // this must be 3
 	int minoctave = 0; // this must be 0
 	int maxoctave = 7; // this must be 7
@@ -177,27 +178,29 @@ bool dictionaryMatrix(double* dm) {
 	cq_f.push_back(440 * pow(2.0,0.083333 * (minMIDI-oob-69)));
 	cq_f.push_back(440 * pow(2.0,0.083333 * (maxMIDI-69)));
 
-	// make out frequency vector
-	vector<float> out_f;
-
 	float curr_f;
 	float floatbin;
 	float curr_amp;
 	// now for every combination calculate the matrix element
-	unsigned countElement = 0;
 	for (unsigned iOut = 0; iOut < 12 * (maxoctave - minoctave); ++iOut) {
+		// cerr << iOut << endl;
 		for (unsigned iHarm = 1; iHarm <= 20; ++iHarm) {
 			curr_f = 440 * pow(2,(minMIDI-69+iOut)*1.0/12) * iHarm;
-			if (curr_f > cq_f[nNote-1])  break;
-			floatbin = (iOut * binspersemitone + 1) + binspersemitone * 12 * log2(iHarm);
+			// if (curr_f > cq_f[nNote-1])  break;
+			floatbin = ((iOut + 1) * binspersemitone + 1) + binspersemitone * 12 * log2(iHarm);
+			// cerr << floatbin << endl;
 			curr_amp = pow(s_param,float(iHarm-1));
+			// cerr << "curramp" << curr_amp << endl;
 			for (unsigned iNote = 0; iNote < nNote; ++iNote) {
-				// cerr << dm[countElement] << endl;
-				dm[countElement] = cospuls(iNote+1.0, floatbin, binspersemitone + 0.0);
-				countElement++;
+				if (abs(iNote+1.0-floatbin)<2) {
+					dm[iNote  + 256 * iOut] += cospuls(iNote+1.0, floatbin, binspersemitone + 0.0) * curr_amp;
+					// dm[iNote + nNote * iOut] += 1 * curr_amp;
+				}
 			}
-	   }
+		}
 	}
+
+
 }
 
 
@@ -213,7 +216,8 @@ NNLSChroma::NNLSChroma(float inputSampleRate) :
   m_localTuning0(0),
   m_localTuning1(0),
   m_localTuning2(0),
-  m_paling(0),
+  m_paling(0.8),
+  m_preset(0.0),
   m_localTuning(0),
   m_kernelValue(0),
   m_kernelFftIndex(0),
@@ -223,7 +227,8 @@ NNLSChroma::NNLSChroma(float inputSampleRate) :
   m_dictID(0)
 {
 	if (debug_on) cerr << "--> NNLSChroma" << endl;
-	m_dict = new double[nNote * 84];
+	m_dict = new float[nNote * 84];
+	for (unsigned i = 0; i < nNote * 84; ++i) m_dict[i] = 0.0;
 	dictionaryMatrix(m_dict);
 }
 
@@ -346,7 +351,7 @@ NNLSChroma::getParameterDescriptors() const
     ParameterDescriptor d1;
     d1.identifier = "tuningmode";
     d1.name = "tuning mode";
-    d1.description = "Tuning can be performed locally or on the whole extraction area.";
+    d1.description = "Tuning can be performed locally or on the whole extraction segment.";
     d1.unit = "";
     d1.minValue = 0;
     d1.maxValue = 1;
@@ -362,22 +367,36 @@ NNLSChroma::getParameterDescriptors() const
     d2.name = "spectral paling";
     d2.description = "Spectral paling: no paling - 0; whitening - 1.";
     d2.unit = "";
-    d2.minValue = 0;
-    d2.maxValue = 1;
+	d2.isQuantized = true;
+	d2.quantizeStep = 0.1;
+    d2.minValue = 0.0;
+    d2.maxValue = 1.0;
     d2.defaultValue = 0.5;
-    d2.isQuantized = false;
-    // d1.valueNames.push_back("global tuning");
-    // d1.valueNames.push_back("local tuning");
-    // d1.quantizeStep = 0.1;
+    // d2.isQuantized = false;
     list.push_back(d2);
 
+    ParameterDescriptor d3;
+    d3.identifier = "preset";
+    d3.name = "preset";
+    d3.description = "Spectral paling: no paling - 0; whitening - 1.";
+    d3.unit = "";
+	d3.isQuantized = true;
+	d3.quantizeStep = 1;
+    d3.minValue = 0.0;
+    d3.maxValue = 2.0;
+    d3.defaultValue = 0.0;
+    d3.valueNames.push_back("polyphonic pop");
+	d3.valueNames.push_back("polyphonic pop (fast)");
+    d3.valueNames.push_back("solo keyboard");
+	d3.valueNames.push_back("manual");
+    list.push_back(d3);
     return list;
 }
 
 float
 NNLSChroma::getParameter(string identifier) const
 {
-		if (debug_on) cerr << "--> getParameter" << endl;
+	if (debug_on) cerr << "--> getParameter" << endl;
     if (identifier == "notedict") {
         return m_dictID; 
     }
@@ -393,7 +412,9 @@ NNLSChroma::getParameter(string identifier) const
             return 0.0;
         }
     }
-
+	if (identifier == "preset") {
+		return m_preset;
+    }
     return 0;
     
 }
@@ -401,7 +422,7 @@ NNLSChroma::getParameter(string identifier) const
 void
 NNLSChroma::setParameter(string identifier, float value) 
 {
-		if (debug_on) cerr << "--> setParameter" << endl;
+	if (debug_on) cerr << "--> setParameter" << endl;
     if (identifier == "notedict") {
         m_dictID = (int) value;
     }
@@ -413,6 +434,24 @@ NNLSChroma::setParameter(string identifier, float value)
     if (identifier == "tuningmode") {
         m_tuneLocal = (value > 0) ? true : false;
         // cerr << "m_tuneLocal :" << m_tuneLocal << endl;
+    }
+    if (identifier == "preset") {
+        m_preset = value;
+		if (m_preset == 0.0) {
+			m_tuneLocal = false;
+			m_paling = 1.0;
+			m_dictID = 0.0;
+		}
+		if (m_preset == 1.0) {
+			m_tuneLocal = false;
+			m_paling = 1.0;
+			m_dictID = 1.0;
+		}
+		if (m_preset == 2.0) {
+			m_tuneLocal = false;
+			m_paling = 0.7;
+			m_dictID = 0.0;
+		}
     }
 }
 
@@ -620,9 +659,9 @@ NNLSChroma::getOutputDescriptors() const
 		d10.minValue = 427.47;
   		d10.maxValue = 452.89;
   	    d10.isQuantized = false;
-  	    d10.sampleType = OutputDescriptor::OneSamplePerStep;
+  	    d10.sampleType = OutputDescriptor::FixedSampleRate;
   	    d10.hasDuration = false;
-  	    d10.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
+  	    // d10.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
   	    list.push_back(d10);
   
     return list;
@@ -666,8 +705,13 @@ NNLSChroma::initialise(size_t channels, size_t stepSize, size_t blockSize)
 	}
 	cerr << "nonzero count : " << countNonzero << endl;
 	delete [] tempkernel;
-
-
+	ofstream myfile;
+	myfile.open ("matrix.txt");
+    // myfile << "Writing this to a file.\n";	
+	for (int i = 0; i < nNote * 84; ++i) {
+		myfile << m_dict[i] << endl;		
+	}
+    myfile.close();
     return true;
 }
 
@@ -693,7 +737,8 @@ NNLSChroma::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
 	float *magnitude = new float[m_blockSize/2];
 	
 	Feature f10; // local tuning
-	
+	f10.hasTimestamp = true;
+	f10.timestamp = timestamp - Vamp::RealTime::fromSeconds(0);
 	const float *fbuf = inputBuffers[0];	
 	
 	// make magnitude
@@ -730,9 +775,10 @@ NNLSChroma::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
         m_meanTuning0 += nm[iTone + 0]*one_over_N;
     	m_meanTuning1 += nm[iTone + 1]*one_over_N;
     	m_meanTuning2 += nm[iTone + 2]*one_over_N;
-        m_localTuning0 *= 0.99994; m_localTuning0 += nm[iTone + 0];
-        m_localTuning1 *= 0.99994; m_localTuning1 += nm[iTone + 1];
-        m_localTuning2 *= 0.99994; m_localTuning2 += nm[iTone + 2];
+		float ratioOld = 0.997;
+        m_localTuning0 *= ratioOld; m_localTuning0 += nm[iTone + 0] * (1 - ratioOld);
+        m_localTuning1 *= ratioOld; m_localTuning1 += nm[iTone + 1] * (1 - ratioOld);
+        m_localTuning2 *= ratioOld; m_localTuning2 += nm[iTone + 2] * (1 - ratioOld);
     }
 	
     // if (m_tuneLocal) {
@@ -743,6 +789,7 @@ NNLSChroma::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
         m_localTuning.push_back(normalisedtuning);
         float tuning440 = 440 * pow(2,normalisedtuning/12);
         f10.values.push_back(tuning440);
+		// cerr << tuning440 << endl;
     // }
     
 	Feature f1; // logfreqspec
@@ -754,7 +801,7 @@ NNLSChroma::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
 	
 	FeatureSet fs;
 	fs[1].push_back(f1);
-    fs[10].push_back(f10);
+    fs[8].push_back(f10);
 
     // deletes
     delete[] magnitude;
@@ -856,6 +903,7 @@ NNLSChroma::getRemainingFeatures()
 	    // taucs_ccs_matrix* A_original_ordering = taucs_construct_sorted_ccs_matrix(nnlsdict06, nnls_m, nnls_n);
 	    
 	    vector<vector<float> > chordogram;
+		vector<vector<int> > scoreChordogram;
 	    vector<float> oldchroma = vector<float>(12,0);
 	    vector<float> oldbasschroma = vector<float>(12,0);
 	    count = 0;
@@ -879,11 +927,14 @@ NNLSChroma::getRemainingFeatures()
 	        f6.hasTimestamp = true;
 	        f6.timestamp = f2.timestamp;
 	        
-			double b[256];
+			float b[256];
 	
 	        bool some_b_greater_zero = false;
+			float sumb = 0;
 	        for (int i = 0; i < 256; i++) {
-	            b[i] = f2.values[i];
+				// b[i] = m_dict[(256 * count + i) % (256 * 84)];
+				b[i] = f2.values[i];
+				sumb += b[i];
 	            if (b[i] > 0) {
 	                some_b_greater_zero = true;
 	            }            
@@ -897,12 +948,12 @@ NNLSChroma::getRemainingFeatures()
 			unsigned iSemitone = 0;
 			
 			if (some_b_greater_zero) {
-				if (m_dictID == 0) {
+				if (m_dictID == 1) {
 					for (unsigned iNote = 2; iNote < nNote - 2; iNote += 3) {
 						currval = 0;
-						for (unsigned iBin = 0; iBin < 3; ++iBin) {
-							currval += b[iNote + iBin];						
-						}
+						currval += b[iNote + 1 + -1] * 0.5;						
+						currval += b[iNote + 1 +  0] * 1.0;						
+						currval += b[iNote + 1 +  1] * 0.5;						
 						f3.values.push_back(currval);
 						chroma[iSemitone % 12] += currval * treblewindow[iSemitone];
 						basschroma[iSemitone % 12] += currval * basswindow[iSemitone];
@@ -910,14 +961,31 @@ NNLSChroma::getRemainingFeatures()
 					}
 		        
 				} else {
-					double x[84+1] = {1.0};
-				    double rnorm;
-				    double w[84+1];
-				    double zz[84+1];
-				    int indx[84+2];
+					float x[84+1000];
+					for (int i = 1; i < 1084; ++i) x[i] = 1.0;
+					// for (int i = 0; i < 84; ++i) {
+					// 	x[i] = b[3*i+3];
+					// }
+				    float rnorm;
+				    float w[84+1000];
+				    float zz[84+1000];
+				    int indx[84+1000];
 				    int mode;
-				  
-					nnls(m_dict, nNote, nNote, 84, b, x, &rnorm, w, zz, indx, &mode);
+					float curr_dict[256*84];
+					for (unsigned i = 0; i < 256 * 84; ++i) {
+						curr_dict[i] = 1.0 * m_dict[i];
+					}
+					nnls(curr_dict, nNote, nNote, 84, b, x, &rnorm, w, zz, indx, &mode);
+					for (unsigned iNote = 0; iNote < 84; ++iNote) {
+						// for	(unsigned kNote = 0; kNote < 256; ++kNote) {
+						// 						x[iNote] += m_dict[kNote + nNote * iNote] * b[kNote];
+						// 					}					
+						f3.values.push_back(x[iNote]);
+						// cerr << mode << endl;
+						chroma[iNote % 12] += x[iNote] * treblewindow[iNote];
+						basschroma[iNote % 12] += x[iNote] * basswindow[iNote];
+						// iSemitone++;
+					}
 				}	
 			}
 	
@@ -951,86 +1019,131 @@ NNLSChroma::getRemainingFeatures()
 	        fsOut[4].push_back(f4);
 	        fsOut[5].push_back(f5);
 	        fsOut[6].push_back(f6);
-	// if (x) free(x);
-	        // delete[] b;
 	        count++;
 	    }
-	//     // cerr << m_stepSize << endl<< endl;
-	//     count = 0;
-	//     int kernelwidth = (49 * 2048) / m_stepSize;
-	//     int nChord = nChorddict / 24;
 	//     int musicitykernelwidth = (50 * 2048) / m_stepSize;
 	//     
-	//     /* Simple chord estimation
-	//     I just take the local chord estimates ("currentChordSalience") and average them over time, then
-	//     take the maximum. Very simple, don't do this at home...
-	//     */
-	//     vector<int> chordSequence;
-	//     for (FeatureList::iterator it = fsOut[6].begin(); it != fsOut[6].end(); ++it) {
-	//     
-	//         int startIndex = max(count - kernelwidth/2 + 1,0);
-	//         int endIndex = min(int(chordogram.size()), startIndex + kernelwidth - 1 + 1);
-	//         vector<float> temp = vector<float>(nChord,0);
-	//         for (int iChord = 0; iChord < nChord; iChord++) {
-	//             float val = 0;
-	//             for (int i = startIndex; i < endIndex; i++) {
-	//                 val += chordogram[i][iChord] * 
-	//                     (kernelwidth - abs(i - startIndex - kernelwidth * 0.5)); // weigthed sum (triangular window)
-	//             }
-	//             temp[iChord] = val; // sum
-	//         }
-	//         
-	//         // get maximum for "chord estimate"
-	//         
-	//         float bestChordValue = 0;
-	//         int bestChordIndex = nChord-1; // "no chord" is default
-	//         for (int iChord = 0; iChord < nChord; iChord++) {
-	//             if (temp[iChord] > bestChordValue) {
-	//                 bestChordValue = temp[iChord];
-	//                 bestChordIndex = iChord;
-	//             }
-	//         }
-	//         // cerr << bestChordIndex << endl;
-	//         chordSequence.push_back(bestChordIndex);
-	//         count++;
-	//     }
-	//     // mode filter on chordSequence
-	//     count = 0;
-	//     int oldChordIndex = -1;
-	//     for (FeatureList::iterator it = fsOut[6].begin(); it != fsOut[6].end(); ++it) {
-	//         Feature f6 = *it;
-	//         Feature f7; // chord estimate
-	//         
-	//         f7.hasTimestamp = true;
-	//         f7.timestamp = f6.timestamp;
-	//         
-	//         vector<int> chordCount = vector<int>(121,0);
-	//         
-	//         int maxChordCount = 0;
-	//         int maxChordIndex = 120;
-	//         int startIndex = max(count - kernelwidth/2,0);
-	//         int endIndex = min(int(chordogram.size()), startIndex + kernelwidth - 1);
-	//         for (int i = startIndex; i < endIndex; i++) {
-	//             chordCount[chordSequence[i]]++;
-	//             if (chordCount[chordSequence[i]] > maxChordCount) {
-	//                 maxChordCount++;
-	//                 maxChordIndex = chordSequence[i];
-	//             }
-	//         }
-	//         if (oldChordIndex != maxChordIndex) {
-	//             oldChordIndex = maxChordIndex;
-	// 
-	//             char buffer1 [50];
-	//             if (maxChordIndex < nChord - 1) {
-	//                 sprintf(buffer1, "%s%s", notenames[maxChordIndex % 12 + 12], chordtypes[maxChordIndex]);
-	//             } else {
-	//                 sprintf(buffer1, "N");
-	//             }
-	//             f7.label = buffer1;
-	//             fsOut[7].push_back(f7);
-	//         }
-	//         count++;
-	//     }
+	    /* Simple chord estimation
+	    I just take the local chord estimates ("currentChordSalience") and average them over time, then
+	    take the maximum. Very simple, don't do this at home...
+	    */
+	    count = 0; 
+	    int halfwindowlength = m_inputSampleRate / m_stepSize;
+	    int nChord = nChorddict / 24;
+	    vector<int> chordSequence;
+  	 	for (FeatureList::iterator it = fsOut[6].begin(); it != fsOut[6].end(); ++it) { // initialise the score chordogram
+			vector<int> temp = vector<int>(nChord,0);
+			scoreChordogram.push_back(temp);
+		}
+	    for (FeatureList::iterator it = fsOut[6].begin(); it != fsOut[6].end()-2*halfwindowlength-1; ++it) {		
+			int startIndex = count + 1;
+			int endIndex = count + 2 * halfwindowlength;
+	        vector<float> temp = vector<float>(nChord,0);
+			float maxval = 0; // will be the value of the most salient chord in this frame
+			float maxindex = nChord-1; //... and the index thereof
+			unsigned bestchordL = 0; // index of the best "left" chord
+ 	 		unsigned bestchordR = 0; // index of the best "right" chord
+			for (unsigned iWF = 1; iWF < 2*halfwindowlength; ++iWF) {
+				// now find the max values on both sides of iWF
+				// left side:
+				float maxL = 0;
+				unsigned maxindL = nChord-1;
+				for (unsigned iChord = 0; iChord < nChord; iChord++) {
+					float currsum = 0;
+					for (unsigned iFrame = 0; iFrame < iWF-1; ++iFrame) {
+						currsum += chordogram[count+iFrame][iChord];
+					}
+					if (iChord == nChord-1) currsum *= 0.8;
+					if (currsum > maxL) {
+						maxL = currsum;
+						maxindL = iChord;
+					}
+				}				
+				// right side:
+				float maxR = 0;
+				unsigned maxindR = nChord-1;
+				for (unsigned iChord = 0; iChord < nChord; iChord++) {
+					float currsum = 0;
+					for (unsigned iFrame = iWF-1; iFrame < 2*halfwindowlength; ++iFrame) {
+						currsum += chordogram[count+iFrame][iChord];
+					}
+					if (iChord == nChord-1) currsum *= 0.8;
+					if (currsum > maxR) {
+						maxR = currsum;
+						maxindR = iChord;
+					}
+				}
+				if (maxL+maxR > maxval) {					
+					maxval = maxL+maxR;
+					maxindex = iWF;
+					bestchordL = maxindL;
+					bestchordR = maxindR;
+				}
+				
+			}
+			// cerr << "maxindex: " << maxindex << ", bestchordR is " << bestchordR << ", of frame " << count << endl;
+			// add a score to every chord-frame-point that was part of a maximum 
+			for (unsigned iFrame = 0; iFrame < maxindex-1; ++iFrame) {
+				scoreChordogram[iFrame+count][bestchordL]++;
+			}
+			for (unsigned iFrame = maxindex-1; iFrame < 2*halfwindowlength; ++iFrame) {
+				scoreChordogram[iFrame+count][bestchordR]++;
+			}
+			count++;	
+	    }
+
+		count = 0;
+	 	for (FeatureList::iterator it = fsOut[6].begin(); it != fsOut[6].end(); ++it) { 
+			float maxval = 0; // will be the value of the most salient chord in this frame
+			float maxindex = 0; //... and the index thereof
+			for (unsigned iChord = 0; iChord < nChord; iChord++) {
+				if (scoreChordogram[count][iChord] > maxval) {
+					maxval = scoreChordogram[count][iChord];
+					maxindex = iChord;
+					cerr << iChord << endl;
+				}
+			}
+			chordSequence.push_back(maxindex);
+			cerr << "before modefilter, maxindex: " << maxindex << endl;
+			count++;
+		}
+	
+	
+	    // mode filter on chordSequence
+	    count = 0;
+	    int oldChordIndex = -1;
+	    for (FeatureList::iterator it = fsOut[6].begin(); it != fsOut[6].end(); ++it) {
+			Feature f6 = *it;
+			Feature f7; // chord estimate
+			f7.hasTimestamp = true;
+			f7.timestamp = f6.timestamp;
+			vector<int> chordCount = vector<int>(nChord,0);
+	        int maxChordCount = 0;
+	        int maxChordIndex = nChord-1;
+	        // int startIndex = max(count - halfwindowlength,0);
+	        // int endIndex = min(int(chordogram.size()), startIndex + halfwindowlength);
+	        // for (int i = startIndex; i < endIndex; i++) {
+	        //     chordCount[chordSequence[i]]++;
+	        //     if (chordCount[chordSequence[i]] > maxChordCount) {
+	        //         maxChordCount++;
+	        //         maxChordIndex = chordSequence[i];
+	        //     }
+	        // }
+			maxChordIndex = chordSequence[count];
+	        if (oldChordIndex != maxChordIndex) {
+	            oldChordIndex = maxChordIndex;
+	
+	            char buffer1 [50];
+	            if (maxChordIndex < nChord - 1) {
+	                sprintf(buffer1, "%s%s", notenames[maxChordIndex % 12 + 12], chordtypes[maxChordIndex]);
+	            } else {
+	                sprintf(buffer1, "N");
+	            }
+	            f7.label = buffer1;
+	            fsOut[7].push_back(f7);
+	        }
+	        count++;
+	    }
 	//     // musicity
 	//     count = 0;
 	//     int oldlabeltype = 0; // start value is 0, music is 1, speech is 2

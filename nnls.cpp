@@ -24,10 +24,13 @@
 
 
 #include "nnls.h"
+#include <iostream>
 
-double d_sign(double& a, double& b)
+using namespace std;
+
+float d_sign(float& a, float& b)
 {
-  double x;
+  float x;
   x = (a >= 0 ? a : - a);
   return (b >= 0 ? x : -x);
 }
@@ -39,33 +42,33 @@ int c__0 = 0;
 int c__2 = 2;
 
 
-int nnls(double* a,  int mda,  int m,  int n, double* b, 
-	 double* x, double* rnorm, double* w, double* zz, int* index, 
+int nnls(float* a,  int mda,  int m,  int n, float* b, 
+	 float* x, float* rnorm, float* w, float* zz, int* index, 
 	 int* mode)
 {
   /* System generated locals */
   int a_dim1, a_offset, idx1, idx2;
-  double d1, d2;
+  float d1, d2;
  
  
   /* Local variables */
   static int iter;
-  static double temp, wmax;
+  static float temp, wmax;
   static int i__, j, l;
-  static double t, alpha, asave;
+  static float t, alpha, asave;
   static int itmax, izmax, nsetp;
-  static double unorm, ztest, cc;
-  double dummy[2];
+  static float unorm, ztest, cc;
+  float dummy[2];
   static int ii, jj, ip;
-  static double sm;
+  static float sm;
   static int iz, jz;
-  static double up, ss;
+  static float up, ss;
   static int rtnkey, iz1, iz2, npp1;
  
   /*     ------------------------------------------------------------------ 
    */
   /*     int INDEX(N) */
-  /*     double precision A(MDA,N), B(M), W(N), X(N), ZZ(M) */
+  /*     float precision A(MDA,N), B(M), W(N), X(N), ZZ(M) */
   /*     ------------------------------------------------------------------ 
    */
   /* Parameter adjustments */
@@ -85,7 +88,7 @@ int nnls(double* a,  int mda,  int m,  int n, double* b,
     return 0;
   }
   iter = 0;
-  itmax = n * 3;
+  itmax = n * 30;
  
   /*                    INITIALIZE THE ARRAYS INDEX() AND X(). */
  
@@ -251,6 +254,7 @@ int nnls(double* a,  int mda,  int m,  int n, double* b,
  
  L210:
   ++iter;
+// cerr << iter << endl;
   if (iter > itmax) {
     *mode = 3;
     /* The following lines were replaced after the f2c translation */
@@ -341,6 +345,7 @@ int nnls(double* a,  int mda,  int m,  int n, double* b,
   --nsetp;
   --iz1;
   index[iz1] = i__;
+// cerr << "index[" << iz1 << "]  is " << i__ << endl;
  
   /*        SEE IF THE REMAINING COEFFS IN SET P ARE FEASIBLE.  THEY SHOULD 
    */
@@ -421,6 +426,7 @@ int nnls(double* a,  int mda,  int m,  int n, double* b,
       }
     }
     jj = index[ip];
+	// cerr << ip << " " << jj << " " << a_dim1 << endl;
     zz[ip] /= a[ip + jj * a_dim1];
     /* L430: */
   }
@@ -437,12 +443,12 @@ int nnls(double* a,  int mda,  int m,  int n, double* b,
 } /* nnls_ */
 
 
-int g1(double* a, double* b, double* cterm, double* sterm, double* sig)
+int g1(float* a, float* b, float* cterm, float* sterm, float* sig)
 {
   /* System generated locals */
-  double d;
+  float d;
  
-  static double xr, yr;
+  static float xr, yr;
  
  
   if (nnls_abs(*a) > nnls_abs(*b)) {
@@ -476,28 +482,28 @@ int g1(double* a, double* b, double* cterm, double* sterm, double* sig)
 
 /* See nnls.h for explanation */
 int h12(int mode, int* lpivot, int* l1, 
-	int m, double* u, int* iue, double* up, double* c__, 
+	int m, float* u, int* iue, float* up, float* c__, 
 	int* ice, int* icv, int* ncv)
 {
   /* System generated locals */
   int u_dim1, u_offset, idx1, idx2;
-  double d, d2;
+  float d, d2;
  
   /* Builtin functions */
   /* The following line was commented out after the f2c translation */
-  /* double sqrt(); */
+  /* float sqrt(); */
  
   /* Local variables */
   static int incr;
-  static double b;
+  static float b;
   static int i__, j;
-  static double clinv;
+  static float clinv;
   static int i2, i3, i4;
-  static double cl, sm;
+  static float cl, sm;
  
   /*     ------------------------------------------------------------------ 
    */
-  /*     double precision U(IUE,M) */
+  /*     float precision U(IUE,M) */
   /*     ------------------------------------------------------------------ 
    */
   /* Parameter adjustments */
