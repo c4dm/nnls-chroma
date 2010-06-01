@@ -161,7 +161,7 @@ bool dictionaryMatrix(float* dm) {
 	int binspersemitone = 3; // this must be 3
 	int minoctave = 0; // this must be 0
 	int maxoctave = 7; // this must be 7
-	float s_param = 0.6;
+	float s_param = 0.7;
 	
 	// pitch-spaced frequency vector
 	int minMIDI = 21 + minoctave * 12 - 1; // this includes one additional semitone!
@@ -216,7 +216,7 @@ NNLSChroma::NNLSChroma(float inputSampleRate) :
   m_localTuning0(0),
   m_localTuning1(0),
   m_localTuning2(0),
-  m_paling(0.8),
+  m_paling(1.0),
   m_preset(0.0),
   m_localTuning(0),
   m_kernelValue(0),
@@ -258,7 +258,7 @@ NNLSChroma::getDescription() const
 {
     // Return something helpful here!
 	if (debug_on) cerr << "--> getDescription" << endl;
-    return "";
+    return "This plugin provides a number of features derived from a log-frequency amplitude spectrum (LAS) of the DFT: the LAS itself, a standard-tuned version thereof (the local and global tuning estimates can are also be output), an approximate transcription to semitone activation using non-linear least squares (NNLS). Furthermore chroma features and a simple chord estimate derived from this NNLS semitone transcription.";
 }
 
 string
@@ -332,49 +332,6 @@ NNLSChroma::getParameterDescriptors() const
 		if (debug_on) cerr << "--> getParameterDescriptors" << endl;
     ParameterList list;
 
-    ParameterDescriptor d0;
-    d0.identifier = "notedict";
-    d0.name = "note dictionary";
-    d0.description = "Notes in different note dictionaries differ by their spectral shapes.";
-    d0.unit = "";
-    d0.minValue = 0;
-    d0.maxValue = 1;
-    d0.defaultValue = 0;
-    d0.isQuantized = true;
-    d0.valueNames.push_back("s = 0.6");
-    // d0.valueNames.push_back("s = 0.9");
-    // d0.valueNames.push_back("s linearly spaced");
-    d0.valueNames.push_back("no NNLS");
-    d0.quantizeStep = 1.0;
-    list.push_back(d0);
-
-    ParameterDescriptor d1;
-    d1.identifier = "tuningmode";
-    d1.name = "tuning mode";
-    d1.description = "Tuning can be performed locally or on the whole extraction segment.";
-    d1.unit = "";
-    d1.minValue = 0;
-    d1.maxValue = 1;
-    d1.defaultValue = 1;
-    d1.isQuantized = true;
-    d1.valueNames.push_back("global tuning");
-    d1.valueNames.push_back("local tuning");
-    d1.quantizeStep = 1.0;
-    list.push_back(d1);
-
-    ParameterDescriptor d2;
-    d2.identifier = "paling";
-    d2.name = "spectral paling";
-    d2.description = "Spectral paling: no paling - 0; whitening - 1.";
-    d2.unit = "";
-	d2.isQuantized = true;
-	d2.quantizeStep = 0.1;
-    d2.minValue = 0.0;
-    d2.maxValue = 1.0;
-    d2.defaultValue = 0.5;
-    // d2.isQuantized = false;
-    list.push_back(d2);
-
     ParameterDescriptor d3;
     d3.identifier = "preset";
     d3.name = "preset";
@@ -383,13 +340,55 @@ NNLSChroma::getParameterDescriptors() const
 	d3.isQuantized = true;
 	d3.quantizeStep = 1;
     d3.minValue = 0.0;
-    d3.maxValue = 2.0;
+    d3.maxValue = 3.0;
     d3.defaultValue = 0.0;
     d3.valueNames.push_back("polyphonic pop");
 	d3.valueNames.push_back("polyphonic pop (fast)");
     d3.valueNames.push_back("solo keyboard");
 	d3.valueNames.push_back("manual");
     list.push_back(d3);
+
+    // ParameterDescriptor d0;
+    //  d0.identifier = "notedict";
+    //  d0.name = "note dictionary";
+    //  d0.description = "Notes in different note dictionaries differ by their spectral shapes.";
+    //  d0.unit = "";
+    //  d0.minValue = 0;
+    //  d0.maxValue = 1;
+    //  d0.defaultValue = 0;
+    //  d0.isQuantized = true;
+    //  d0.valueNames.push_back("s = 0.6");
+    //  d0.valueNames.push_back("no NNLS");
+    //  d0.quantizeStep = 1.0;
+    //  list.push_back(d0);
+
+    ParameterDescriptor d1;
+    d1.identifier = "tuningmode";
+    d1.name = "tuning mode";
+    d1.description = "Tuning can be performed locally or on the whole extraction segment. Local tuning is only advisable when the tuning is likely to change over the audio, for example in podcasts, or in a cappella singing.";
+    d1.unit = "";
+    d1.minValue = 0;
+    d1.maxValue = 1;
+    d1.defaultValue = 0;
+    d1.isQuantized = true;
+    d1.valueNames.push_back("global tuning");
+    d1.valueNames.push_back("local tuning");
+    d1.quantizeStep = 1.0;
+    list.push_back(d1);
+
+	//     ParameterDescriptor d2;
+	//     d2.identifier = "paling";
+	//     d2.name = "spectral paling";
+	//     d2.description = "Spectral paling: no paling - 0; whitening - 1.";
+	//     d2.unit = "";
+	// d2.isQuantized = true;
+	// // d2.quantizeStep = 0.1;
+	//     d2.minValue = 0.0;
+	//     d2.maxValue = 1.0;
+	//     d2.defaultValue = 1.0;
+	//     d2.isQuantized = false;
+	//     list.push_back(d2);
+
     return list;
 }
 
@@ -651,7 +650,7 @@ NNLSChroma::getOutputDescriptors() const
   	OutputDescriptor d10;
   	    d10.identifier = "localtuning";
   	    d10.name = "Local tuning";
-  	    d10.description = "";
+  	    d10.description = "Tuning based on the history up to this timestamp.";
   	    d10.unit = "Hz";
   	    d10.hasFixedBinCount = true;
   	    d10.binCount = 1;
@@ -681,7 +680,7 @@ NNLSChroma::initialise(size_t channels, size_t stepSize, size_t blockSize)
     m_stepSize = stepSize;
     frameCount = 0;
 	int tempn = 256 * m_blockSize/2;
-	cerr << "length of tempkernel : " <<  tempn << endl;
+	// cerr << "length of tempkernel : " <<  tempn << endl;
 	float *tempkernel;
 
 	tempkernel = new float[tempn];
@@ -703,7 +702,7 @@ NNLSChroma::initialise(size_t channels, size_t stepSize, size_t blockSize)
 			}
 		}
 	}
-	cerr << "nonzero count : " << countNonzero << endl;
+	// cerr << "nonzero count : " << countNonzero << endl;
 	delete [] tempkernel;
 	ofstream myfile;
 	myfile.open ("matrix.txt");
@@ -718,37 +717,40 @@ NNLSChroma::initialise(size_t channels, size_t stepSize, size_t blockSize)
 void
 NNLSChroma::reset()
 {
-		if (debug_on) cerr << "--> reset";
+	if (debug_on) cerr << "--> reset";
+	
     // Clear buffers, reset stored values, etc
-	    frameCount = 0;
-        m_dictID = 0;
-		m_kernelValue.clear();
-		m_kernelFftIndex.clear();
-		m_kernelNoteIndex.clear();
+	frameCount = 0;
+	m_dictID = 0;
+	m_fl.clear();
+	m_meanTuning0 = 0;
+	m_meanTuning1 = 0;
+	m_meanTuning2 = 0;
+	m_localTuning0 = 0;
+	m_localTuning1 = 0;
+	m_localTuning2 = 0;
+	m_localTuning.clear();
 }
 
 NNLSChroma::FeatureSet
 NNLSChroma::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
 {   
-		if (debug_on) cerr << "--> process" << endl;
-	// int nNote = 84; // TODO: this should be globally set and/or depend on the kernel matrix
-    
+	if (debug_on) cerr << "--> process" << endl;
+	    
 	frameCount++;   
 	float *magnitude = new float[m_blockSize/2];
 	
 	Feature f10; // local tuning
 	f10.hasTimestamp = true;
-	f10.timestamp = timestamp - Vamp::RealTime::fromSeconds(0);
+	f10.timestamp = timestamp;
 	const float *fbuf = inputBuffers[0];	
 	
 	// make magnitude
 	for (size_t iBin = 0; iBin < m_blockSize/2; iBin++) {
 		magnitude[iBin] = sqrt(fbuf[2 * iBin] * fbuf[2 * iBin] + 
 			fbuf[2 * iBin + 1] * fbuf[2 * iBin + 1]);
-		// magnitude[iBin] = (iBin == frameCount - 1 || frameCount < 2) ? 1.0 : 0.0;
 	}
-	
-	
+		
 	// note magnitude mapping using pre-calculated matrix
 	float *nm  = new float[nNote]; // note magnitude
 	for (size_t iNote = 0; iNote < nNote; iNote++) {
@@ -814,8 +816,9 @@ NNLSChroma::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
 NNLSChroma::FeatureSet
 NNLSChroma::getRemainingFeatures()
 {
-		if (debug_on) cerr << "--> getRemainingFeatures" << endl;
-    FeatureSet fsOut;
+	if (debug_on) cerr << "--> getRemainingFeatures" << endl;
+	FeatureSet fsOut;
+	if (m_fl.size() == 0) return fsOut;
 	// 
 	/**  Calculate Tuning
 		calculate tuning from (using the angle of the complex number defined by the 
@@ -866,7 +869,7 @@ NNLSChroma::getRemainingFeatures()
 		        
 		        // cerr << intShift << " " << intFactor << endl;
 		        
-		        for (int k = 2; k < f1.values.size() - 3; ++k) { // interpolate all inner bins
+		        for (unsigned k = 2; k < f1.values.size() - 3; ++k) { // interpolate all inner bins
 		            tempValue = f1.values[k + intShift] * (1-intFactor) + f1.values[k+intShift+1] * intFactor;
 		            f2.values.push_back(tempValue);
 		        }
@@ -1035,15 +1038,15 @@ NNLSChroma::getRemainingFeatures()
 			vector<int> temp = vector<int>(nChord,0);
 			scoreChordogram.push_back(temp);
 		}
-	    for (FeatureList::iterator it = fsOut[6].begin(); it != fsOut[6].end()-2*halfwindowlength-1; ++it) {		
+	    for (FeatureList::iterator it = fsOut[6].begin(); it < fsOut[6].end()-2*halfwindowlength-1; ++it) {		
 			int startIndex = count + 1;
 			int endIndex = count + 2 * halfwindowlength;
 	        vector<float> temp = vector<float>(nChord,0);
 			float maxval = 0; // will be the value of the most salient chord in this frame
-			float maxindex = nChord-1; //... and the index thereof
+			float maxindex = 0; //... and the index thereof
 			unsigned bestchordL = 0; // index of the best "left" chord
  	 		unsigned bestchordR = 0; // index of the best "right" chord
-			for (unsigned iWF = 1; iWF < 2*halfwindowlength; ++iWF) {
+			for (int iWF = 1; iWF < 2*halfwindowlength; ++iWF) {
 				// now find the max values on both sides of iWF
 				// left side:
 				float maxL = 0;
@@ -1100,11 +1103,11 @@ NNLSChroma::getRemainingFeatures()
 				if (scoreChordogram[count][iChord] > maxval) {
 					maxval = scoreChordogram[count][iChord];
 					maxindex = iChord;
-					cerr << iChord << endl;
+					// cerr << iChord << endl;
 				}
 			}
 			chordSequence.push_back(maxindex);
-			cerr << "before modefilter, maxindex: " << maxindex << endl;
+			// cerr << "before modefilter, maxindex: " << maxindex << endl;
 			count++;
 		}
 	
@@ -1120,16 +1123,18 @@ NNLSChroma::getRemainingFeatures()
 			vector<int> chordCount = vector<int>(nChord,0);
 	        int maxChordCount = 0;
 	        int maxChordIndex = nChord-1;
-	        // int startIndex = max(count - halfwindowlength,0);
-	        // int endIndex = min(int(chordogram.size()), startIndex + halfwindowlength);
-	        // for (int i = startIndex; i < endIndex; i++) {
-	        //     chordCount[chordSequence[i]]++;
-	        //     if (chordCount[chordSequence[i]] > maxChordCount) {
-	        //         maxChordCount++;
-	        //         maxChordIndex = chordSequence[i];
-	        //     }
-	        // }
-			maxChordIndex = chordSequence[count];
+	        int startIndex = max(count - halfwindowlength/2,0);
+	        int endIndex = min(int(chordogram.size()), count + halfwindowlength/2);
+	        for (int i = startIndex; i < endIndex; i++) {				
+	            chordCount[chordSequence[i]]++;
+	            if (chordCount[chordSequence[i]] > maxChordCount) {
+					cerr << "start index " << startIndex << endl;
+	                maxChordCount++;
+	                maxChordIndex = chordSequence[i];
+	            }
+	        }
+			// chordSequence[count] = maxChordIndex;
+			cerr << maxChordIndex << endl;
 	        if (oldChordIndex != maxChordIndex) {
 	            oldChordIndex = maxChordIndex;
 	
