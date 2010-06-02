@@ -28,14 +28,14 @@ VAMP_SDK_DIR = ../vamp-plugin-sdk
 QMDSP_DIR = ../qm-dsp/build/osx/20091028
 FFT_DIR = ../qm-dsp/dsp/transforms
 NNLS_DIR = ../nnls_suvrit
-BOOST_ROOT = /usr/local/boost_1_43_0
+BOOST_ROOT = /usr/local/include/boost-1_38
 
 
 ##  Uncomment these for an OS/X native build using command-line tools:
 CXXFLAGS = -arch i386 -I$(VAMP_SDK_DIR) -I$(FFT_DIR) -I$(NNLS_DIR) -I$(BOOST_ROOT) -Wall -fPIC -g
 PLUGIN_EXT = .dylib
 PLUGIN = $(PLUGIN_LIBRARY_NAME)$(PLUGIN_EXT)
-LDFLAGS = -g -m32 -dynamiclib -install_name $(PLUGIN) $(VAMP_SDK_DIR)/libvamp-sdk.a  -exported_symbols_list vamp-plugin.list -framework Accelerate
+LDFLAGS = -fopenmp -g -m32 -dynamiclib -install_name $(PLUGIN) $(VAMP_SDK_DIR)/libvamp-sdk.a  -exported_symbols_list vamp-plugin.list -framework Accelerate
 
 
 ##  Uncomment these for an OS/X universal binary using command-line tools:
@@ -77,6 +77,9 @@ LDFLAGS = -g -m32 -dynamiclib -install_name $(PLUGIN) $(VAMP_SDK_DIR)/libvamp-sd
 
 $(PLUGIN): $(PLUGIN_CODE_OBJECTS)
 	   $(CXX) -o $@ $^ $(LDFLAGS)
+
+NNLSChroma.o: NNLSChroma.h
+plugins.o: NNLSChroma.h
 
 clean:
 	rm -f *.o
