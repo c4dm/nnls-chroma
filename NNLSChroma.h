@@ -73,6 +73,8 @@ protected:
 	float *m_dict;
     bool m_tuneLocal;
     int m_dictID;
+	float *m_chorddict;
+	vector<string> m_chordnames;
     // list< vector< float > > *logfreqSpecList;
 };
 

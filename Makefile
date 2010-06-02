@@ -28,11 +28,11 @@ VAMP_SDK_DIR = ../vamp-plugin-sdk
 QMDSP_DIR = ../qm-dsp/build/osx/20091028
 FFT_DIR = ../qm-dsp/dsp/transforms
 NNLS_DIR = ../nnls_suvrit
-
+BOOST_ROOT = /usr/local/boost_1_43_0
 
 
 ##  Uncomment these for an OS/X native build using command-line tools:
-CXXFLAGS = -arch i386 -I$(VAMP_SDK_DIR) -I$(FFT_DIR) -I$(NNLS_DIR) -Wall -fPIC -g
+CXXFLAGS = -arch i386 -I$(VAMP_SDK_DIR) -I$(FFT_DIR) -I$(NNLS_DIR) -I$(BOOST_ROOT) -Wall -fPIC -g
 PLUGIN_EXT = .dylib
 PLUGIN = $(PLUGIN_LIBRARY_NAME)$(PLUGIN_EXT)
 LDFLAGS = -g -m32 -dynamiclib -install_name $(PLUGIN) $(VAMP_SDK_DIR)/libvamp-sdk.a  -exported_symbols_list vamp-plugin.list -framework Accelerate

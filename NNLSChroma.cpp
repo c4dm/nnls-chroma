@@ -6,11 +6,17 @@
 #include <fstream>
 #include <sstream>
 #include <cassert>
+#include <cstdlib>
 #include <cstdio>
+#include <boost/tokenizer.hpp>
+#include <boost/iostreams/device/file.hpp>
+#include <boost/iostreams/stream.hpp>
+#include <boost/lexical_cast.hpp>
 #include "nnls.h"
 // #include "cblas.h"
 #include "chorddict.cpp"
 using namespace std;
+using namespace boost;
 
 const float sinvalue = 0.866025404;
 const float cosvalue = -0.5;
@@ -19,6 +25,21 @@ const float basswindow[] = {0.001769, 0.015848, 0.043608, 0.084265, 0.136670, 0.
 const float treblewindow[] = {0.000350, 0.003144, 0.008717, 0.017037, 0.028058, 0.041719, 0.057942, 0.076638, 0.097701, 0.121014, 0.146447, 0.173856, 0.203090, 0.233984, 0.266366, 0.300054, 0.334860, 0.370590, 0.407044, 0.444018, 0.481304, 0.518696, 0.555982, 0.592956, 0.629410, 0.665140, 0.699946, 0.733634, 0.766016, 0.796910, 0.826144, 0.853553, 0.878986, 0.902299, 0.923362, 0.942058, 0.958281, 0.971942, 0.982963, 0.991283, 0.996856, 0.999650, 0.999650, 0.996856, 0.991283, 0.982963, 0.971942, 0.958281, 0.942058, 0.923362, 0.902299, 0.878986, 0.853553, 0.826144, 0.796910, 0.766016, 0.733634, 0.699946, 0.665140, 0.629410, 0.592956, 0.555982, 0.518696, 0.481304, 0.444018, 0.407044, 0.370590, 0.334860, 0.300054, 0.266366, 0.233984, 0.203090, 0.173856, 0.146447, 0.121014, 0.097701, 0.076638, 0.057942, 0.041719, 0.028058, 0.017037, 0.008717, 0.003144, 0.000350};
 const char* notenames[24] = {"A  (bass)","Bb (bass)","B  (bass)","C  (bass)","C# (bass)","D  (bass)","Eb (bass)","E  (bass)","F  (bass)","F# (bass)","G  (bass)","Ab (bass)",
 "A","Bb","B","C","C#","D","Eb","E","F","F#","G","Ab"};
+
+const char* bassnames[12][12] ={
+{"A","","B","C","C#","D","","E","","F#","G","G#"},
+{"Bb","","C","Db","D","Eb","","F","","G","Ab","A"},
+{"B","","C#","D","D#","E","","F#","","G#","A","A#"},
+{"C","","D","Eb","E","F","","G","","A","Bb","B"},
+{"C#","","D#","E","E#","F#","","G#","","A#","B","B#"},
+{"D","","E","F","F#","G","","A","","B","C","C#"},
+{"Eb","","F","Gb","G","Ab","","Bb","","C","Db","D"},
+{"E","","F#","G","G#","A","","B","","C#","D","D#"},
+{"F","","G","Ab","A","Bb","","C","","D","Eb","E"},
+{"F#","","G#","A","A#","B","","C#","","D#","E","E#"},
+{"G","","A","Bb","B","C","","D","","E","F","F#"},
+{"Ab","","Bb","Cb","C","Db","","Eb","","F","Gb","G"}
+};
 const vector<float> hw(hammingwind, hammingwind+19);
 const int nNote = 256;
 
@@ -203,6 +224,146 @@ bool dictionaryMatrix(float* dm) {
 
 }
 
+string get_env_var( std::string const & key ) {                                 
+  char * val;                                                                        
+  val = getenv( key.c_str() );                                                       
+  string retval;   
+  if (val != NULL) {                                                                 
+    retval = val;                                                                    
+  }                                                                                  
+  return retval;                                                                        
+}
+
+
+int chordDictionary(float *mchorddict, string *chordnames) {
+	// ifstream chordDictFile;
+	string chordDictFilename(get_env_var("VAMP_PATH")+"/chord.dict");
+	// string instring[] = ",1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,0\nm,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,1,0,0,0,0\n6,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,1,0,0\n7,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,1,0\nmaj7,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,1\nmin7,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,1,0,0,1,0\n,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,0\n,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,0\ndim,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,1,0,0,0,0,0\naug,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0\n";
+	typedef tokenizer<char_separator<char> > Tok;
+	// char_separator<char> sep; // default constructed
+	char_separator<char> sep(",; ",":");
+    iostreams::stream<iostreams::file_source> chordDictFile(chordDictFilename.c_str());
+    string line;
+	int iElement = 0;
+	int nChord = 0;
+	
+	vector<string> loadedChordNames;
+	vector<float> loadedChordDict;
+	if (chordDictFile.is_open()) {
+		while (std::getline(chordDictFile, line)) { // loop over lines in chord.dict file		
+			// first, get the chord definition
+			string chordType;
+			vector<float> tempPCVector;			
+			// cerr << line << endl;
+			if (!line.empty() && line.substr(0,1) != "#") {
+				Tok tok(line, sep);			
+				for(Tok::iterator tok_iter = tok.begin(); tok_iter != tok.end(); ++tok_iter) { // loop over line elements
+					string tempString = *tok_iter;
+					// cerr << tempString << endl;
+					if (tok_iter == tok.begin()) { // either the chord name or a colon
+						if (tempString == ":") {
+							chordType = "";
+						} else {
+							chordType = tempString;
+							tok_iter++; // is this cheating ? :)
+						}
+					} else {
+						tempPCVector.push_back(lexical_cast<float>(*tok_iter));
+					}
+				}
+					
+				// now make all 12 chords of every type
+				for (unsigned iSemitone = 0; iSemitone < 12; iSemitone++) {				
+					// add bass slash notation
+					string slashNotation = "";
+					for (unsigned kSemitone = 1; kSemitone < 12; kSemitone++) {
+						if (tempPCVector[(kSemitone) % 12] > 0.99) {
+							slashNotation = bassnames[iSemitone][kSemitone];
+						}
+					}
+					for (unsigned kSemitone = 0; kSemitone < 12; kSemitone++) { // bass pitch classes
+						cerr << ((kSemitone - iSemitone + 12) % 12) << endl;
+						loadedChordDict.push_back(0.5 * tempPCVector[(kSemitone - iSemitone + 12) % 12] + 0.5 * tempPCVector[((kSemitone - iSemitone + 12) % 12) + 12]);
+					}
+					for (unsigned kSemitone = 0; kSemitone < 12; kSemitone++) { // chord pitch classes
+						loadedChordDict.push_back(tempPCVector[((kSemitone - iSemitone + 12) % 12) + 12]);
+					}
+					ostringstream os;				
+					if (slashNotation.empty()) {
+						os << notenames[12+iSemitone] << chordType;
+					} else {
+						os << notenames[12+iSemitone] << chordType << "/" << slashNotation;
+					}
+				
+					loadedChordNames.push_back(os.str());
+				}
+			}
+		}
+		// N type
+		loadedChordNames.push_back("N");
+		for (unsigned kSemitone = 0; kSemitone < 12; kSemitone++) loadedChordDict.push_back(0.5);
+		for (unsigned kSemitone = 0; kSemitone < 12; kSemitone++) loadedChordDict.push_back(1.0);
+	
+		// normalise
+		float sum = 0;
+		for (int i = 0; i < loadedChordDict.size(); i++) {
+			sum += pow(loadedChordDict[i],2);
+			if (i % 24 == 23) {
+				float invertedsum = 1.0/sqrt(sum);
+				for (int k = 0; k < 24; k++) {
+					loadedChordDict[i-k] *= invertedsum; 
+				}
+				sum = 0;
+			}
+		
+		}
+	
+
+		nChord = 0;
+		for (int i = 0; i < loadedChordNames.size(); i++) {
+			chordnames[i] = loadedChordNames[i];
+			cerr << "in chordnames "<< chordnames[i] << endl;
+			nChord++;
+		}
+		chordDictFile.close();
+
+
+		mchorddict = new float[nChord*24];
+		for (int i = 0; i < nChord*24; i++) {
+			mchorddict[i] = loadedChordDict[i];			
+		}
+		
+		// mchordnames = new string[nChord];
+		// for (int i = 0; i < nChord; i++) {
+		// 	mchordnames[i] = loadedChordNames[i];			
+		// }
+		
+		// return loadedChordNames;
+	} else {// use default from chorddict.cpp
+		mchorddict = new float[nChorddict];
+		for (int i = 0; i < nChorddict; i++) {
+			mchorddict[i] = chorddict[i];
+		}
+		
+		nChord = nChorddict/24;
+		// mchordnames = new string[nChorddict/24];
+		char buffer1 [50];
+		for (int i = 0; i < nChorddict/24; i++) {
+	        if (i < nChorddict/24 - 1) {
+	            sprintf(buffer1, "%s%s", notenames[i % 12 + 12], chordtypes[i]);
+	        } else {
+	            sprintf(buffer1, "N");
+	        }
+			ostringstream os;
+			os << buffer1;
+			// loadedChordNames.push_back(os.str());
+			chordnames[i] = os.str();
+		}
+		
+	}
+	cerr << "before leaving" << chordnames[1] << endl;
+	return nChord;
+}
 
 NNLSChroma::NNLSChroma(float inputSampleRate) :
   Plugin(inputSampleRate),
@@ -224,12 +385,26 @@ NNLSChroma::NNLSChroma(float inputSampleRate) :
   m_kernelNoteIndex(0),
   m_dict(0),
   m_tuneLocal(false),
-  m_dictID(0)
+  m_dictID(0),
+  m_chorddict(0),
+  m_chordnames(0)
 {
 	if (debug_on) cerr << "--> NNLSChroma" << endl;
+
+	// make the *note* dictionary matrix
 	m_dict = new float[nNote * 84];
 	for (unsigned i = 0; i < nNote * 84; ++i) m_dict[i] = 0.0;
 	dictionaryMatrix(m_dict);
+	
+	// get the *chord* dictionary from file (if the file exists)
+	string *chordnames;
+	chordnames = new string[1000];
+	int nchord = chordDictionary(m_chorddict, chordnames);
+	cerr << nchord << endl;
+	for (int i = 0; i < nchord; i++) {		
+		m_chordnames.push_back(chordnames[i]);
+	}
+	delete [] chordnames;
 }
 
 
@@ -237,6 +412,8 @@ NNLSChroma::~NNLSChroma()
 {
 		if (debug_on) cerr << "--> ~NNLSChroma" << endl;
 		delete [] m_dict;
+		delete [] m_chorddict;
+		// delete m_chordnames;
 }
 
 string
@@ -736,7 +913,6 @@ NNLSChroma::FeatureSet
 NNLSChroma::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
 {   
 	if (debug_on) cerr << "--> process" << endl;
-	    
 	frameCount++;   
 	float *magnitude = new float[m_blockSize/2];
 	
@@ -810,6 +986,10 @@ NNLSChroma::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
     delete[] nm;
 
     m_fl.push_back(f1); // remember note magnitude for getRemainingFeatures
+	char * pPath;
+	pPath = getenv ("VAMP_PATH");	
+	
+	
 	return fs;	
 }
 
@@ -1128,13 +1308,13 @@ NNLSChroma::getRemainingFeatures()
 	        for (int i = startIndex; i < endIndex; i++) {				
 	            chordCount[chordSequence[i]]++;
 	            if (chordCount[chordSequence[i]] > maxChordCount) {
-					cerr << "start index " << startIndex << endl;
+					// cerr << "start index " << startIndex << endl;
 	                maxChordCount++;
 	                maxChordIndex = chordSequence[i];
 	            }
 	        }
 			// chordSequence[count] = maxChordIndex;
-			cerr << maxChordIndex << endl;
+			// cerr << maxChordIndex << endl;
 	        if (oldChordIndex != maxChordIndex) {
 	            oldChordIndex = maxChordIndex;
 	
