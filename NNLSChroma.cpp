@@ -1,6 +1,7 @@
 
 #include "NNLSChroma.h"
 #include <cmath>
+// #include <omp.h>
 #include <list>
 #include <iostream>
 #include <fstream>
@@ -15,9 +16,9 @@
 #include "nnls.h"
 #include "chorddict.cpp"
 
-#include <omp.h>
-#define N       1000
-#define CHUNKSIZE   100
+// #include <omp.h>
+// #define N       1000
+// #define CHUNKSIZE   100
 
 
 using namespace std;
@@ -292,7 +293,7 @@ vector<string> chordDictionary(vector<float> *mchorddict) {
 						if (tempPCVector[(kSemitone - iSemitone + 12) % 12]==1) {
 							bassValue = 1;
 						} else {
-							if (tempPCVector[((kSemitone - iSemitone + 12) % 12) + 12] == 1) bassValue = 0.2;
+							if (tempPCVector[((kSemitone - iSemitone + 12) % 12) + 12] == 1) bassValue = 0.5;
 						}
 						loadedChordDict.push_back(bassValue);
 					}
@@ -1143,32 +1144,42 @@ NNLSChroma::getRemainingFeatures()
 				} else {
 					float x[84+1000];
 					for (int i = 1; i < 1084; ++i) x[i] = 1.0;
-					// for (int i = 0; i < 84; ++i) {
-					// 	x[i] = b[3*i+3];
-					// }
+                    vector<int> signifIndex;
+                    int index=0;
+                    sumb /= 84.0;
+                    for (unsigned iNote = 2; iNote < nNote - 2; iNote += 3) {
+						float currval = 0;
+						currval += b[iNote + 1 + -1];						
+						currval += b[iNote + 1 +  0];						
+						currval += b[iNote + 1 +  1];
+                        if (currval > 0) signifIndex.push_back(index);
+                        f3.values.push_back(0); // fill the values, change later
+                        index++;
+					}
 				    float rnorm;
 				    float w[84+1000];
 				    float zz[84+1000];
 				    int indx[84+1000];
 				    int mode;
-					float curr_dict[256*84];
-					for (unsigned i = 0; i < 256 * 84; ++i) {
-						curr_dict[i] = 1.0 * m_dict[i];
+                    int dictsize = 256*signifIndex.size();
+                    // cerr << "dictsize is " << dictsize << "and values size" << f3.values.size()<< endl;
+					float *curr_dict = new float[dictsize];
+					for (unsigned iNote = 0; iNote < signifIndex.size(); ++iNote) {
+                        for (unsigned iBin = 0; iBin < 256; iBin++) {
+    						curr_dict[iNote * 256 + iBin] = 1.0 * m_dict[signifIndex[iNote] * 256 + iBin];
+                        }
 					}
-					nnls(curr_dict, nNote, nNote, 84, b, x, &rnorm, w, zz, indx, &mode);
-					for (unsigned iNote = 0; iNote < 84; ++iNote) {
-						// for	(unsigned kNote = 0; kNote < 256; ++kNote) {
-						// 						x[iNote] += m_dict[kNote + nNote * iNote] * b[kNote];
-						// 					}					
-						f3.values.push_back(x[iNote]);
+					nnls(curr_dict, nNote, nNote, signifIndex.size(), b, x, &rnorm, w, zz, indx, &mode);
+                    delete [] curr_dict;
+					for (unsigned iNote = 0; iNote < signifIndex.size(); ++iNote) {
+						f3.values[signifIndex[iNote]] = x[iNote];
 						// cerr << mode << endl;
-						chroma[iNote % 12] += x[iNote] * treblewindow[iNote];
-						basschroma[iNote % 12] += x[iNote] * basswindow[iNote];
-						// iSemitone++;
+						chroma[signifIndex[iNote] % 12] += x[iNote] * treblewindow[signifIndex[iNote]];
+						basschroma[signifIndex[iNote] % 12] += x[iNote] * basswindow[signifIndex[iNote]];
 					}
 				}	
 			}
-	
+            
 	        f4.values = chroma;
 	        f5.values = basschroma;
 	        chroma.insert(chroma.begin(), basschroma.begin(), basschroma.end()); // just stack the both chromas 
@@ -1201,8 +1212,8 @@ NNLSChroma::getRemainingFeatures()
 	        fsOut[6].push_back(f6);
 	        count++;
 	    }
-	//     int musicitykernelwidth = (50 * 2048) / m_stepSize;
-	//     
+	    cerr << "*******    NNLS done      *******" << endl;
+
 	    /* Simple chord estimation
 	    I just take the local chord estimates ("currentChordSalience") and average them over time, then
 	    take the maximum. Very simple, don't do this at home...
@@ -1217,17 +1228,38 @@ NNLSChroma::getRemainingFeatures()
 	    for (FeatureList::iterator it = fsOut[6].begin(); it < fsOut[6].end()-2*halfwindowlength-1; ++it) {		
 			int startIndex = count + 1;
 			int endIndex = count + 2 * halfwindowlength;
-	        vector<float> temp = vector<float>(nChord,0);
-			float maxval = 0; // will be the value of the most salient chord in this frame
+			
+            float chordThreshold = 2.5/nChord;//*(2*halfwindowlength+1);
+            
+            vector<int> chordCandidates;
+			for (unsigned iChord = 0; iChord < nChord-1; iChord++) {
+                // float currsum = 0;
+                // for (unsigned iFrame = startIndex; iFrame < endIndex; ++iFrame) {
+                //  currsum += chordogram[iFrame][iChord];
+                // }
+                //                 if (currsum > chordThreshold) chordCandidates.push_back(iChord);
+                for (unsigned iFrame = startIndex; iFrame < endIndex; ++iFrame) {
+                    if (chordogram[iFrame][iChord] > chordThreshold) {
+                        chordCandidates.push_back(iChord);
+                        break;
+                    }                    
+                }
+			}
+			chordCandidates.push_back(nChord-1);
+            // cerr << chordCandidates.size() << endl;          
+	        
+			float maxval = 0; // will be the value of the most salient *chord change* in this frame
 			float maxindex = 0; //... and the index thereof
-			unsigned bestchordL = 0; // index of the best "left" chord
- 	 		unsigned bestchordR = 0; // index of the best "right" chord
+			unsigned bestchordL = nChord-1; // index of the best "left" chord
+ 	 		unsigned bestchordR = nChord-1; // index of the best "right" chord
+ 	 		
 			for (int iWF = 1; iWF < 2*halfwindowlength; ++iWF) {
 				// now find the max values on both sides of iWF
 				// left side:
 				float maxL = 0;
 				unsigned maxindL = nChord-1;
-				for (unsigned iChord = 0; iChord < nChord; iChord++) {
+				for (unsigned kChord = 0; kChord < chordCandidates.size(); kChord++) {
+                    unsigned iChord = chordCandidates[kChord];
 					float currsum = 0;
 					for (unsigned iFrame = 0; iFrame < iWF-1; ++iFrame) {
 						currsum += chordogram[count+iFrame][iChord];
@@ -1241,7 +1273,8 @@ NNLSChroma::getRemainingFeatures()
 				// right side:
 				float maxR = 0;
 				unsigned maxindR = nChord-1;
-				for (unsigned iChord = 0; iChord < nChord; iChord++) {
+				for (unsigned kChord = 0; kChord < chordCandidates.size(); kChord++) {
+                    unsigned iChord = chordCandidates[kChord];
 					float currsum = 0;
 					for (unsigned iFrame = iWF-1; iFrame < 2*halfwindowlength; ++iFrame) {
 						currsum += chordogram[count+iFrame][iChord];
@@ -1270,7 +1303,7 @@ NNLSChroma::getRemainingFeatures()
 			}
 			count++;	
 	    }
-
+        cerr << "*******  agent finished   *******" << endl;
 		count = 0;
 	 	for (FeatureList::iterator it = fsOut[6].begin(); it != fsOut[6].end(); ++it) { 
 			float maxval = 0; // will be the value of the most salient chord in this frame
@@ -1286,7 +1319,8 @@ NNLSChroma::getRemainingFeatures()
 			// cerr << "before modefilter, maxindex: " << maxindex << endl;
 			count++;
 		}
-	
+		cerr << "*******  mode filter done *******" << endl;
+
 	
 	    // mode filter on chordSequence
 	    count = 0;
