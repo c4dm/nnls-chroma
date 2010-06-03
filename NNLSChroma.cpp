@@ -13,8 +13,13 @@
 #include <boost/iostreams/stream.hpp>
 #include <boost/lexical_cast.hpp>
 #include "nnls.h"
-// #include "cblas.h"
 #include "chorddict.cpp"
+
+#include <omp.h>
+#define N       1000
+#define CHUNKSIZE   100
+
+
 using namespace std;
 using namespace boost;
 
@@ -235,7 +240,7 @@ string get_env_var( std::string const & key ) {
 }
 
 
-int chordDictionary(float *mchorddict, string *chordnames) {
+vector<string> chordDictionary(vector<float> *mchorddict) {
 	// ifstream chordDictFile;
 	string chordDictFilename(get_env_var("VAMP_PATH")+"/chord.dict");
 	// string instring[] = ",1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,0\nm,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,1,0,0,0,0\n6,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,1,0,0\n7,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,1,0\nmaj7,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,1\nmin7,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,1,0,0,1,0\n,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,0\n,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,0\ndim,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,1,0,0,0,0,0\naug,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0\n";
@@ -282,8 +287,14 @@ int chordDictionary(float *mchorddict, string *chordnames) {
 						}
 					}
 					for (unsigned kSemitone = 0; kSemitone < 12; kSemitone++) { // bass pitch classes
-						cerr << ((kSemitone - iSemitone + 12) % 12) << endl;
-						loadedChordDict.push_back(0.5 * tempPCVector[(kSemitone - iSemitone + 12) % 12] + 0.5 * tempPCVector[((kSemitone - iSemitone + 12) % 12) + 12]);
+						// cerr << ((kSemitone - iSemitone + 12) % 12) << endl;
+						float bassValue = 0;
+						if (tempPCVector[(kSemitone - iSemitone + 12) % 12]==1) {
+							bassValue = 1;
+						} else {
+							if (tempPCVector[((kSemitone - iSemitone + 12) % 12) + 12] == 1) bassValue = 0.2;
+						}
+						loadedChordDict.push_back(bassValue);
 					}
 					for (unsigned kSemitone = 0; kSemitone < 12; kSemitone++) { // chord pitch classes
 						loadedChordDict.push_back(tempPCVector[((kSemitone - iSemitone + 12) % 12) + 12]);
@@ -321,28 +332,20 @@ int chordDictionary(float *mchorddict, string *chordnames) {
 
 		nChord = 0;
 		for (int i = 0; i < loadedChordNames.size(); i++) {
-			chordnames[i] = loadedChordNames[i];
-			cerr << "in chordnames "<< chordnames[i] << endl;
 			nChord++;
 		}
 		chordDictFile.close();
 
 
-		mchorddict = new float[nChord*24];
+		// mchorddict = new float[nChord*24];
 		for (int i = 0; i < nChord*24; i++) {
-			mchorddict[i] = loadedChordDict[i];			
+			mchorddict->push_back(loadedChordDict[i]);			
 		}
-		
-		// mchordnames = new string[nChord];
-		// for (int i = 0; i < nChord; i++) {
-		// 	mchordnames[i] = loadedChordNames[i];			
-		// }
-		
-		// return loadedChordNames;
+			
 	} else {// use default from chorddict.cpp
-		mchorddict = new float[nChorddict];
+		// mchorddict = new float[nChorddict];
 		for (int i = 0; i < nChorddict; i++) {
-			mchorddict[i] = chorddict[i];
+			mchorddict->push_back(chorddict[i]);
 		}
 		
 		nChord = nChorddict/24;
@@ -356,13 +359,13 @@ int chordDictionary(float *mchorddict, string *chordnames) {
 	        }
 			ostringstream os;
 			os << buffer1;
-			// loadedChordNames.push_back(os.str());
-			chordnames[i] = os.str();
+			loadedChordNames.push_back(os.str());
+
 		}
 		
 	}
-	cerr << "before leaving" << chordnames[1] << endl;
-	return nChord;
+	// cerr << "before leaving" << chordnames[1] << endl;
+	return loadedChordNames;
 }
 
 NNLSChroma::NNLSChroma(float inputSampleRate) :
@@ -397,14 +400,7 @@ NNLSChroma::NNLSChroma(float inputSampleRate) :
 	dictionaryMatrix(m_dict);
 	
 	// get the *chord* dictionary from file (if the file exists)
-	string *chordnames;
-	chordnames = new string[1000];
-	int nchord = chordDictionary(m_chorddict, chordnames);
-	cerr << nchord << endl;
-	for (int i = 0; i < nchord; i++) {		
-		m_chordnames.push_back(chordnames[i]);
-	}
-	delete [] chordnames;
+	m_chordnames = chordDictionary(&m_chorddict);
 }
 
 
@@ -412,7 +408,7 @@ NNLSChroma::~NNLSChroma()
 {
 		if (debug_on) cerr << "--> ~NNLSChroma" << endl;
 		delete [] m_dict;
-		delete [] m_chorddict;
+		// delete [] m_chorddict;
 		// delete m_chordnames;
 }
 
@@ -999,6 +995,7 @@ NNLSChroma::getRemainingFeatures()
 	if (debug_on) cerr << "--> getRemainingFeatures" << endl;
 	FeatureSet fsOut;
 	if (m_fl.size() == 0) return fsOut;
+	int nChord = m_chordnames.size();
 	// 
 	/**  Calculate Tuning
 		calculate tuning from (using the angle of the complex number defined by the 
@@ -1090,7 +1087,7 @@ NNLSChroma::getRemainingFeatures()
 	    vector<float> oldchroma = vector<float>(12,0);
 	    vector<float> oldbasschroma = vector<float>(12,0);
 	    count = 0;
-	
+
 	    for (FeatureList::iterator it = fsOut[2].begin(); it != fsOut[2].end(); ++it) {
 	        Feature f2 = *it; // logfreq spectrum
 	        Feature f3; // semitone spectrum
@@ -1181,14 +1178,14 @@ NNLSChroma::getRemainingFeatures()
 	        vector<float> currentChordSalience;
 	        float tempchordvalue = 0;
 	        float sumchordvalue = 0;
-	        int nChord = nChorddict / 24;
+	        
 	        for (int iChord = 0; iChord < nChord; iChord++) {
 	            tempchordvalue = 0;
 	            for (int iBin = 0; iBin < 12; iBin++) {
-	                tempchordvalue += chorddict[24 * iChord + iBin] * chroma[iBin];
+	                tempchordvalue += m_chorddict[24 * iChord + iBin] * chroma[iBin];
 	            }
 	            for (int iBin = 12; iBin < 24; iBin++) {
-	                tempchordvalue += chorddict[24 * iChord + iBin] * chroma[iBin];
+	                tempchordvalue += m_chorddict[24 * iChord + iBin] * chroma[iBin];
 	            }
 	            sumchordvalue+=tempchordvalue;
 	            currentChordSalience.push_back(tempchordvalue);
@@ -1212,7 +1209,6 @@ NNLSChroma::getRemainingFeatures()
 	    */
 	    count = 0; 
 	    int halfwindowlength = m_inputSampleRate / m_stepSize;
-	    int nChord = nChorddict / 24;
 	    vector<int> chordSequence;
   	 	for (FeatureList::iterator it = fsOut[6].begin(); it != fsOut[6].end(); ++it) { // initialise the score chordogram
 			vector<int> temp = vector<int>(nChord,0);
@@ -1318,13 +1314,14 @@ NNLSChroma::getRemainingFeatures()
 	        if (oldChordIndex != maxChordIndex) {
 	            oldChordIndex = maxChordIndex;
 	
-	            char buffer1 [50];
-	            if (maxChordIndex < nChord - 1) {
-	                sprintf(buffer1, "%s%s", notenames[maxChordIndex % 12 + 12], chordtypes[maxChordIndex]);
-	            } else {
-	                sprintf(buffer1, "N");
-	            }
-	            f7.label = buffer1;
+	            // char buffer1 [50];
+	            // if (maxChordIndex < nChord - 1) {
+	            //     sprintf(buffer1, "%s%s", notenames[maxChordIndex % 12 + 12], chordtypes[maxChordIndex]);
+	            // } else {
+	            //     sprintf(buffer1, "N");
+	            // }
+	            // f7.label = buffer1;
+				f7.label = m_chordnames[maxChordIndex];
 	            fsOut[7].push_back(f7);
 	        }
 	        count++;

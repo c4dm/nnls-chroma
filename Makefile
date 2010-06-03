@@ -28,7 +28,7 @@ VAMP_SDK_DIR = ../vamp-plugin-sdk
 QMDSP_DIR = ../qm-dsp/build/osx/20091028
 FFT_DIR = ../qm-dsp/dsp/transforms
 NNLS_DIR = ../nnls_suvrit
-BOOST_ROOT = /usr/local/include/boost-1_38
+BOOST_ROOT = /usr/local/boost_1_43_0
 
 
 ##  Uncomment these for an OS/X native build using command-line tools:
