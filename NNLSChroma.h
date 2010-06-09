@@ -75,6 +75,7 @@ protected:
     int m_dictID;
 	vector<float> m_chorddict;
 	vector<string> m_chordnames;
+	float m_doNormalizeChroma;
     // list< vector< float > > *logfreqSpecList;
 };
 

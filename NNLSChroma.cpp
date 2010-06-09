@@ -391,7 +391,8 @@ NNLSChroma::NNLSChroma(float inputSampleRate) :
   m_tuneLocal(false),
   m_dictID(0),
   m_chorddict(0),
-  m_chordnames(0)
+  m_chordnames(0),
+  m_doNormalizeChroma(0)
 {
 	if (debug_on) cerr << "--> NNLSChroma" << endl;
 
@@ -562,6 +563,19 @@ NNLSChroma::getParameterDescriptors() const
 	//     d2.defaultValue = 1.0;
 	//     d2.isQuantized = false;
 	//     list.push_back(d2);
+	ParameterDescriptor d4;
+    d4.identifier = "chromanormalize";
+    d4.name = "chroma normalization";
+    d4.description = "How shall the chroma vector be normalized?";
+    d4.unit = "";
+    d4.minValue = 0;
+    d4.maxValue = 1;
+    d4.defaultValue = 0;
+    d4.isQuantized = true;
+    d4.valueNames.push_back("no normalization");
+    d4.valueNames.push_back("maximum normalization");
+    d4.quantizeStep = 1.0;
+    list.push_back(d4);
 
     return list;
 }
@@ -587,6 +601,9 @@ NNLSChroma::getParameter(string identifier) const
     }
 	if (identifier == "preset") {
 		return m_preset;
+    }
+	if (identifier == "chromanormalize") {
+		return m_doNormalizeChroma;
     }
     return 0;
     
@@ -626,6 +643,9 @@ NNLSChroma::setParameter(string identifier, float value)
 			m_dictID = 0.0;
 		}
     }
+	if (identifier == "chromanormalize") {
+		m_doNormalizeChroma = value;
+	}
 }
 
 NNLSChroma::ProgramList
@@ -1180,7 +1200,14 @@ NNLSChroma::getRemainingFeatures()
 				}	
 			}
             
-	        f4.values = chroma;
+	        
+			if (m_doNormalizeChroma > 0) {
+				float chromamax = *max_element(chroma.begin(), chroma.end());
+				for (int i = 0; i < chroma.size(); i++) {
+					chroma[i] /= chromamax;
+				}
+			}
+			f4.values = chroma; 
 	        f5.values = basschroma;
 	        chroma.insert(chroma.begin(), basschroma.begin(), basschroma.end()); // just stack the both chromas 
 	        f6.values = chroma; 
@@ -1324,7 +1351,7 @@ NNLSChroma::getRemainingFeatures()
 	
 	    // mode filter on chordSequence
 	    count = 0;
-	    int oldChordIndex = -1;
+	    string oldChord = "";
 	    for (FeatureList::iterator it = fsOut[6].begin(); it != fsOut[6].end(); ++it) {
 			Feature f6 = *it;
 			Feature f7; // chord estimate
@@ -1333,6 +1360,7 @@ NNLSChroma::getRemainingFeatures()
 			vector<int> chordCount = vector<int>(nChord,0);
 	        int maxChordCount = 0;
 	        int maxChordIndex = nChord-1;
+			string maxChord;
 	        int startIndex = max(count - halfwindowlength/2,0);
 	        int endIndex = min(int(chordogram.size()), count + halfwindowlength/2);
 	        for (int i = startIndex; i < endIndex; i++) {				
@@ -1341,12 +1369,13 @@ NNLSChroma::getRemainingFeatures()
 					// cerr << "start index " << startIndex << endl;
 	                maxChordCount++;
 	                maxChordIndex = chordSequence[i];
+					maxChord = m_chordnames[maxChordIndex];
 	            }
 	        }
 			// chordSequence[count] = maxChordIndex;
 			// cerr << maxChordIndex << endl;
-	        if (oldChordIndex != maxChordIndex) {
-	            oldChordIndex = maxChordIndex;
+	        if (oldChord != maxChord) {
+	            oldChord = maxChord;
 	
 	            // char buffer1 [50];
 	            // if (maxChordIndex < nChord - 1) {
