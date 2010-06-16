@@ -433,7 +433,7 @@ NNLSChroma::getDescription() const
 {
     // Return something helpful here!
 	if (debug_on) cerr << "--> getDescription" << endl;
-    return "This plugin provides a number of features derived from a log-frequency amplitude spectrum (LAS) of the DFT: the LAS itself, a standard-tuned version thereof (the local and global tuning estimates can are also be output), an approximate transcription to semitone activation using non-linear least squares (NNLS). Furthermore chroma features and a simple chord estimate derived from this NNLS semitone transcription.";
+    return "This plugin provides a number of features derived from a log-frequency amplitude spectrum of the DFT: some variants of the log-frequency spectrum, including a semitone spectrum derived from approximate transcription using the NNLS algorithm; based on this semitone spectrum, chroma features and a simple chord estimate.";
 }
 
 string
@@ -569,11 +569,13 @@ NNLSChroma::getParameterDescriptors() const
     d4.description = "How shall the chroma vector be normalized?";
     d4.unit = "";
     d4.minValue = 0;
-    d4.maxValue = 1;
+    d4.maxValue = 3;
     d4.defaultValue = 0;
     d4.isQuantized = true;
-    d4.valueNames.push_back("no normalization");
-    d4.valueNames.push_back("maximum normalization");
+    d4.valueNames.push_back("none");
+    d4.valueNames.push_back("maximum norm");
+	d4.valueNames.push_back("L1 norm");
+	d4.valueNames.push_back("L2 norm");
     d4.quantizeStep = 1.0;
     list.push_back(d4);
 
@@ -1045,8 +1047,9 @@ NNLSChroma::getRemainingFeatures()
 		    /** Tune Log-Frequency Spectrogram
 		    calculate a tuned log-frequency spectrogram (f2): use the tuning estimated above (kinda f0) to 
 		    perform linear interpolation on the existing log-frequency spectrogram (kinda f1).
-		    **/    
-		
+		    **/
+			cerr << "[NNLS Chroma Plugin] Tuning Log-Frequency Spectrogram ... ";
+					
 		    float tempValue = 0;
 		    float dbThreshold = 0; // relative to the background spectrum
 		    float thresh = pow(10,dbThreshold/20);
@@ -1094,6 +1097,7 @@ NNLSChroma::getRemainingFeatures()
 		        fsOut[2].push_back(f2);
 		        count++;
 		    }
+			cerr << "done." << endl;
 	    
 	    /** Semitone spectrum and chromagrams
 	    Semitone-spaced log-frequency spectrum derived from the tuned log-freq spectrum above. the spectrum
@@ -1101,7 +1105,12 @@ NNLSChroma::getRemainingFeatures()
 	    Three different kinds of chromagram are calculated, "treble", "bass", and "both" (which means 
 	    bass and treble stacked onto each other).
 	    **/
-	    // taucs_ccs_matrix* A_original_ordering = taucs_construct_sorted_ccs_matrix(nnlsdict06, nnls_m, nnls_n);
+		if (m_dictID == 1) {
+			cerr << "[NNLS Chroma Plugin] Mapping to semitone spectrum and chroma ... ";
+		} else {
+			cerr << "[NNLS Chroma Plugin] Performing NNLS and mapping to chroma ... ";
+		}
+
 	    
 	    vector<vector<float> > chordogram;
 		vector<vector<int> > scoreChordogram;
@@ -1199,19 +1208,69 @@ NNLSChroma::getRemainingFeatures()
 					}
 				}	
 			}
+			
             
 	        
-			if (m_doNormalizeChroma > 0) {
-				float chromamax = *max_element(chroma.begin(), chroma.end());
-				for (int i = 0; i < chroma.size(); i++) {
-					chroma[i] /= chromamax;
-				}
-			}
+			
 			f4.values = chroma; 
 	        f5.values = basschroma;
 	        chroma.insert(chroma.begin(), basschroma.begin(), basschroma.end()); // just stack the both chromas 
 	        f6.values = chroma; 
 	        
+			if (m_doNormalizeChroma > 0) {
+				vector<float> chromanorm = vector<float>(3,0);			
+				switch (int(m_doNormalizeChroma)) {
+					case 0: // should never end up here
+						break;
+					case 1:
+						chromanorm[0] = *max_element(f4.values.begin(), f4.values.end());
+						chromanorm[1] = *max_element(f5.values.begin(), f5.values.end());
+						chromanorm[2] = max(chromanorm[0], chromanorm[1]);
+						break;
+					case 2:
+						for (vector<float>::iterator it = f4.values.begin(); it != f4.values.end(); ++it) {
+							chromanorm[0] += *it; 						
+						}
+						for (vector<float>::iterator it = f5.values.begin(); it != f5.values.end(); ++it) {
+							chromanorm[1] += *it; 						
+						}
+						for (vector<float>::iterator it = f6.values.begin(); it != f6.values.end(); ++it) {
+							chromanorm[2] += *it; 						
+						}
+						break;
+					case 3:
+						for (vector<float>::iterator it = f4.values.begin(); it != f4.values.end(); ++it) {
+							chromanorm[0] += pow(*it,2); 						
+						}
+						chromanorm[0] = sqrt(chromanorm[0]);
+						for (vector<float>::iterator it = f5.values.begin(); it != f5.values.end(); ++it) {
+							chromanorm[1] += pow(*it,2); 						
+						}
+						chromanorm[1] = sqrt(chromanorm[1]);
+						for (vector<float>::iterator it = f6.values.begin(); it != f6.values.end(); ++it) {
+							chromanorm[2] += pow(*it,2); 						
+						}
+						chromanorm[2] = sqrt(chromanorm[2]);
+						break;
+				}
+				if (chromanorm[0] > 0) {
+					for (int i = 0; i < f4.values.size(); i++) {
+						f4.values[i] /= chromanorm[0];
+					}
+				}
+				if (chromanorm[1] > 0) {
+					for (int i = 0; i < f5.values.size(); i++) {
+						f5.values[i] /= chromanorm[1];
+					}
+				}
+				if (chromanorm[2] > 0) {
+					for (int i = 0; i < f6.values.size(); i++) {
+						f6.values[i] /= chromanorm[2];
+					}
+				}
+				
+			}
+	
 	        // local chord estimation
 	        vector<float> currentChordSalience;
 	        float tempchordvalue = 0;
@@ -1239,12 +1298,14 @@ NNLSChroma::getRemainingFeatures()
 	        fsOut[6].push_back(f6);
 	        count++;
 	    }
-	    cerr << "*******    NNLS done      *******" << endl;
+	    cerr << "done." << endl;
+		
 
 	    /* Simple chord estimation
 	    I just take the local chord estimates ("currentChordSalience") and average them over time, then
 	    take the maximum. Very simple, don't do this at home...
 	    */
+		cerr << "[NNLS Chroma Plugin] Chord Estimation ... ";
 	    count = 0; 
 	    int halfwindowlength = m_inputSampleRate / m_stepSize;
 	    vector<int> chordSequence;
@@ -1330,7 +1391,7 @@ NNLSChroma::getRemainingFeatures()
 			}
 			count++;	
 	    }
-        cerr << "*******  agent finished   *******" << endl;
+        // cerr << "*******  agent finished   *******" << endl;
 		count = 0;
 	 	for (FeatureList::iterator it = fsOut[6].begin(); it != fsOut[6].end(); ++it) { 
 			float maxval = 0; // will be the value of the most salient chord in this frame
@@ -1346,7 +1407,7 @@ NNLSChroma::getRemainingFeatures()
 			// cerr << "before modefilter, maxindex: " << maxindex << endl;
 			count++;
 		}
-		cerr << "*******  mode filter done *******" << endl;
+		// cerr << "*******  mode filter done *******" << endl;
 
 	
 	    // mode filter on chordSequence
@@ -1389,6 +1450,7 @@ NNLSChroma::getRemainingFeatures()
 	        }
 	        count++;
 	    }
+		cerr << "done." << endl;
 	//     // musicity
 	//     count = 0;
 	//     int oldlabeltype = 0; // start value is 0, music is 1, speech is 2

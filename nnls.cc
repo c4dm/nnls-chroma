@@ -1,27 +1,6 @@
-// 	$Id: nnls.cc,v 1.1.2.1 2003/03/06 16:28:07 suvrit Exp $	
+//      $Id: nnls.cc,v 1.1.1.1 2003/04/02 22:06:19 suvrit Exp $
 // File: nnls.cc
 // Implements the Lawson-Hanson NNLS algorithm
-// Copied over from nnls.c so i don't ahve copyright on this
-//...somebody else has.....don't know if this should be under GPL or LGPL or
-// whatever, but i'll put a lil note here anyways:
-
-// Copyright (C) 2004 Lawson-Hanson
-// Modifications to adapt to c++ by Suvrit Sra.
-
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
-// of the License, or (at your option) any later version.
-
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-
 
 #include "nnls.h"
 
@@ -31,23 +10,23 @@ float d_sign(float& a, float& b)
   x = (a >= 0 ? a : - a);
   return (b >= 0 ? x : -x);
 }
- 
+
 /* Table of constant values */
- 
+
 int c__1 = 1;
 int c__0 = 0;
 int c__2 = 2;
 
 
-int nnls(float* a,  int mda,  int m,  int n, float* b, 
-	 float* x, float* rnorm, float* w, float* zz, int* index, 
-	 int* mode)
+int nnls(float* a,  int mda,  int m,  int n, float* b,
+         float* x, float* rnorm, float* w, float* zz, int* index,
+         int* mode)
 {
   /* System generated locals */
   int a_dim1, a_offset, idx1, idx2;
   float d1, d2;
- 
- 
+
+
   /* Local variables */
   static int iter;
   static float temp, wmax;
@@ -61,12 +40,12 @@ int nnls(float* a,  int mda,  int m,  int n, float* b,
   static int iz, jz;
   static float up, ss;
   static int rtnkey, iz1, iz2, npp1;
- 
-  /*     ------------------------------------------------------------------ 
+
+  /*     ------------------------------------------------------------------
    */
   /*     int INDEX(N) */
   /*     float precision A(MDA,N), B(M), W(N), X(N), ZZ(M) */
-  /*     ------------------------------------------------------------------ 
+  /*     ------------------------------------------------------------------
    */
   /* Parameter adjustments */
   a_dim1 = mda;
@@ -77,7 +56,7 @@ int nnls(float* a,  int mda,  int m,  int n, float* b,
   --w;
   --zz;
   --index;
- 
+
   /* Function Body */
   *mode = 1;
   if (m <= 0 || n <= 0) {
@@ -86,33 +65,33 @@ int nnls(float* a,  int mda,  int m,  int n, float* b,
   }
   iter = 0;
   itmax = n * 3;
- 
+
   /*                    INITIALIZE THE ARRAYS INDEX() AND X(). */
- 
+
   idx1 = n;
   for (i__ = 1; i__ <= idx1; ++i__) {
     x[i__] = 0.;
     /* L20: */
     index[i__] = i__;
   }
- 
+
   iz2 = n;
   iz1 = 1;
   nsetp = 0;
   npp1 = 1;
   /*                             ******  MAIN LOOP BEGINS HERE  ****** */
  L30:
-  /*                  QUIT IF ALL COEFFICIENTS ARE ALREADY IN THE SOLUTION. 
+  /*                  QUIT IF ALL COEFFICIENTS ARE ALREADY IN THE SOLUTION.
    */
   /*                        OR IF M COLS OF A HAVE BEEN TRIANGULARIZED. */
- 
+
   if (iz1 > iz2 || nsetp >= m) {
     goto L350;
   }
- 
-  /*         COMPUTE COMPONENTS OF THE DUAL (NEGATIVE GRADIENT) VECTOR W(). 
+
+  /*         COMPUTE COMPONENTS OF THE DUAL (NEGATIVE GRADIENT) VECTOR W().
    */
- 
+
   idx1 = iz2;
   for (iz = iz1; iz <= idx1; ++iz) {
     j = index[iz];
@@ -137,21 +116,21 @@ int nnls(float* a,  int mda,  int m,  int n, float* b,
     }
     /* L70: */
   }
- 
+
   /*             IF WMAX .LE. 0. GO TO TERMINATION. */
-  /*             THIS INDICATES SATISFACTION OF THE KUHN-TUCKER CONDITIONS. 
+  /*             THIS INDICATES SATISFACTION OF THE KUHN-TUCKER CONDITIONS.
    */
- 
+
   if (wmax <= 0.) {
     goto L350;
   }
   iz = izmax;
   j = index[iz];
- 
+
   /*     THE SIGN OF W(J) IS OK FOR J TO BE MOVED TO SET P. */
   /*     BEGIN THE TRANSFORMATION AND CHECK NEW DIAGONAL ELEMENT TO AVOID */
   /*     NEAR LINEAR DEPENDENCE. */
- 
+
   asave = a[npp1 + j * a_dim1];
   idx1 = npp1 + 1;
   h12(c__1, &npp1, &idx1, m, &a[j * a_dim1 + 1], &c__1, &up, dummy, &
@@ -169,11 +148,11 @@ int nnls(float* a,  int mda,  int m,  int n, float* b,
   unorm = sqrt(unorm);
   d2 = unorm + (d1 = a[npp1 + j * a_dim1], nnls_abs(d1)) * .01;
   if ((d2- unorm) > 0.) {
- 
+
     /*        COL J IS SUFFICIENTLY INDEPENDENT.  COPY B INTO ZZ, UPDATE Z
-	      Z */
+              Z */
     /*        AND SOLVE FOR ZTEST ( = PROPOSED NEW VALUE FOR X(J) ). */
- 
+
     idx1 = m;
     for (l = 1; l <= idx1; ++l) {
       /* L120: */
@@ -181,53 +160,53 @@ int nnls(float* a,  int mda,  int m,  int n, float* b,
     }
     idx1 = npp1 + 1;
     h12(c__2, &npp1, &idx1, m, &a[j * a_dim1 + 1], &c__1, &up, (zz+1), &
-	c__1, &c__1, &c__1);
+        c__1, &c__1, &c__1);
     ztest = zz[npp1] / a[npp1 + j * a_dim1];
- 
+
     /*                                     SEE IF ZTEST IS POSITIVE */
- 
+
     if (ztest > 0.) {
       goto L140;
     }
   }
- 
+
   /*     REJECT J AS A CANDIDATE TO BE MOVED FROM SET Z TO SET P. */
   /*     RESTORE A(NPP1,J), SET W(J)=0., AND LOOP BACK TO TEST DUAL */
   /*     COEFFS AGAIN. */
- 
+
   a[npp1 + j * a_dim1] = asave;
   w[j] = 0.;
   goto L60;
- 
+
   /*     THE INDEX  J=INDEX(IZ)  HAS BEEN SELECTED TO BE MOVED FROM */
   /*     SET Z TO SET P.    UPDATE B,  UPDATE INDICES,  APPLY HOUSEHOLDER */
   /*     TRANSFORMATIONS TO COLS IN NEW SET Z,  ZERO SUBDIAGONAL ELTS IN */
   /*     COL J,  SET W(J)=0. */
- 
+
  L140:
   idx1 = m;
   for (l = 1; l <= idx1; ++l) {
     /* L150: */
     b[l] = zz[l];
   }
- 
+
   index[iz] = index[iz1];
   index[iz1] = j;
   ++iz1;
   nsetp = npp1;
   ++npp1;
- 
+
   if (iz1 <= iz2) {
     idx1 = iz2;
     for (jz = iz1; jz <= idx1; ++jz) {
       jj = index[jz];
-      h12(c__2, &nsetp, &npp1, m, 
-	  &a[j * a_dim1 + 1], &c__1, &up, 
-	  &a[jj * a_dim1 + 1], &c__1, &mda, &c__1);
+      h12(c__2, &nsetp, &npp1, m,
+          &a[j * a_dim1 + 1], &c__1, &up,
+          &a[jj * a_dim1 + 1], &c__1, &mda, &c__1);
       /* L160: */
     }
   }
- 
+
   if (nsetp != m) {
     idx1 = m;
     for (l = npp1; l <= idx1; ++l) {
@@ -236,19 +215,19 @@ int nnls(float* a,  int mda,  int m,  int n, float* b,
       a[l + j * a_dim1] = 0.;
     }
   }
- 
+
   w[j] = 0.;
   /*                                SOLVE THE TRIANGULAR SYSTEM. */
-  /*                                STORE THE SOLUTION TEMPORARILY IN ZZ(). 
+  /*                                STORE THE SOLUTION TEMPORARILY IN ZZ().
    */
   rtnkey = 1;
   goto L400;
  L200:
- 
+
   /*                       ******  SECONDARY LOOP BEGINS HERE ****** */
- 
+
   /*                          ITERATION COUNTER. */
- 
+
  L210:
   ++iter;
   if (iter > itmax) {
@@ -261,10 +240,10 @@ int nnls(float* a,  int mda,  int m,  int n, float* b,
     fflush(stdout);
     goto L350;
   }
- 
+
   /*                    SEE IF ALL NEW CONSTRAINED COEFFS ARE FEASIBLE. */
   /*                                  IF NOT COMPUTE ALPHA. */
- 
+
   alpha = 2.;
   idx1 = nsetp;
   for (ip = 1; ip <= idx1; ++ip) {
@@ -272,83 +251,83 @@ int nnls(float* a,  int mda,  int m,  int n, float* b,
     if (zz[ip] <= 0.) {
       t = -x[l] / (zz[ip] - x[l]);
       if (alpha > t) {
-	alpha = t;
-	jj = ip;
+        alpha = t;
+        jj = ip;
       }
     }
     /* L240: */
   }
- 
+
   /*          IF ALL NEW CONSTRAINED COEFFS ARE FEASIBLE THEN ALPHA WILL */
   /*          STILL = 2.    IF SO EXIT FROM SECONDARY LOOP TO MAIN LOOP. */
- 
+
   if (alpha == 2.) {
     goto L330;
   }
- 
+
   /*          OTHERWISE USE ALPHA WHICH WILL BE BETWEEN 0. AND 1. TO */
   /*          INTERPOLATE BETWEEN THE OLD X AND THE NEW ZZ. */
- 
+
   idx1 = nsetp;
   for (ip = 1; ip <= idx1; ++ip) {
     l = index[ip];
     x[l] += alpha * (zz[ip] - x[l]);
     /* L250: */
   }
- 
+
   /*        MODIFY A AND B AND THE INDEX ARRAYS TO MOVE COEFFICIENT I */
   /*        FROM SET P TO SET Z. */
- 
+
   i__ = index[jj];
  L260:
   x[i__] = 0.;
- 
+
   if (jj != nsetp) {
     ++jj;
     idx1 = nsetp;
     for (j = jj; j <= idx1; ++j) {
       ii = index[j];
       index[j - 1] = ii;
-      g1(&a[j - 1 + ii * a_dim1], &a[j + ii * a_dim1], 
-	 &cc, &ss, &a[j - 1 + ii * a_dim1]);
+      g1(&a[j - 1 + ii * a_dim1], &a[j + ii * a_dim1],
+         &cc, &ss, &a[j - 1 + ii * a_dim1]);
       // SS: CHECK THIS DAMAGE...
       a[j + ii * a_dim1] = 0.;
       idx2 = n;
       for (l = 1; l <= idx2; ++l) {
-	if (l != ii) {
- 
-	  /*                 Apply procedure G2 (CC,SS,A(J-1,L),A(J,
-			     L)) */
- 
-	  temp = a[j - 1 + l * a_dim1];
-	  // SS: CHECK THIS DAMAGE
-	  a[j - 1 + l * a_dim1] = cc * temp + ss * a[j + l * a_dim1];
-	  a[j + l * a_dim1] = -ss * temp + cc * a[j + l * a_dim1];
-	}
-	/* L270: */
+        if (l != ii) {
+
+          /*                 Apply procedure G2 (CC,SS,A(J-1,L),A(J,
+                             L)) */
+
+          temp = a[j - 1 + l * a_dim1];
+          // SS: CHECK THIS DAMAGE
+          a[j - 1 + l * a_dim1] = cc * temp + ss * a[j + l * a_dim1];
+          a[j + l * a_dim1] = -ss * temp + cc * a[j + l * a_dim1];
+        }
+        /* L270: */
       }
- 
+
       /*                 Apply procedure G2 (CC,SS,B(J-1),B(J)) */
- 
+
       temp = b[j - 1];
       b[j - 1] = cc * temp + ss * b[j];
       b[j] = -ss * temp + cc * b[j];
       /* L280: */
     }
   }
- 
+
   npp1 = nsetp;
   --nsetp;
   --iz1;
   index[iz1] = i__;
- 
-  /*        SEE IF THE REMAINING COEFFS IN SET P ARE FEASIBLE.  THEY SHOULD 
+
+  /*        SEE IF THE REMAINING COEFFS IN SET P ARE FEASIBLE.  THEY SHOULD
    */
   /*        BE BECAUSE OF THE WAY ALPHA WAS DETERMINED. */
   /*        IF ANY ARE INFEASIBLE IT IS DUE TO ROUND-OFF ERROR.  ANY */
   /*        THAT ARE NONPOSITIVE WILL BE SET TO ZERO */
   /*        AND MOVED FROM SET P TO SET Z. */
- 
+
   idx1 = nsetp;
   for (jj = 1; jj <= idx1; ++jj) {
     i__ = index[jj];
@@ -357,9 +336,9 @@ int nnls(float* a,  int mda,  int m,  int n, float* b,
     }
     /* L300: */
   }
- 
+
   /*         COPY B( ) INTO ZZ( ).  THEN SOLVE AGAIN AND LOOP BACK. */
- 
+
   idx1 = m;
   for (i__ = 1; i__ <= idx1; ++i__) {
     /* L310: */
@@ -370,7 +349,7 @@ int nnls(float* a,  int mda,  int m,  int n, float* b,
  L320:
   goto L210;
   /*                      ******  END OF SECONDARY LOOP  ****** */
- 
+
  L330:
   idx1 = nsetp;
   for (ip = 1; ip <= idx1; ++ip) {
@@ -380,12 +359,12 @@ int nnls(float* a,  int mda,  int m,  int n, float* b,
   }
   /*        ALL NEW COEFFS ARE POSITIVE.  LOOP BACK TO BEGINNING. */
   goto L30;
- 
+
   /*                        ******  END OF MAIN LOOP  ****** */
- 
+
   /*                        COME TO HERE FOR TERMINATION. */
   /*                     COMPUTE THE NORM OF THE FINAL RESIDUAL VECTOR. */
- 
+
  L350:
   sm = 0.;
   if (npp1 <= m) {
@@ -405,10 +384,10 @@ int nnls(float* a,  int mda,  int m,  int n, float* b,
   }
   *rnorm = sqrt(sm);
   return 0;
- 
+
   /*     THE FOLLOWING BLOCK OF CODE IS USED AS AN INTERNAL SUBROUTINE */
   /*     TO SOLVE THE TRIANGULAR SYSTEM, PUTTING THE SOLUTION IN ZZ(). */
- 
+
  L400:
   idx1 = nsetp;
   for (l = 1; l <= idx1; ++l) {
@@ -416,8 +395,8 @@ int nnls(float* a,  int mda,  int m,  int n, float* b,
     if (l != 1) {
       idx2 = ip;
       for (ii = 1; ii <= idx2; ++ii) {
-	zz[ii] -= a[ii + jj * a_dim1] * zz[ip + 1];
-	/* L410: */
+        zz[ii] -= a[ii + jj * a_dim1] * zz[ip + 1];
+        /* L410: */
       }
     }
     jj = index[ip];
@@ -428,12 +407,12 @@ int nnls(float* a,  int mda,  int m,  int n, float* b,
   case 1:  goto L200;
   case 2:  goto L320;
   }
- 
+
   /* The next line was added after the f2c translation to keep
      compilers from complaining about a void return from a non-void
      function. */
   return 0;
- 
+
 } /* nnls_ */
 
 
@@ -441,10 +420,10 @@ int g1(float* a, float* b, float* cterm, float* sterm, float* sig)
 {
   /* System generated locals */
   float d;
- 
+
   static float xr, yr;
- 
- 
+
+
   if (nnls_abs(*a) > nnls_abs(*b)) {
     xr = *b / *a;
     /* Computing 2nd power */
@@ -472,21 +451,21 @@ int g1(float* a, float* b, float* cterm, float* sterm, float* sig)
   *sterm = 1.;
   return 0;
 } /* g1_ */
- 
+
 
 /* See nnls.h for explanation */
-int h12(int mode, int* lpivot, int* l1, 
-	int m, float* u, int* iue, float* up, float* c__, 
-	int* ice, int* icv, int* ncv)
+int h12(int mode, int* lpivot, int* l1,
+        int m, float* u, int* iue, float* up, float* c__,
+        int* ice, int* icv, int* ncv)
 {
   /* System generated locals */
   int u_dim1, u_offset, idx1, idx2;
   float d, d2;
- 
+
   /* Builtin functions */
   /* The following line was commented out after the f2c translation */
   /* float sqrt(); */
- 
+
   /* Local variables */
   static int incr;
   static float b;
@@ -494,18 +473,18 @@ int h12(int mode, int* lpivot, int* l1,
   static float clinv;
   static int i2, i3, i4;
   static float cl, sm;
- 
-  /*     ------------------------------------------------------------------ 
+
+  /*     ------------------------------------------------------------------
    */
   /*     float precision U(IUE,M) */
-  /*     ------------------------------------------------------------------ 
+  /*     ------------------------------------------------------------------
    */
   /* Parameter adjustments */
   u_dim1 = *iue;
   u_offset = u_dim1 + 1;
   u -= u_offset;
   --c__;
- 
+
   /* Function Body */
   if (0 >= *lpivot || *lpivot >= *l1 || *l1 > m) {
     return 0;
@@ -514,7 +493,7 @@ int h12(int mode, int* lpivot, int* l1,
   if (mode == 2) {
     goto L60;
   }
-  /*                            ****** CONSTRUCT THE TRANSFORMATION. ****** 
+  /*                            ****** CONSTRUCT THE TRANSFORMATION. ******
    */
   idx1 = m;
   for (j = *l1; j <= idx1; ++j) {
@@ -552,9 +531,9 @@ int h12(int mode, int* lpivot, int* l1,
   *up = u[*lpivot * u_dim1 + 1] - cl;
   u[*lpivot * u_dim1 + 1] = cl;
   goto L70;
-  /*            ****** APPLY THE TRANSFORMATION  I+U*(U**T)/B  TO C. ****** 
+  /*            ****** APPLY THE TRANSFORMATION  I+U*(U**T)/B  TO C. ******
    */
- 
+
  L60:
   if (cl <= 0.) {
     goto L130;
@@ -566,9 +545,9 @@ int h12(int mode, int* lpivot, int* l1,
     return 0;
   }
   b = *up * u[*lpivot * u_dim1 + 1];
-  /*                       B  MUST BE NONPOSITIVE HERE.  IF B = 0., RETURN. 
+  /*                       B  MUST BE NONPOSITIVE HERE.  IF B = 0., RETURN.
    */
- 
+
   if (b >= 0.) {
     goto L130;
   } else {
@@ -610,5 +589,3 @@ int h12(int mode, int* lpivot, int* l1,
  L130:
   return 0;
 } /* h12 */
- 
-
