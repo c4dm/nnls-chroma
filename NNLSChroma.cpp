@@ -948,7 +948,7 @@ NNLSChroma::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
 		if (maxmag < magnitude[iBin]) maxmag = magnitude[iBin];
 	}
 	
-	if (maxmag < 12) {
+	if (maxmag < 10) {
 		// cerr << "timestamp " << timestamp << ": very low magnitude, setting magnitude to all zeros" << endl;
 		for (size_t iBin = 0; iBin < m_blockSize/2; iBin++) {
 			magnitude[iBin] = 0;
