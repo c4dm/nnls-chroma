@@ -941,9 +941,18 @@ NNLSChroma::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
 	const float *fbuf = inputBuffers[0];	
 	
 	// make magnitude
+	float maxmag = -10000;
 	for (size_t iBin = 0; iBin < m_blockSize/2; iBin++) {
 		magnitude[iBin] = sqrt(fbuf[2 * iBin] * fbuf[2 * iBin] + 
-			fbuf[2 * iBin + 1] * fbuf[2 * iBin + 1]);
+			fbuf[2 * iBin + 1] * fbuf[2 * iBin + 1]);		
+		if (maxmag < magnitude[iBin]) maxmag = magnitude[iBin];
+	}
+	
+	if (maxmag < 12) {
+		// cerr << "timestamp " << timestamp << ": very low magnitude, setting magnitude to all zeros" << endl;
+		for (size_t iBin = 0; iBin < m_blockSize/2; iBin++) {
+			magnitude[iBin] = 0;
+		}
 	}
 		
 	// note magnitude mapping using pre-calculated matrix
