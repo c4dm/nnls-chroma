@@ -46,6 +46,23 @@ const char* bassnames[12][12] ={
 {"G","","A","Bb","B","C","","D","","E","F","F#"},
 {"Ab","","Bb","Cb","C","Db","","Eb","","F","Gb","G"}
 };
+
+
+// const char* bassnames[12][12] ={
+// {"1","","2","b3","3","4","","5","","6","b7","7"},
+// {"1","","2","b3","3","4","","5","","6","b7","7"},
+// {"1","","2","b3","3","4","","5","","6","b7","7"},
+// {"1","","2","b3","3","4","","5","","6","b7","7"},
+// {"1","","2","b3","3","4","","5","","6","b7","7"},
+// {"1","","2","b3","3","4","","5","","6","b7","7"},
+// {"1","","2","b3","3","4","","5","","6","b7","7"},
+// {"1","","2","b3","3","4","","5","","6","b7","7"},
+// {"1","","2","b3","3","4","","5","","6","b7","7"},
+// {"1","","2","b3","3","4","","5","","6","b7","7"},
+// {"1","","2","b3","3","4","","5","","6","b7","7"},
+// {"1","","2","b3","3","4","","5","","6","b7","7"},
+// };
+
 const vector<float> hw(hammingwind, hammingwind+19);
 const int nNote = 256;
 
@@ -184,7 +201,7 @@ bool logFreqMatrix(int fs, int blocksize, float *outmatrix) {
 	return true;	
 }
 
-bool dictionaryMatrix(float* dm) {
+void dictionaryMatrix(float* dm) {
 	int binspersemitone = 3; // this must be 3
 	int minoctave = 0; // this must be 0
 	int maxoctave = 7; // this must be 7
@@ -247,7 +264,7 @@ vector<string> chordDictionary(vector<float> *mchorddict) {
 	// string instring[] = ",1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,0\nm,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,1,0,0,0,0\n6,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,1,0,0\n7,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,1,0\nmaj7,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,1\nmin7,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,1,0,0,1,0\n,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,0\n,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,0\ndim,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,1,0,0,0,0,0\naug,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0\n";
 	typedef tokenizer<char_separator<char> > Tok;
 	// char_separator<char> sep; // default constructed
-	char_separator<char> sep(",; ",":");
+	char_separator<char> sep(",; ","=");
     iostreams::stream<iostreams::file_source> chordDictFile(chordDictFilename.c_str());
     string line;
 	int iElement = 0;
@@ -267,7 +284,7 @@ vector<string> chordDictionary(vector<float> *mchorddict) {
 					string tempString = *tok_iter;
 					// cerr << tempString << endl;
 					if (tok_iter == tok.begin()) { // either the chord name or a colon
-						if (tempString == ":") {
+						if (tempString == "=") {
 							chordType = "";
 						} else {
 							chordType = tempString;
@@ -306,7 +323,7 @@ vector<string> chordDictionary(vector<float> *mchorddict) {
 					} else {
 						os << notenames[12+iSemitone] << chordType << "/" << slashNotation;
 					}
-				
+					// cerr << os.str() << endl;
 					loadedChordNames.push_back(os.str());
 				}
 			}
@@ -392,7 +409,8 @@ NNLSChroma::NNLSChroma(float inputSampleRate) :
   m_dictID(0),
   m_chorddict(0),
   m_chordnames(0),
-  m_doNormalizeChroma(0)
+  m_doNormalizeChroma(0),
+  m_rollon(0.01)
 {
 	if (debug_on) cerr << "--> NNLSChroma" << endl;
 
@@ -523,6 +541,17 @@ NNLSChroma::getParameterDescriptors() const
 	d3.valueNames.push_back("manual");
     list.push_back(d3);
 
+    ParameterDescriptor d5;
+     d5.identifier = "rollon";
+     d5.name = "spectral roll-on";
+     d5.description = "The bins below the spectral roll-on quantile will be set to 0.";
+     d5.unit = "";
+     d5.minValue = 0;
+     d5.maxValue = 1;
+     d5.defaultValue = 0;
+     d5.isQuantized = false;
+     list.push_back(d5);
+
     // ParameterDescriptor d0;
     //  d0.identifier = "notedict";
     //  d0.name = "note dictionary";
@@ -593,6 +622,10 @@ NNLSChroma::getParameter(string identifier) const
     if (identifier == "paling") {
         return m_paling; 
     }
+
+	if (identifier == "rollon") {
+        return m_rollon; 
+    }
     
     if (identifier == "tuningmode") {
         if (m_tuneLocal) {
@@ -647,6 +680,10 @@ NNLSChroma::setParameter(string identifier, float value)
     }
 	if (identifier == "chromanormalize") {
 		m_doNormalizeChroma = value;
+	}
+	 
+	if (identifier == "rollon") {
+		m_rollon = value;
 	}
 }
 
@@ -813,19 +850,6 @@ NNLSChroma::getOutputDescriptors() const
     d7.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
     list.push_back(d7);
     
-  	//   OutputDescriptor d8;
-  	//     d8.identifier = "inconsistency";
-  	//     d8.name = "Harmonic inconsistency value";
-  	//     d8.description = "Harmonic inconsistency. Indicates music if low, non-music or speech when high.";
-  	//     d8.unit = "";
-  	//     d8.hasFixedBinCount = true;
-  	//     d8.binCount = 1;
-  	//     d8.hasKnownExtents = false;
-  	//     d8.isQuantized = false;
-  	//     d8.sampleType = OutputDescriptor::FixedSampleRate;
-  	//     d8.hasDuration = false;
-  	//     d8.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
-  	//     list.push_back(d8);
   	//     
   	//     OutputDescriptor d9;
   	//     d9.identifier = "inconsistencysegment";
@@ -844,20 +868,36 @@ NNLSChroma::getOutputDescriptors() const
   	//     list.push_back(d9);
   	// 
   	OutputDescriptor d10;
-  	    d10.identifier = "localtuning";
-  	    d10.name = "Local tuning";
-  	    d10.description = "Tuning based on the history up to this timestamp.";
-  	    d10.unit = "Hz";
-  	    d10.hasFixedBinCount = true;
-  	    d10.binCount = 1;
-  	    d10.hasKnownExtents = true;
-		d10.minValue = 427.47;
-  		d10.maxValue = 452.89;
-  	    d10.isQuantized = false;
-  	    d10.sampleType = OutputDescriptor::FixedSampleRate;
-  	    d10.hasDuration = false;
-  	    // d10.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
-  	    list.push_back(d10);
+	d10.identifier = "localtuning";
+	d10.name = "Local tuning";
+	d10.description = "Tuning based on the history up to this timestamp.";
+	d10.unit = "Hz";
+	d10.hasFixedBinCount = true;
+	d10.binCount = 1;
+	d10.hasKnownExtents = true;
+	d10.minValue = 427.47;
+	d10.maxValue = 452.89;
+	d10.isQuantized = false;
+	d10.sampleType = OutputDescriptor::FixedSampleRate;
+	d10.hasDuration = false;
+	// d10.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
+	list.push_back(d10);
+
+  	OutputDescriptor d8;
+    d8.identifier = "harmonicchange";
+    d8.name = "Harmonic change value";
+    d8.description = "Harmonic change.";
+    d8.unit = "";
+    d8.hasFixedBinCount = true;
+    d8.binCount = 1;
+    d8.hasKnownExtents = true;
+	d8.minValue = 0.0;
+	d8.maxValue = 0.999;
+    d8.isQuantized = false;
+    d8.sampleType = OutputDescriptor::FixedSampleRate;
+    d8.hasDuration = false;
+    // d8.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
+    list.push_back(d8);
   
     return list;
 }
@@ -939,16 +979,28 @@ NNLSChroma::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
 	f10.hasTimestamp = true;
 	f10.timestamp = timestamp;
 	const float *fbuf = inputBuffers[0];	
-	
+	float energysum = 0;
 	// make magnitude
 	float maxmag = -10000;
 	for (size_t iBin = 0; iBin < m_blockSize/2; iBin++) {
 		magnitude[iBin] = sqrt(fbuf[2 * iBin] * fbuf[2 * iBin] + 
 			fbuf[2 * iBin + 1] * fbuf[2 * iBin + 1]);		
 		if (maxmag < magnitude[iBin]) maxmag = magnitude[iBin];
+		if (m_rollon > 0) {
+			energysum += pow(magnitude[iBin],2);
+		}
 	}
 	
-	if (maxmag < 10) {
+	float cumenergy = 0;
+	if (m_rollon > 0) {
+		for (size_t iBin = 2; iBin < m_blockSize/2; iBin++) {
+			cumenergy +=  pow(magnitude[iBin],2);
+			if (cumenergy < energysum * m_rollon) magnitude[iBin-2] = 0;
+			else break;
+		}
+	}
+	
+	if (maxmag < 2) {
 		// cerr << "timestamp " << timestamp << ": very low magnitude, setting magnitude to all zeros" << endl;
 		for (size_t iBin = 0; iBin < m_blockSize/2; iBin++) {
 			magnitude[iBin] = 0;
@@ -1057,7 +1109,7 @@ NNLSChroma::getRemainingFeatures()
 		    calculate a tuned log-frequency spectrogram (f2): use the tuning estimated above (kinda f0) to 
 		    perform linear interpolation on the existing log-frequency spectrogram (kinda f1).
 		    **/
-			cerr << "[NNLS Chroma Plugin] Tuning Log-Frequency Spectrogram ... ";
+			cerr << endl << "[NNLS Chroma Plugin] Tuning Log-Frequency Spectrogram ... ";
 					
 		    float tempValue = 0;
 		    float dbThreshold = 0; // relative to the background spectrum
@@ -1123,6 +1175,7 @@ NNLSChroma::getRemainingFeatures()
 	    
 	    vector<vector<float> > chordogram;
 		vector<vector<int> > scoreChordogram;
+		vector<float> chordchange = vector<float>(fsOut[2].size(),0);
 	    vector<float> oldchroma = vector<float>(12,0);
 	    vector<float> oldbasschroma = vector<float>(12,0);
 	    count = 0;
@@ -1296,9 +1349,13 @@ NNLSChroma::getRemainingFeatures()
 	            sumchordvalue+=tempchordvalue;
 	            currentChordSalience.push_back(tempchordvalue);
 	        }
-	        for (int iChord = 0; iChord < nChord; iChord++) {
-	            currentChordSalience[iChord] /= sumchordvalue;
-	        }
+			if (sumchordvalue > 0) {
+		        for (int iChord = 0; iChord < nChord; iChord++) {
+		            currentChordSalience[iChord] /= sumchordvalue;
+		        }
+			} else {
+				currentChordSalience[nChord-1] = 1.0;
+			}
 	        chordogram.push_back(currentChordSalience);
 	        
 	        fsOut[3].push_back(f3);
@@ -1398,6 +1455,7 @@ NNLSChroma::getRemainingFeatures()
 			for (unsigned iFrame = maxindex-1; iFrame < 2*halfwindowlength; ++iFrame) {
 				scoreChordogram[iFrame+count][bestchordR]++;
 			}
+			if (bestchordL != bestchordR) chordchange[maxindex+count] += (halfwindowlength - abs(maxindex-halfwindowlength)) * 2.0 / halfwindowlength;
 			count++;	
 	    }
         // cerr << "*******  agent finished   *******" << endl;
@@ -1427,6 +1485,10 @@ NNLSChroma::getRemainingFeatures()
 			Feature f7; // chord estimate
 			f7.hasTimestamp = true;
 			f7.timestamp = f6.timestamp;
+			Feature f8; // chord estimate
+			f8.hasTimestamp = true;
+			f8.timestamp = f6.timestamp;
+			
 			vector<int> chordCount = vector<int>(nChord,0);
 	        int maxChordCount = 0;
 	        int maxChordIndex = nChord-1;
@@ -1444,6 +1506,9 @@ NNLSChroma::getRemainingFeatures()
 	        }
 			// chordSequence[count] = maxChordIndex;
 			// cerr << maxChordIndex << endl;
+			f8.values.push_back(chordchange[count]/(halfwindowlength*2));
+			// cerr << chordchange[count] << endl;
+			fsOut[9].push_back(f8);
 	        if (oldChord != maxChord) {
 	            oldChord = maxChord;
 	
@@ -1459,6 +1524,11 @@ NNLSChroma::getRemainingFeatures()
 	        }
 	        count++;
 	    }
+		Feature f7; // last chord estimate
+		f7.hasTimestamp = true;
+		f7.timestamp = fsOut[6][fsOut[6].size()-1].timestamp;
+		f7.label = "N";
+		fsOut[7].push_back(f7);
 		cerr << "done." << endl;
 	//     // musicity
 	//     count = 0;
