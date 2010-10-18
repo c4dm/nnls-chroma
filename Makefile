@@ -32,10 +32,10 @@ BOOST_ROOT = /usr/local/boost_1_43_0
 
 
 ##  Uncomment these for an OS/X native build using command-line tools:
-CXXFLAGS = -arch i386 -I$(VAMP_SDK_DIR) -I$(FFT_DIR) -I$(NNLS_DIR) -I$(BOOST_ROOT) -Wall -fPIC -g
+CXXFLAGS = -mmacosx-version-min=10.5 -arch i386 -I$(VAMP_SDK_DIR) -I$(FFT_DIR) -I$(NNLS_DIR) -I$(BOOST_ROOT) -Wall -fPIC -g
 PLUGIN_EXT = .dylib
 PLUGIN = $(PLUGIN_LIBRARY_NAME)$(PLUGIN_EXT)
-LDFLAGS = -fopenmp -g -m32 -dynamiclib -install_name $(PLUGIN) $(VAMP_SDK_DIR)/libvamp-sdk.a  -exported_symbols_list vamp-plugin.list -framework Accelerate
+LDFLAGS = -mmacosx-version-min=10.5 -g -m32 -dynamiclib -install_name $(PLUGIN) $(VAMP_SDK_DIR)/libvamp-sdk.a  -exported_symbols_list vamp-plugin.list -framework Accelerate
 
 
 ##  Uncomment these for an OS/X universal binary using command-line tools:
