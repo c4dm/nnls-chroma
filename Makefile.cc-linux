@@ -15,7 +15,7 @@
 
 # Edit this to the base name of your plugin library
 #
-PLUGIN_LIBRARY_NAME = matthiasm
+PLUGIN_LIBRARY_NAME = nnls-chroma
 
 # Edit this to list one .o file for each .cpp file in your plugin project
 #
@@ -24,17 +24,16 @@ PLUGIN_CODE_OBJECTS = chromamethods.o NNLSChroma.o plugins.o nnls.o
 # Edit this to the location of the Vamp plugin SDK, relative to your
 # project directory
 #
-VAMP_SDK_DIR = /work/vamp-plugin-sdk
-QMDSP_DIR = /work/qm-dsp
-NNLS_DIR = ../tsnnls/tsnnls
+VAMP_SDK_DIR = ../vamp-plugin-sdk
 
 
-CFLAGS = -I$(VAMP_SDK_DIR) -I$(LAPACK_DIR) -I$(NNLS_DIR) -Wall -fPIC
-CXXFLAGS = -I$(VAMP_SDK_DIR) -I$(LAPACK_DIR) -I$(NNLS_DIR) -Wall -fPIC
+ARCHFLAGS = -g
+
+CFLAGS = $(ARCHFLAGS) -I$(VAMP_SDK_DIR) -Wall -fPIC
+CXXFLAGS = $(ARCHFLAGS) -I$(VAMP_SDK_DIR) -Wall -fPIC
 PLUGIN_EXT = .so
 PLUGIN = $(PLUGIN_LIBRARY_NAME)$(PLUGIN_EXT)
-#LDFLAGS = -shared -Wl,-soname=$(PLUGIN) $(VAMP_SDK_DIR)/libvamp-sdk.a -Wl,--version-script=vamp-plugin.map $(QMDSP_DIR)/libqm-dsp.a ../tsnnls/tsnnls/.libs/libtsnnls.a -llapack-3
-LDFLAGS = -shared -Wl,-soname=$(PLUGIN) $(VAMP_SDK_DIR)/libvamp-sdk.a -Wl,--version-script=vamp-plugin.map $(QMDSP_DIR)/libqm-dsp.a
+LDFLAGS = -shared -Wl,-soname=$(PLUGIN) $(VAMP_SDK_DIR)/libvamp-sdk.a -Wl,--version-script=vamp-plugin.map 
 
 
 
