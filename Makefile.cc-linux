@@ -27,7 +27,7 @@ PLUGIN_CODE_OBJECTS = chromamethods.o NNLSChroma.o plugins.o nnls.o
 VAMP_SDK_DIR = ../vamp-plugin-sdk
 
 
-ARCHFLAGS = -g
+ARCHFLAGS = -O3 -ftree-vectorize -ffast-math
 
 CFLAGS = $(ARCHFLAGS) -I$(VAMP_SDK_DIR) -Wall -fPIC
 CXXFLAGS = $(ARCHFLAGS) -I$(VAMP_SDK_DIR) -Wall -fPIC
