@@ -208,15 +208,87 @@ string get_env_var( std::string const & key ) {
     return retval;                                                                        
 }
 
+static
+std::vector<std::string>
+getPluginPath()
+{
+    //!!! This is duplicated from PluginHostAdapter::getPluginPath,
+    //!!! which is not available to us in the plugin (only to the
+    //!!! host)
+
+    std::vector<std::string> path;
+    std::string envPath;
+
+    char *cpath = getenv("VAMP_PATH");
+    if (cpath) envPath = cpath;
+
+#ifdef _WIN32
+#define PATH_SEPARATOR ';'
+#define DEFAULT_VAMP_PATH "%ProgramFiles%\\Vamp Plugins"
+#else
+#define PATH_SEPARATOR ':'
+#ifdef __APPLE__
+#define DEFAULT_VAMP_PATH "$HOME/Library/Audio/Plug-Ins/Vamp:/Library/Audio/Plug-Ins/Vamp"
+#else
+#define DEFAULT_VAMP_PATH "$HOME/vamp:$HOME/.vamp:/usr/local/lib/vamp:/usr/lib/vamp"
+#endif
+#endif
+
+    if (envPath == "") {
+        envPath = DEFAULT_VAMP_PATH;
+        char *chome = getenv("HOME");
+        if (chome) {
+            std::string home(chome);
+            std::string::size_type f;
+            while ((f = envPath.find("$HOME")) != std::string::npos &&
+                    f < envPath.length()) {
+                envPath.replace(f, 5, home);
+            }
+        }
+#ifdef _WIN32
+        char *cpfiles = getenv("ProgramFiles");
+        if (!cpfiles) cpfiles = (char *)"C:\\Program Files";
+        std::string pfiles(cpfiles);
+        std::string::size_type f;
+        while ((f = envPath.find("%ProgramFiles%")) != std::string::npos &&
+               f < envPath.length()) {
+            envPath.replace(f, 14, pfiles);
+        }
+#endif
+    }
+
+    std::string::size_type index = 0, newindex = 0;
+
+    while ((newindex = envPath.find(PATH_SEPARATOR, index)) < envPath.size()) {
+	path.push_back(envPath.substr(index, newindex - index));
+	index = newindex + 1;
+    }
+    
+    path.push_back(envPath.substr(index));
+
+    return path;
+}
 
 vector<string> chordDictionary(vector<float> *mchorddict) {
-    // ifstream chordDictFile;
-    string chordDictFilename(get_env_var("VAMP_PATH")+"/chord.dict");
-    // string instring[] = ",1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,0\nm,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,1,0,0,0,0\n6,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,1,0,0\n7,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,1,0\nmaj7,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,1\nmin7,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,1,0,0,1,0\n,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,0\n,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,0\ndim,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,1,0,0,0,0,0\naug,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0\n";
+
     typedef tokenizer<char_separator<char> > Tok;
-    // char_separator<char> sep; // default constructed
     char_separator<char> sep(",; ","=");
-    iostreams::stream<iostreams::file_source> chordDictFile(chordDictFilename.c_str());
+
+    string chordDictBase("chord.dict");
+    string chordDictFilename;
+
+    vector<string> ppath = getPluginPath();
+    for (int i = 0; i < ppath.size(); ++i) {
+	chordDictFilename = ppath[i] + "/" + chordDictBase;
+	cerr << "Looking for chord.dict in " << chordDictFilename << "..." << endl;
+	if (iostreams::stream<iostreams::file_source>(chordDictFilename.c_str())
+	    .is_open()) {
+	    cerr << "(Success)" << endl;
+	    break;
+	}
+    }
+
+    iostreams::stream<iostreams::file_source> chordDictFile(chordDictFilename);
     string line;
     int iElement = 0;
     int nChord = 0;
