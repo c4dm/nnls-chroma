@@ -19,59 +19,23 @@ PLUGIN_LIBRARY_NAME = matthiasm
 
 # Edit this to list one .o file for each .cpp file in your plugin project
 #
-PLUGIN_CODE_OBJECTS = NNLSChroma.o plugins.o nnls.o
+PLUGIN_CODE_OBJECTS = chromamethods.o NNLSChroma.o plugins.o nnls.o
 
 # Edit this to the location of the Vamp plugin SDK, relative to your
 # project directory
 #
 VAMP_SDK_DIR = /work/vamp-plugin-sdk
-#LAPACK_DIR = /work/qm-dsp/include
 QMDSP_DIR = /work/qm-dsp
-FFT_DIR = /work/qm-dsp/dsp/transforms
 NNLS_DIR = ../tsnnls/tsnnls
 
 
-##  Uncomment these for an OS/X native build using command-line tools:
-#CXXFLAGS = -I$(VAMP_SDK_DIR) -I$(LAPACK_DIR) -I$(FFT_DIR) -I$(NNLS_DIR) -Wall -fPIC -g
-#PLUGIN_EXT = .dylib
-#PLUGIN = $(PLUGIN_LIBRARY_NAME)$(PLUGIN_EXT)
-#LDFLAGS = -dynamiclib -install_name $(PLUGIN) $(VAMP_SDK_DIR)/libvamp-sdk.a $(QMDSP_DIR)/libqm-dsp.a ../tsnnls/tsnnls/.libs/libtsnnls.a -exported_symbols_list vamp-plugin.list -framework Accelerate
-
-
-##  Uncomment these for an OS/X universal binary using command-line tools:
-
-# CXXFLAGS = -isysroot /Developer/SDKs/MacOSX10.4u.sdk -arch i386 -arch ppc -I$(VAMP_SDK_DIR) -Wall -fPIC
-# PLUGIN_EXT = .dylib
-# PLUGIN = $(PLUGIN_LIBRARY_NAME)$(PLUGIN_EXT)
-# LDFLAGS = -dynamiclib -install_name $(PLUGIN) $(VAMP_SDK_DIR)/libvamp-sdk.a -exported_symbols_list vamp-plugin.list
-
-
-##  Uncomment these for Linux using the standard tools:
-
-CFLAGS = -I$(VAMP_SDK_DIR) -I$(LAPACK_DIR) -I$(FFT_DIR) -I$(NNLS_DIR) -Wall -fPIC
-CXXFLAGS = -I$(VAMP_SDK_DIR) -I$(LAPACK_DIR) -I$(FFT_DIR) -I$(NNLS_DIR) -Wall -fPIC
+CFLAGS = -I$(VAMP_SDK_DIR) -I$(LAPACK_DIR) -I$(NNLS_DIR) -Wall -fPIC
+CXXFLAGS = -I$(VAMP_SDK_DIR) -I$(LAPACK_DIR) -I$(NNLS_DIR) -Wall -fPIC
 PLUGIN_EXT = .so
 PLUGIN = $(PLUGIN_LIBRARY_NAME)$(PLUGIN_EXT)
 #LDFLAGS = -shared -Wl,-soname=$(PLUGIN) $(VAMP_SDK_DIR)/libvamp-sdk.a -Wl,--version-script=vamp-plugin.map $(QMDSP_DIR)/libqm-dsp.a ../tsnnls/tsnnls/.libs/libtsnnls.a -llapack-3
 LDFLAGS = -shared -Wl,-soname=$(PLUGIN) $(VAMP_SDK_DIR)/libvamp-sdk.a -Wl,--version-script=vamp-plugin.map $(QMDSP_DIR)/libqm-dsp.a
 
-
-##  Uncomment these for a cross-compile from Linux to Windows using MinGW:
-
-# CXX = i586-mingw32msvc-g++
-# CXXFLAGS = -I$(VAMP_SDK_DIR) -Wall 
-# PLUGIN_EXT = .dll
-# PLUGIN = $(PLUGIN_LIBRARY_NAME)$(PLUGIN_EXT)
-# LDFLAGS = --static-libgcc -Wl,-soname=$(PLUGIN) -shared $(VAMP_SDK_DIR)/libvamp-sdk.a
-
-
-##  Uncomment these for OpenSolaris using SunStudio compiler and GNU make:
-
-# CXX = CC
-# CXXFLAGS = -G -I$(VAMP_SDK_DIR) +w -KPIC
-# PLUGIN_EXT = .so
-# PLUGIN = $(PLUGIN_LIBRARY_NAME)$(PLUGIN_EXT)
-# LDFLAGS = -G -h$(PLUGIN) $(VAMP_SDK_DIR)/libvamp-sdk.a -Qoption ld -Mvamp-plugin.map
 
 
 
