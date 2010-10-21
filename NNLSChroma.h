@@ -1,3 +1,4 @@
+/* -*- c-basic-offset: 4 indent-tabs-mode: nil -*-  vi:set ts=8 sts=4 sw=4: */
 
 // Remember to use a different guard symbol in each header!
 #ifndef _NNLS_CHROMA_
@@ -53,30 +54,30 @@ public:
 
 protected:
     // plugin-specific data and methods go here
-	int frameCount;
+    int frameCount;
     FeatureList m_fl;
     size_t m_blockSize;
     size_t m_stepSize;
     int m_lengthOfNoteIndex;
-	float m_meanTuning0;
-	float m_meanTuning1;
-	float m_meanTuning2;
+    float m_meanTuning0;
+    float m_meanTuning1;
+    float m_meanTuning2;
     float m_localTuning0;
     float m_localTuning1;
     float m_localTuning2;
     float m_paling;
-	float m_preset;
+    float m_preset;
     vector<float> m_localTuning;
-	vector<float> m_kernelValue;
-	vector<int> m_kernelFftIndex;
-	vector<int> m_kernelNoteIndex;
-	float *m_dict;
+    vector<float> m_kernelValue;
+    vector<int> m_kernelFftIndex;
+    vector<int> m_kernelNoteIndex;
+    float *m_dict;
     bool m_tuneLocal;
     int m_dictID;
-	vector<float> m_chorddict;
-	vector<string> m_chordnames;
-	float m_doNormalizeChroma;
-	float m_rollon;
+    vector<float> m_chorddict;
+    vector<string> m_chordnames;
+    float m_doNormalizeChroma;
+    float m_rollon;
     // list< vector< float > > *logfreqSpecList;
 };
 
