@@ -345,7 +345,7 @@ C
       ITER=ITER+1   
       IF (ITER .gt. ITMAX) then
          MODE=3
-         write (*,'(/a)') ' NNLS quitting on iteration count.'
+c         write (*,'(/a)') ' NNLS quitting on iteration count.'
          GO TO 350 
       endif
 C   
