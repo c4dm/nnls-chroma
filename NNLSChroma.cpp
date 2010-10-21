@@ -1199,7 +1199,7 @@ NNLSChroma::getRemainingFeatures()
 	        f6.hasTimestamp = true;
 	        f6.timestamp = f2.timestamp;
 	        
-			float b[256];
+			double b[256];
 	
 	        bool some_b_greater_zero = false;
 			float sumb = 0;
@@ -1233,7 +1233,7 @@ NNLSChroma::getRemainingFeatures()
 					}
 		        
 				} else {
-					float x[84+1000];
+				    double x[84+1000];
 					for (int i = 1; i < 1084; ++i) x[i] = 1.0;
                     vector<int> signifIndex;
                     int index=0;
@@ -1247,20 +1247,22 @@ NNLSChroma::getRemainingFeatures()
                         f3.values.push_back(0); // fill the values, change later
                         index++;
 					}
-				    float rnorm;
-				    float w[84+1000];
-				    float zz[84+1000];
+				    double rnorm;
+				    double w[84+1000];
+				    double zz[84+1000];
 				    int indx[84+1000];
 				    int mode;
                     int dictsize = 256*signifIndex.size();
                     // cerr << "dictsize is " << dictsize << "and values size" << f3.values.size()<< endl;
-					float *curr_dict = new float[dictsize];
+		    double *curr_dict = new double[dictsize];
 					for (unsigned iNote = 0; iNote < signifIndex.size(); ++iNote) {
                         for (unsigned iBin = 0; iBin < 256; iBin++) {
     						curr_dict[iNote * 256 + iBin] = 1.0 * m_dict[signifIndex[iNote] * 256 + iBin];
                         }
 					}
-					nnls(curr_dict, nNote, nNote, signifIndex.size(), b, x, &rnorm, w, zz, indx, &mode);
+					int sz = signifIndex.size();
+					int nn = nNote;
+					NNLS(curr_dict, &nn, &nn, &sz, b, x, &rnorm, w, zz, indx, &mode);
                     delete [] curr_dict;
 					for (unsigned iNote = 0; iNote < signifIndex.size(); ++iNote) {
 						f3.values[signifIndex[iNote]] = x[iNote];

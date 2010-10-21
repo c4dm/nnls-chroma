@@ -31,7 +31,6 @@ FFT_DIR = /work/qm-dsp/dsp/transforms
 NNLS_DIR = ../tsnnls/tsnnls
 
 
-
 ##  Uncomment these for an OS/X native build using command-line tools:
 #CXXFLAGS = -I$(VAMP_SDK_DIR) -I$(LAPACK_DIR) -I$(FFT_DIR) -I$(NNLS_DIR) -Wall -fPIC -g
 #PLUGIN_EXT = .dylib
@@ -79,6 +78,9 @@ LDFLAGS = -shared -Wl,-soname=$(PLUGIN) $(VAMP_SDK_DIR)/libvamp-sdk.a -Wl,--vers
 
 $(PLUGIN): $(PLUGIN_CODE_OBJECTS)
 	   $(CXX) -o $@ $^ $(LDFLAGS)
+
+nnls.o:	 nnls.f
+	 gfortran -std=legacy -fPIC -Wall -c $< 
 
 clean:
 	rm -f *.o
