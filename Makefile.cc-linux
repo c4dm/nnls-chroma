@@ -19,7 +19,7 @@ PLUGIN_LIBRARY_NAME = matthiasm
 
 # Edit this to list one .o file for each .cpp file in your plugin project
 #
-PLUGIN_CODE_OBJECTS = NNLSChroma.o plugins.o nnls.o coskernel-20-105-3-44100-16384-80.o 
+PLUGIN_CODE_OBJECTS = NNLSChroma.o plugins.o nnls.o
 
 # Edit this to the location of the Vamp plugin SDK, relative to your
 # project directory
