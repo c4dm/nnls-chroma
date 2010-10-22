@@ -306,7 +306,7 @@ NNLSChroma::getRemainingFeatures()
     vector<float> oldbasschroma = vector<float>(12,0);
     count = 0;
 
-    for (FeatureList::iterator it = fsOut[2].begin(); it != fsOut[2].end(); ++it) {
+    for (FeatureList::iterator it = fsOut[m_outputTunedSpec].begin(); it != fsOut[m_outputTunedSpec].end(); ++it) {
         Feature f2 = *it; // logfreq spectrum
         Feature f3; // semitone spectrum
         Feature f4; // treble chromagram
