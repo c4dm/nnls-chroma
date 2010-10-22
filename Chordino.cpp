@@ -72,7 +72,7 @@ Chordino::getOutputDescriptors() const
 
     OutputDescriptor d7;
     d7.identifier = "simplechord";
-    d7.name = "Simple Chord Estimate";
+    d7.name = "Chord Estimate";
     d7.description = "A simple chord estimate based on the inner product of chord templates with the smoothed chroma.";
     d7.unit = "";
     d7.hasFixedBinCount = true;
@@ -87,7 +87,7 @@ Chordino::getOutputDescriptors() const
     
     OutputDescriptor d8;
     d8.identifier = "harmonicchange";
-    d8.name = "Harmonic change value";
+    d8.name = "Harmonic Change Value";
     d8.description = "Harmonic change.";
     d8.unit = "";
     d8.hasFixedBinCount = true;
