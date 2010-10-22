@@ -89,7 +89,7 @@ Tuning::getOutputDescriptors() const
 	
     OutputDescriptor d10;
     d10.identifier = "localtuning";
-    d10.name = "Local tuning";
+    d10.name = "Local Tuning";
     d10.description = "Tuning based on the history up to this timestamp.";
     d10.unit = "Hz";
     d10.hasFixedBinCount = true;
