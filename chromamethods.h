@@ -25,7 +25,7 @@
 const int nNote = 256;
 
 extern std::vector<float> SpecialConvolution(std::vector<float> convolvee, std::vector<float> kernel);
-extern void dictionaryMatrix(float* dm);
+extern void dictionaryMatrix(float* dm, float s_param);
 extern std::vector<std::string> chordDictionary(std::vector<float> *mchorddict);
 extern bool logFreqMatrix(int fs, int blocksize, float *outmatrix);
 

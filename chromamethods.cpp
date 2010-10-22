@@ -170,11 +170,11 @@ bool logFreqMatrix(int fs, int blocksize, float *outmatrix) {
     return true;	
 }
 
-void dictionaryMatrix(float* dm) {
+void dictionaryMatrix(float* dm, float s_param) {
     int binspersemitone = 3; // this must be 3
     int minoctave = 0; // this must be 0
     int maxoctave = 7; // this must be 7
-    float s_param = 0.7;
+    // float s_param = 0.7;
 	
     // pitch-spaced frequency vector
     int minMIDI = 21 + minoctave * 12 - 1; // this includes one additional semitone!

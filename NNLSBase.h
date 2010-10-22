@@ -66,8 +66,9 @@ protected:
     float m_localTuning0;
     float m_localTuning1;
     float m_localTuning2;
-    float m_paling;
+    float m_whitening;
     float m_preset;
+	float m_s;
     vector<float> m_localTuning;
     vector<float> m_kernelValue;
     vector<int> m_kernelFftIndex;

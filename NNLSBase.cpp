@@ -42,7 +42,7 @@ NNLSBase::NNLSBase(float inputSampleRate) :
     m_localTuning0(0),
     m_localTuning1(0),
     m_localTuning2(0),
-    m_paling(1.0),
+    m_whitening(1.0),
     m_preset(0.0),
     m_localTuning(0),
     m_kernelValue(0),
@@ -54,14 +54,15 @@ NNLSBase::NNLSBase(float inputSampleRate) :
     m_chorddict(0),
     m_chordnames(0),
     m_doNormalizeChroma(0),
-    m_rollon(0.01)
+    m_rollon(0.0),
+	m_s(0.7)
 {
     if (debug_on) cerr << "--> NNLSBase" << endl;
 
     // make the *note* dictionary matrix
     m_dict = new float[nNote * 84];
     for (unsigned i = 0; i < nNote * 84; ++i) m_dict[i] = 0.0;
-    dictionaryMatrix(m_dict);
+    dictionaryMatrix(m_dict, 0.7);
 	
     // get the *chord* dictionary from file (if the file exists)
     m_chordnames = chordDictionary(&m_chorddict);
@@ -145,46 +146,16 @@ NNLSBase::getParameterDescriptors() const
     if (debug_on) cerr << "--> getParameterDescriptors" << endl;
     ParameterList list;
 
-    ParameterDescriptor d3;
-    d3.identifier = "preset";
-    d3.name = "preset";
-    d3.description = "Spectral paling: no paling - 0; whitening - 1.";
-    d3.unit = "";
-    d3.isQuantized = true;
-    d3.quantizeStep = 1;
-    d3.minValue = 0.0;
-    d3.maxValue = 3.0;
-    d3.defaultValue = 0.0;
-    d3.valueNames.push_back("polyphonic pop");
-    d3.valueNames.push_back("polyphonic pop (fast)");
-    d3.valueNames.push_back("solo keyboard");
-    d3.valueNames.push_back("manual");
-    list.push_back(d3);
-
-    ParameterDescriptor d5;
-    d5.identifier = "rollon";
-    d5.name = "spectral roll-on";
-    d5.description = "The bins below the spectral roll-on quantile will be set to 0.";
-    d5.unit = "";
-    d5.minValue = 0;
-    d5.maxValue = 1;
-    d5.defaultValue = 0;
-    d5.isQuantized = false;
-    list.push_back(d5);
-
-    // ParameterDescriptor d0;
-    //  d0.identifier = "notedict";
-    //  d0.name = "note dictionary";
-    //  d0.description = "Notes in different note dictionaries differ by their spectral shapes.";
-    //  d0.unit = "";
-    //  d0.minValue = 0;
-    //  d0.maxValue = 1;
-    //  d0.defaultValue = 0;
-    //  d0.isQuantized = true;
-    //  d0.valueNames.push_back("s = 0.6");
-    //  d0.valueNames.push_back("no NNLS");
-    //  d0.quantizeStep = 1.0;
-    //  list.push_back(d0);
+    ParameterDescriptor d0;
+    d0.identifier = "rollon";
+    d0.name = "spectral roll-on";
+    d0.description = "The bins below the spectral roll-on quantile will be set to 0.";
+    d0.unit = "";
+    d0.minValue = 0;
+    d0.maxValue = 0.05;
+    d0.defaultValue = 0;
+    d0.isQuantized = false;
+    list.push_back(d0);
 
     ParameterDescriptor d1;
     d1.identifier = "tuningmode";
@@ -200,18 +171,29 @@ NNLSBase::getParameterDescriptors() const
     d1.quantizeStep = 1.0;
     list.push_back(d1);
 
-    //     ParameterDescriptor d2;
-    //     d2.identifier = "paling";
-    //     d2.name = "spectral paling";
-    //     d2.description = "Spectral paling: no paling - 0; whitening - 1.";
-    //     d2.unit = "";
-    // d2.isQuantized = true;
-    // // d2.quantizeStep = 0.1;
-    //     d2.minValue = 0.0;
-    //     d2.maxValue = 1.0;
-    //     d2.defaultValue = 1.0;
-    //     d2.isQuantized = false;
-    //     list.push_back(d2);
+    ParameterDescriptor d2;
+    d2.identifier = "whitening";
+    d2.name = "spectral whitening";
+    d2.description = "Spectral whitening: no whitening - 0; whitening - 1.";
+    d2.unit = "";
+    d2.isQuantized = true;
+    d2.minValue = 0.0;
+    d2.maxValue = 1.0;
+    d2.defaultValue = 1.0;
+    d2.isQuantized = false;
+    list.push_back(d2);
+
+    ParameterDescriptor d3;
+    d3.identifier = "s";
+    d3.name = "spectral shape";
+    d3.description = "Determines how individual notes in the note dictionary look: higher values mean more dominant higher harmonics.";
+    d3.unit = "";
+    d3.minValue = 0.5;
+    d3.maxValue = 0.9;
+    d3.defaultValue = 0.7;
+    d3.isQuantized = false;
+    list.push_back(d3);
+
     ParameterDescriptor d4;
     d4.identifier = "chromanormalize";
     d4.name = "chroma normalization";
@@ -239,8 +221,12 @@ NNLSBase::getParameter(string identifier) const
         return m_dictID; 
     }
     
-    if (identifier == "paling") {
-        return m_paling; 
+    if (identifier == "whitening") {
+        return m_whitening; 
+    }
+
+    if (identifier == "s") {
+        return m_s; 
     }
 
     if (identifier == "rollon") {
@@ -272,10 +258,14 @@ NNLSBase::setParameter(string identifier, float value)
         m_dictID = (int) value;
     }
     
-    if (identifier == "paling") {
-        m_paling = value;
+    if (identifier == "whitening") {
+        m_whitening = value;
     }
     
+    if (identifier == "s") {
+        m_s = value;
+    }
+
     if (identifier == "tuningmode") {
         m_tuneLocal = (value > 0) ? true : false;
         // cerr << "m_tuneLocal :" << m_tuneLocal << endl;
@@ -284,17 +274,17 @@ NNLSBase::setParameter(string identifier, float value)
         m_preset = value;
         if (m_preset == 0.0) {
             m_tuneLocal = false;
-            m_paling = 1.0;
+            m_whitening = 1.0;
             m_dictID = 0.0;
         }
         if (m_preset == 1.0) {
             m_tuneLocal = false;
-            m_paling = 1.0;
+            m_whitening = 1.0;
             m_dictID = 1.0;
         }
         if (m_preset == 2.0) {
             m_tuneLocal = false;
-            m_paling = 0.7;
+            m_whitening = 0.7;
             m_dictID = 0.0;
         }
     }
@@ -565,9 +555,9 @@ NNLSBase::getRemainingFeatures()
             runningstd[i] = sqrt(runningstd[i]); // square root to finally have running std
             if (runningstd[i] > 0) {
                 // f2.values[i] = (f2.values[i] / runningmean[i]) > thresh ? 
-                // 		                    (f2.values[i] - runningmean[i]) / pow(runningstd[i],m_paling) : 0;
+                // 		                    (f2.values[i] - runningmean[i]) / pow(runningstd[i],m_whitening) : 0;
                 f2.values[i] = (f2.values[i] - runningmean[i]) > 0 ?
-                    (f2.values[i] - runningmean[i]) / pow(runningstd[i],m_paling) : 0;
+                    (f2.values[i] - runningmean[i]) / pow(runningstd[i],m_whitening) : 0;
             }
             if (f2.values[i] < 0) {
                 cerr << "ERROR: negative value in logfreq spectrum" << endl;

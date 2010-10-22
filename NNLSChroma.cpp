@@ -276,9 +276,9 @@ NNLSChroma::getRemainingFeatures()
             runningstd[i] = sqrt(runningstd[i]); // square root to finally have running std
             if (runningstd[i] > 0) {
                 // f2.values[i] = (f2.values[i] / runningmean[i]) > thresh ? 
-                // 		                    (f2.values[i] - runningmean[i]) / pow(runningstd[i],m_paling) : 0;
+                // 		                    (f2.values[i] - runningmean[i]) / pow(runningstd[i],m_whitening) : 0;
                 f2.values[i] = (f2.values[i] - runningmean[i]) > 0 ?
-                    (f2.values[i] - runningmean[i]) / pow(runningstd[i],m_paling) : 0;
+                    (f2.values[i] - runningmean[i]) / pow(runningstd[i],m_whitening) : 0;
             }
             if (f2.values[i] < 0) {
                 cerr << "ERROR: negative value in logfreq spectrum" << endl;
