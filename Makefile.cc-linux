@@ -1,33 +1,13 @@
 
-##  Skeleton Makefile for Vamp plugin builds using command-line tools.
-##
-##  Rename this to Makefile, and edit as appropriate.
-##  This Makefile WILL NOT WORK until you have edited it as described
-##  below -- the Makefile as supplied does nothing useful at all!
-##
-##  Various sets of options are provided, commented out -- just uncomment
-##  (remove the '#' characters for) the set that most closely resembles
-##  your own situation, and adjust to taste.  Then run "make".
-##
-##  (For Windows builds using MS Visual Studio, start instead with the
-##  VampExamplePlugins project found in the build directory of the SDK.)
-
-
-# Edit this to the base name of your plugin library
-#
 PLUGIN_LIBRARY_NAME = nnls-chroma
 
-# Edit this to list one .o file for each .cpp file in your plugin project
-#
-PLUGIN_CODE_OBJECTS = chromamethods.o NNLSChroma.o plugins.o nnls.o
+PLUGIN_CODE_OBJECTS = chromamethods.o NNLSBase.o NNLSChroma.o Chordino.o Tuning.o plugins.o nnls.o
 
-# Edit this to the location of the Vamp plugin SDK, relative to your
-# project directory
-#
 VAMP_SDK_DIR = ../vamp-plugin-sdk
 
 
 ARCHFLAGS = -O3 -ftree-vectorize -ffast-math
+#ARCHFLAGS = -g
 
 CFLAGS = $(ARCHFLAGS) -I$(VAMP_SDK_DIR) -Wall -fPIC
 CXXFLAGS = $(ARCHFLAGS) -I$(VAMP_SDK_DIR) -Wall -fPIC
@@ -43,6 +23,21 @@ LDFLAGS = -shared -Wl,-soname=$(PLUGIN) $(VAMP_SDK_DIR)/libvamp-sdk.a -Wl,--vers
 $(PLUGIN): $(PLUGIN_CODE_OBJECTS)
 	   $(CXX) -o $@ $^ $(LDFLAGS)
 
+nnls.o:	nnls.c		# not nnls.f
+
 clean:
 	rm -f *.o
 
+# DO NOT DELETE
+
+nnls.o: nnls.h
+Chordino.o: Chordino.h NNLSBase.h chromamethods.h nnls.h
+chromamethods.o: chromamethods.h nnls.h chorddict.cpp
+NNLSBase.o: NNLSBase.h chromamethods.h nnls.h
+NNLSChroma.o: NNLSChroma.h NNLSBase.h chromamethods.h nnls.h
+plugins.o: NNLSChroma.h NNLSBase.h Chordino.h Tuning.h
+Tuning.o: Tuning.h NNLSBase.h chromamethods.h nnls.h
+Chordino.o: NNLSBase.h
+chromamethods.o: nnls.h
+NNLSChroma.o: NNLSBase.h
+Tuning.o: NNLSBase.h

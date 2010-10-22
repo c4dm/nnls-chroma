@@ -1,22 +1,33 @@
+/* -*- c-basic-offset: 4 indent-tabs-mode: nil -*-  vi:set ts=8 sts=4 sw=4: */
 
-// This is a skeleton file for use in creating your own plugin
-// libraries.  Replace MyPlugin and myPlugin throughout with the name
-// of your first plugin class, and fill in the gaps as appropriate.
+/*
+  NNLS-Chroma / Chordino
 
+  Audio feature extraction plugins for chromagram and chord
+  estimation.
+
+  Centre for Digital Music, Queen Mary University of London.
+  This file copyright 2008-2010 Matthias Mauch and QMUL.
+    
+  This program is free software; you can redistribute it and/or
+  modify it under the terms of the GNU General Public License as
+  published by the Free Software Foundation; either version 2 of the
+  License, or (at your option) any later version.  See the file
+  COPYING included with this distribution for more information.
+*/
 
 #include <vamp/vamp.h>
 #include <vamp-sdk/PluginAdapter.h>
 
 #include "NNLSChroma.h"
+#include "Chordino.h"
+#include "Tuning.h"
 
 
-// Declare one static adapter here for each plugin class in this library.
+static Vamp::PluginAdapter<NNLSChroma> chromaAdapter;
+static Vamp::PluginAdapter<Chordino> chordinoAdapter;
+static Vamp::PluginAdapter<Tuning> tuningAdapter;
 
-static Vamp::PluginAdapter<NNLSChroma> myPluginAdapter;
-
-
-// This is the entry-point for the library, and the only function that
-// needs to be publicly exported.
 
 const VampPluginDescriptor *
 vampGetPluginDescriptor(unsigned int version, unsigned int index)
@@ -29,7 +40,9 @@ vampGetPluginDescriptor(unsigned int version, unsigned int index)
     // library.)
 
     switch (index) {
-    case  0: return myPluginAdapter.getDescriptor();
+    case  0: return chromaAdapter.getDescriptor();
+    case  1: return chordinoAdapter.getDescriptor();
+    case  2: return tuningAdapter.getDescriptor();
     default: return 0;
     }
 }

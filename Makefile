@@ -2,13 +2,12 @@ PLUGIN_LIBRARY_NAME = matthiasm
 
 # Edit this to list one .o file for each .cpp file in your plugin project
 #
-PLUGIN_CODE_OBJECTS = NNLSChroma.o plugins.o nnls.o chromamethods.o
+PLUGIN_CODE_OBJECTS = NNLSBase.o NNLSChroma.o Chordino.o Tuning.o plugins.o nnls.o chromamethods.o
 
 # Edit this to the location of the Vamp plugin SDK, relative to your
 # project directory
 #
 VAMP_SDK_DIR = ../vamp-plugin-sdk
-QMDSP_DIR = ../qm-dsp/build/osx/20091028
 BOOST_ROOT = ../boost_1_44_0
 
 
@@ -24,11 +23,21 @@ LDFLAGS = $(ARCHFLAGS) -dynamiclib -install_name $(PLUGIN) $(VAMP_SDK_DIR)/libva
 $(PLUGIN): $(PLUGIN_CODE_OBJECTS)
 	   $(CXX) -o $@ $^ $(LDFLAGS)
 
-NNLSChroma.o: NNLSChroma.h
-plugins.o: NNLSChroma.h
-
 nnls.o:	nnls.c		# not nnls.f
 
 clean:
 	rm -f *.o
 
+# DO NOT DELETE
+
+nnls.o: nnls.h
+Chordino.o: Chordino.h NNLSBase.h chromamethods.h nnls.h
+chromamethods.o: chromamethods.h nnls.h chorddict.cpp
+NNLSBase.o: NNLSBase.h chromamethods.h nnls.h
+NNLSChroma.o: NNLSChroma.h NNLSBase.h chromamethods.h nnls.h
+plugins.o: NNLSChroma.h NNLSBase.h Chordino.h Tuning.h
+Tuning.o: Tuning.h NNLSBase.h chromamethods.h nnls.h
+Chordino.o: NNLSBase.h
+chromamethods.o: nnls.h
+NNLSChroma.o: NNLSBase.h
+Tuning.o: NNLSBase.h

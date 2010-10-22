@@ -1,5 +1,16 @@
 #include "nnls.h"
 
+/*
+  NNLS-Chroma / Chordino
+
+  This file is converted from the Netlib FORTRAN code NNLS.FOR,
+  developed by Charles L. Lawson and Richard J. Hanson at Jet
+  Propulsion Laboratory 1973 JUN 15, and published in the book
+  "SOLVING LEAST SQUARES PROBLEMS", Prentice-Hall, 1974.
+
+  Refer to nnls.f for the original code and comments.
+*/
+
 #include <math.h>
 
 #define nnls_max(a,b) ((a) >= (b) ? (a) : (b))

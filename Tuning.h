@@ -16,19 +16,19 @@
   COPYING included with this distribution for more information.
 */
 
-#ifndef _NNLS_CHROMA_
-#define _NNLS_CHROMA_
+#ifndef _TUNING_
+#define _TUNING_
 
 #include "NNLSBase.h"
 
 using namespace std;
 
 
-class NNLSChroma : public NNLSBase
+class Tuning : public NNLSBase
 {
 public:
-    NNLSChroma(float inputSampleRate);
-    virtual ~NNLSChroma();
+    Tuning(float inputSampleRate);
+    virtual ~Tuning();
 
     string getIdentifier() const;
     string getName() const;
@@ -44,12 +44,8 @@ public:
     void reset();
 
 protected:
-    mutable int m_outputLogSpec;
-    mutable int m_outputTunedSpec;
-    mutable int m_outputSemiSpec;
-    mutable int m_outputChroma;
-    mutable int m_outputBassChroma;
-    mutable int m_outputBothChroma;
+    mutable int m_outputTuning;
+    mutable int m_outputLocalTuning;
 };
 
 
