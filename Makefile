@@ -2,7 +2,7 @@ PLUGIN_LIBRARY_NAME = matthiasm
 
 # Edit this to list one .o file for each .cpp file in your plugin project
 #
-PLUGIN_CODE_OBJECTS = NNLSChroma.o plugins.o nnls.o
+PLUGIN_CODE_OBJECTS = NNLSChroma.o plugins.o nnls.o chromamethods.o
 
 # Edit this to the location of the Vamp plugin SDK, relative to your
 # project directory
@@ -13,7 +13,7 @@ BOOST_ROOT = ../boost_1_44_0
 
 
 ##  Uncomment these for an OS/X native build using command-line tools:
-ARCHFLAGS = -isysroot /Developer/SDKs/MacOSX10.4u.sdk -mmacosx-version-min=10.4 -arch ppc -arch i386
+ARCHFLAGS = -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5 -arch i386
 CFLAGS = $(ARCHFLAGS) -Wall -fPIC -g
 CXXFLAGS = $(CFLAGS) -I$(VAMP_SDK_DIR) -I$(BOOST_ROOT)
 PLUGIN_EXT = .dylib
