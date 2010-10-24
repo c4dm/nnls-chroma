@@ -365,18 +365,37 @@ vector<string> chordDictionary(vector<float> *mchorddict) {
         for (unsigned kSemitone = 0; kSemitone < 12; kSemitone++) loadedChordDict.push_back(1.0);
 	
         // normalise
-        float sum = 0;
-        for (int i = 0; i < loadedChordDict.size(); i++) {
-            sum += pow(loadedChordDict[i],2);
-            if (i % 24 == 23) {
-                float invertedsum = 1.0/sqrt(sum);
-                for (int k = 0; k < 24; k++) {
-                    loadedChordDict[i-k] *= invertedsum; 
-                }
-                sum = 0;
+        // float sum = 0;
+        // for (int i = 0; i < loadedChordDict.size(); i++) {
+        //     sum += pow(loadedChordDict[i],2);
+        //     if (i % 24 == 23) {
+        //         float invertedsum = 1.0/sqrt(sum);
+        //         for (int k = 0; k < 24; k++) {
+        //             loadedChordDict[i-k] *= invertedsum; 
+        //         }
+        //         sum = 0;
+        //     }
+        //      
+        // }
+        
+        
+        for (int iChord = 0; iChord < loadedChordDict.size()/24; iChord++) {
+            float sum = 0;
+            float stand = 0;
+            for (int iST = 0; iST < 24; ++iST) {
+                sum += loadedChordDict[24 * iChord + iST];
             }
-		
+            for (int iST = 0; iST < 24; ++iST) {
+                loadedChordDict[24 * iChord + iST] -= sum/24;
+                stand += pow(loadedChordDict[24 * iChord + iST],2)/24;
+            }
+            stand = sqrt(stand);
+            for (int iST = 0; iST < 24; ++iST) {
+                loadedChordDict[24 * iChord + iST] /= stand;            
+            }
+            
         }
+        
 	
 
         nChord = 0;

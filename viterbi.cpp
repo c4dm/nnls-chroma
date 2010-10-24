@@ -39,11 +39,13 @@ std::vector<int> ViterbiPath(std::vector<double> init, std::vector<vector<double
         for (int jState = 0; jState < nState; ++jState) {            
             int bestState = nState - 1;
             double bestValue = 0;
-            for (int iState = 0; iState < nState; ++iState) {
-                double currentValue = delta[iFrame-1][iState] * trans[iState][jState];
-                if (currentValue > bestValue) {
-                    bestValue = currentValue;
-                    bestState = iState;
+            if (obs[iFrame][jState] > 0) {
+                for (int iState = 0; iState < nState; ++iState) {
+                    double currentValue = delta[iFrame-1][iState] * trans[iState][jState];
+                    if (currentValue > bestValue) {
+                        bestValue = currentValue;
+                        bestState = iState;
+                    }
                 }
             }
             // cerr << bestState <<" ::: " << bestValue << endl ;

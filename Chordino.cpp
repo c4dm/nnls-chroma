@@ -362,11 +362,12 @@ Chordino::getRemainingFeatures()
         for (int iChord = 0; iChord < nChord; iChord++) {
             tempchordvalue = 0;
             for (int iBin = 0; iBin < 12; iBin++) {
-                tempchordvalue += m_chorddict[24 * iChord + iBin] * chroma[iBin];
+                tempchordvalue += m_chorddict[24 * iChord + iBin] * chroma[iBin];                
             }
             for (int iBin = 12; iBin < 24; iBin++) {
                 tempchordvalue += m_chorddict[24 * iChord + iBin] * chroma[iBin];
             }
+            if (tempchordvalue < 0) tempchordvalue = 0;
             sumchordvalue+=tempchordvalue;
             currentChordSalience.push_back(tempchordvalue);
         }
@@ -386,9 +387,9 @@ Chordino::getRemainingFeatures()
 
     bool m_useHMM = true; // this will go into the chordino header file.
 	if (m_useHMM) {
-	    
+        cerr << "[Chordino Plugin] HMM Chord Estimation ... ";
         int oldchord = nChord-1;
-        double selftransprob = 0.1;
+        double selftransprob = 0.9;
 	    
         vector<double> init = vector<double>(nChord,1.0/nChord);
         vector<vector<double> > trans;
@@ -417,7 +418,7 @@ Chordino::getRemainingFeatures()
            I just take the local chord estimates ("currentChordSalience") and average them over time, then
            take the maximum. Very simple, don't do this at home...
         */
-        cerr << "[NNLS Chroma Plugin] Chord Estimation ... ";
+        cerr << "[Chordino Plugin] Simple Chord Estimation ... ";
         count = 0; 
         int halfwindowlength = m_inputSampleRate / m_stepSize;
         vector<int> chordSequence;
