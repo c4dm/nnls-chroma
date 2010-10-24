@@ -45,7 +45,7 @@ string
 NNLSChroma::getIdentifier() const
 {
     if (debug_on) cerr << "--> getIdentifier" << endl;
-    return "nnls_chroma";
+    return "nnls-chroma";
 }
 
 string

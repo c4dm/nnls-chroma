@@ -14,7 +14,7 @@ The processed log-frequency spectrum is then used as an input for NNLS approxima
 ### Parameters ###
 
 The default settings (in brackets, below) are those used for Matthias Mauch's 2010 MIREX submissions.
-
+* use approximate transcription (NNLS) (on or off; default: on): toggle between NNLS approximate transcription and linear spectral mapping.
 * spectral roll on (0.00 -- 0.05; default: 0.0): consider the cumulative energy spectrum (from low to high frequencies). All bins below the first bin whose cumulative energy exceeds [spectral roll on] x [total energy] will be set to 0. A value of 0 means that no bins will be changed.
 * tuning mode (global or local; default: global): local uses a local average for tuning, global uses ... exactly.
 * spectral whitening (0.0 -- 1.0; default: 1.0): determines how much the log-frequency spectrum is whitened. A value of 0.0 means no whitening. For values other than 0.0 the log-freq spectral bins are divided by  [standard deviation of their neighbours]^[spectral whitening], where "^" means "to the power of".

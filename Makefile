@@ -1,4 +1,4 @@
-PLUGIN_LIBRARY_NAME = matthiasm
+PLUGIN_LIBRARY_NAME = nnls-chroma
 
 # Edit this to list one .o file for each .cpp file in your plugin project
 #
