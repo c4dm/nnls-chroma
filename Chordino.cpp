@@ -223,7 +223,7 @@ Chordino::getRemainingFeatures()
         Three different kinds of chromagram are calculated, "treble", "bass", and "both" (which means 
         bass and treble stacked onto each other).
     **/
-    if (m_dictID == 1) {
+    if (m_useNNLS == 0) {
         cerr << "[Chordino Plugin] Mapping to semitone spectrum and chroma ... ";
     } else {
         cerr << "[Chordino Plugin] Performing NNLS and mapping to chroma ... ";
@@ -265,7 +265,7 @@ Chordino::getRemainingFeatures()
         unsigned iSemitone = 0;
 			
         if (some_b_greater_zero) {
-            if (m_dictID == 1) {
+            if (m_useNNLS == 0) {
                 for (unsigned iNote = 2; iNote < nNote - 2; iNote += 3) {
                     currval = 0;
                     currval += b[iNote + 1 + -1] * 0.5;

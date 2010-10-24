@@ -50,12 +50,12 @@ NNLSBase::NNLSBase(float inputSampleRate) :
     m_kernelNoteIndex(0),
     m_dict(0),
     m_tuneLocal(false),
-    m_dictID(0),
     m_chorddict(0),
     m_chordnames(0),
     m_doNormalizeChroma(0),
     m_rollon(0.0),
-	m_s(0.7)
+	m_s(0.7),
+	m_useNNLS(1)
 {
     if (debug_on) cerr << "--> NNLSBase" << endl;
 
@@ -146,6 +146,18 @@ NNLSBase::getParameterDescriptors() const
     if (debug_on) cerr << "--> getParameterDescriptors" << endl;
     ParameterList list;
 
+    ParameterDescriptor d;
+    d.identifier = "useNNLS";
+    d.name = "use approximate transcription (NNLS)";
+    d.description = "Toggles approximate transcription (NNLS).";
+    d.unit = "";
+    d.minValue = 0.0;
+    d.maxValue = 1.0;
+    d.defaultValue = 1.0;
+    d.isQuantized = true;
+	d.quantizeStep = 1.0;
+    list.push_back(d);
+
     ParameterDescriptor d0;
     d0.identifier = "rollon";
     d0.name = "spectral roll-on";
@@ -217,8 +229,8 @@ float
 NNLSBase::getParameter(string identifier) const
 {
     if (debug_on) cerr << "--> getParameter" << endl;
-    if (identifier == "notedict") {
-        return m_dictID; 
+    if (identifier == "useNNLS") {
+        return m_useNNLS; 
     }
     
     if (identifier == "whitening") {
@@ -254,8 +266,8 @@ void
 NNLSBase::setParameter(string identifier, float value) 
 {
     if (debug_on) cerr << "--> setParameter" << endl;
-    if (identifier == "notedict") {
-        m_dictID = (int) value;
+    if (identifier == "useNNLS") {
+        m_useNNLS = (int) value;
     }
     
     if (identifier == "whitening") {
@@ -270,24 +282,24 @@ NNLSBase::setParameter(string identifier, float value)
         m_tuneLocal = (value > 0) ? true : false;
         // cerr << "m_tuneLocal :" << m_tuneLocal << endl;
     }
-    if (identifier == "preset") {
-        m_preset = value;
-        if (m_preset == 0.0) {
-            m_tuneLocal = false;
-            m_whitening = 1.0;
-            m_dictID = 0.0;
-        }
-        if (m_preset == 1.0) {
-            m_tuneLocal = false;
-            m_whitening = 1.0;
-            m_dictID = 1.0;
-        }
-        if (m_preset == 2.0) {
-            m_tuneLocal = false;
-            m_whitening = 0.7;
-            m_dictID = 0.0;
-        }
-    }
+    // if (identifier == "preset") {
+    //     m_preset = value;
+    //     if (m_preset == 0.0) {
+    //         m_tuneLocal = false;
+    //         m_whitening = 1.0;
+    //         m_dictID = 0.0;
+    //     }
+    //     if (m_preset == 1.0) {
+    //         m_tuneLocal = false;
+    //         m_whitening = 1.0;
+    //         m_dictID = 1.0;
+    //     }
+    //     if (m_preset == 2.0) {
+    //         m_tuneLocal = false;
+    //         m_whitening = 0.7;
+    //         m_dictID = 0.0;
+    //     }
+    // }
     if (identifier == "chromanormalize") {
         m_doNormalizeChroma = value;
     }
@@ -379,7 +391,7 @@ NNLSBase::reset()
 	
     // Clear buffers, reset stored values, etc
     m_frameCount = 0;
-    m_dictID = 0;
+    // m_dictID = 0;
     m_logSpectrum.clear();
     m_meanTuning0 = 0;
     m_meanTuning1 = 0;
@@ -574,7 +586,7 @@ NNLSBase::getRemainingFeatures()
         Three different kinds of chromagram are calculated, "treble", "bass", and "both" (which means 
         bass and treble stacked onto each other).
     **/
-    if (m_dictID == 1) {
+    if (m_useNNLS == 0) {
         cerr << "[NNLS Chroma Plugin] Mapping to semitone spectrum and chroma ... ";
     } else {
         cerr << "[NNLS Chroma Plugin] Performing NNLS and mapping to chroma ... ";
@@ -628,7 +640,7 @@ NNLSBase::getRemainingFeatures()
         unsigned iSemitone = 0;
 			
         if (some_b_greater_zero) {
-            if (m_dictID == 1) {
+            if (m_useNNLS == 0) {
                 for (unsigned iNote = 2; iNote < nNote - 2; iNote += 3) {
                     currval = 0;
                     currval += b[iNote + 1 + -1] * 0.5;						

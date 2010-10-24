@@ -69,13 +69,13 @@ protected:
     float m_whitening;
     float m_preset;
 	float m_s;
+	float m_useNNLS;
     vector<float> m_localTuning;
     vector<float> m_kernelValue;
     vector<int> m_kernelFftIndex;
     vector<int> m_kernelNoteIndex;
     float *m_dict;
     bool m_tuneLocal;
-    int m_dictID;
     vector<float> m_chorddict;
     vector<string> m_chordnames;
     float m_doNormalizeChroma;
