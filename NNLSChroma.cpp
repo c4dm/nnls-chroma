@@ -74,7 +74,7 @@ NNLSChroma::getOutputDescriptors() const
     for (int iNote = 0; iNote < 24; iNote++) {
         bothchromanames.push_back(notenames[iNote]);
         if (iNote < 12) {
-            chromanames.push_back(notenames[iNote]);
+            chromanames.push_back(notenames[iNote+12]);
         }
     }
     

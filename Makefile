@@ -2,7 +2,7 @@ PLUGIN_LIBRARY_NAME = matthiasm
 
 # Edit this to list one .o file for each .cpp file in your plugin project
 #
-PLUGIN_CODE_OBJECTS = NNLSBase.o NNLSChroma.o Chordino.o Tuning.o plugins.o nnls.o chromamethods.o
+PLUGIN_CODE_OBJECTS = NNLSBase.o NNLSChroma.o Chordino.o Tuning.o plugins.o nnls.o chromamethods.o viterbi.o
 
 # Edit this to the location of the Vamp plugin SDK, relative to your
 # project directory
@@ -41,3 +41,4 @@ Chordino.o: NNLSBase.h
 chromamethods.o: nnls.h
 NNLSChroma.o: NNLSBase.h
 Tuning.o: NNLSBase.h
+viterbi.o: viterbi.h

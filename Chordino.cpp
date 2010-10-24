@@ -19,6 +19,7 @@
 #include "Chordino.h"
 
 #include "chromamethods.h"
+#include "viterbi.h"
 
 #include <cstdlib>
 #include <fstream>
@@ -161,8 +162,8 @@ Chordino::getRemainingFeatures()
 		    
 		    
     /** Tune Log-Frequency Spectrogram
-        calculate a tuned log-frequency spectrogram (f2): use the tuning estimated above (kinda f0) to 
-        perform linear interpolation on the existing log-frequency spectrogram (kinda f1).
+        calculate a tuned log-frequency spectrogram (currentTunedSpec): use the tuning estimated above (kinda f0) to 
+        perform linear interpolation on the existing log-frequency spectrogram (kinda currentLogSpectum).
     **/
     cerr << endl << "[Chordino Plugin] Tuning Log-Frequency Spectrogram ... ";
 					
@@ -173,13 +174,17 @@ Chordino::getRemainingFeatures()
     int count = 0;
 		
     FeatureList tunedSpec;
+    int nFrame = m_logSpectrum.size();
+    
+    vector<Vamp::RealTime> timestamps;
 
     for (FeatureList::iterator i = m_logSpectrum.begin(); i != m_logSpectrum.end(); ++i) {
-        Feature f1 = *i;
-        Feature f2; // tuned log-frequency spectrum
-        f2.hasTimestamp = true;
-        f2.timestamp = f1.timestamp;
-        f2.values.push_back(0.0); f2.values.push_back(0.0); // set lower edge to zero
+        Feature currentLogSpectum = *i;
+        Feature currentTunedSpec; // tuned log-frequency spectrum
+        currentTunedSpec.hasTimestamp = true;
+        currentTunedSpec.timestamp = currentLogSpectum.timestamp;
+        timestamps.push_back(currentLogSpectum.timestamp);
+        currentTunedSpec.values.push_back(0.0); currentTunedSpec.values.push_back(0.0); // set lower edge to zero
 		
         if (m_tuneLocal) {
             intShift = floor(m_localTuning[count] * 3);
@@ -188,31 +193,31 @@ Chordino::getRemainingFeatures()
 		        
         // cerr << intShift << " " << intFactor << endl;
 		        
-        for (unsigned k = 2; k < f1.values.size() - 3; ++k) { // interpolate all inner bins
-            tempValue = f1.values[k + intShift] * (1-intFactor) + f1.values[k+intShift+1] * intFactor;
-            f2.values.push_back(tempValue);
+        for (unsigned k = 2; k < currentLogSpectum.values.size() - 3; ++k) { // interpolate all inner bins
+            tempValue = currentLogSpectum.values[k + intShift] * (1-intFactor) + currentLogSpectum.values[k+intShift+1] * intFactor;
+            currentTunedSpec.values.push_back(tempValue);
         }
 		        
-        f2.values.push_back(0.0); f2.values.push_back(0.0); f2.values.push_back(0.0); // upper edge
-        vector<float> runningmean = SpecialConvolution(f2.values,hw);
+        currentTunedSpec.values.push_back(0.0); currentTunedSpec.values.push_back(0.0); currentTunedSpec.values.push_back(0.0); // upper edge
+        vector<float> runningmean = SpecialConvolution(currentTunedSpec.values,hw);
         vector<float> runningstd;
         for (int i = 0; i < 256; i++) { // first step: squared values into vector (variance)
-            runningstd.push_back((f2.values[i] - runningmean[i]) * (f2.values[i] - runningmean[i]));
+            runningstd.push_back((currentTunedSpec.values[i] - runningmean[i]) * (currentTunedSpec.values[i] - runningmean[i]));
         }
         runningstd = SpecialConvolution(runningstd,hw); // second step convolve
         for (int i = 0; i < 256; i++) { 
             runningstd[i] = sqrt(runningstd[i]); // square root to finally have running std
             if (runningstd[i] > 0) {
-                // f2.values[i] = (f2.values[i] / runningmean[i]) > thresh ? 
-                // 		                    (f2.values[i] - runningmean[i]) / pow(runningstd[i],m_whitening) : 0;
-                f2.values[i] = (f2.values[i] - runningmean[i]) > 0 ?
-                    (f2.values[i] - runningmean[i]) / pow(runningstd[i],m_whitening) : 0;
+                // currentTunedSpec.values[i] = (currentTunedSpec.values[i] / runningmean[i]) > thresh ? 
+                // 		                    (currentTunedSpec.values[i] - runningmean[i]) / pow(runningstd[i],m_whitening) : 0;
+                currentTunedSpec.values[i] = (currentTunedSpec.values[i] - runningmean[i]) > 0 ?
+                    (currentTunedSpec.values[i] - runningmean[i]) / pow(runningstd[i],m_whitening) : 0;
             }
-            if (f2.values[i] < 0) {
+            if (currentTunedSpec.values[i] < 0) {
                 cerr << "ERROR: negative value in logfreq spectrum" << endl;
             }
         }
-        tunedSpec.push_back(f2);
+        tunedSpec.push_back(currentTunedSpec);
         count++;
     }
     cerr << "done." << endl;
@@ -230,19 +235,21 @@ Chordino::getRemainingFeatures()
     }
 
 	    
-    vector<vector<float> > chordogram;
+    vector<vector<double> > chordogram;
     vector<vector<int> > scoreChordogram;
     vector<float> chordchange = vector<float>(tunedSpec.size(),0);
     count = 0;
 
     FeatureList chromaList;
+    
+    
 
     for (FeatureList::iterator it = tunedSpec.begin(); it != tunedSpec.end(); ++it) {
-        Feature f2 = *it; // logfreq spectrum
-        Feature f6; // treble and bass chromagram
+        Feature currentTunedSpec = *it; // logfreq spectrum
+        Feature currentChromas; // treble and bass chromagram
 
-        f6.hasTimestamp = true;
-        f6.timestamp = f2.timestamp;
+        currentChromas.hasTimestamp = true;
+        currentChromas.timestamp = currentTunedSpec.timestamp;    
 
         float b[256];
 	
@@ -250,7 +257,7 @@ Chordino::getRemainingFeatures()
         float sumb = 0;
         for (int i = 0; i < 256; i++) {
             // b[i] = m_dict[(256 * count + i) % (256 * 84)];
-            b[i] = f2.values[i];
+            b[i] = currentTunedSpec.values[i];
             sumb += b[i];
             if (b[i] > 0) {
                 some_b_greater_zero = true;
@@ -314,7 +321,7 @@ Chordino::getRemainingFeatures()
 
         vector<float> origchroma = chroma;
         chroma.insert(chroma.begin(), basschroma.begin(), basschroma.end()); // just stack the both chromas 
-        f6.values = chroma;
+        currentChromas.values = chroma;
  
         if (m_doNormalizeChroma > 0) {
             vector<float> chromanorm = vector<float>(3,0);			
@@ -340,17 +347,17 @@ Chordino::getRemainingFeatures()
             }
             if (chromanorm[2] > 0) {
                 for (int i = 0; i < chroma.size(); i++) {
-                    f6.values[i] /= chromanorm[2];
+                    currentChromas.values[i] /= chromanorm[2];
                 }
             }
         }
 
-        chromaList.push_back(f6);
+        chromaList.push_back(currentChromas);
 
         // local chord estimation
-        vector<float> currentChordSalience;
-        float tempchordvalue = 0;
-        float sumchordvalue = 0;
+        vector<double> currentChordSalience;
+        double tempchordvalue = 0;
+        double sumchordvalue = 0;
 	        
         for (int iChord = 0; iChord < nChord; iChord++) {
             tempchordvalue = 0;
@@ -377,165 +384,186 @@ Chordino::getRemainingFeatures()
     cerr << "done." << endl;
 		
 
-    /* Simple chord estimation
-       I just take the local chord estimates ("currentChordSalience") and average them over time, then
-       take the maximum. Very simple, don't do this at home...
-    */
-    cerr << "[Chordino Plugin] Chord Estimation ... ";
-    count = 0; 
-    int halfwindowlength = m_inputSampleRate / m_stepSize;
-    vector<int> chordSequence;
+    bool m_useHMM = true; // this will go into the chordino header file.
+	if (m_useHMM) {
+	    
+        int oldchord = nChord-1;
+        double selftransprob = 0.1;
+	    
+        vector<double> init = vector<double>(nChord,1.0/nChord);
+        vector<vector<double> > trans;
+        for (int iChord = 0; iChord < nChord; iChord++) {
+            vector<double> temp = vector<double>(nChord,(1-selftransprob)/(nChord-1));            
+            temp[iChord] = selftransprob;
+            trans.push_back(temp);
+        }
+        vector<int> chordpath = ViterbiPath(init,trans,chordogram);
+        
+        for (int iFrame = 0; iFrame < chordpath.size(); ++iFrame) {
+            // cerr << chordpath[iFrame] << endl;
+            if (chordpath[iFrame] != oldchord) {
+                Feature chord_feature; // chord estimate
+                chord_feature.hasTimestamp = true;
+                chord_feature.timestamp = timestamps[iFrame];
+                chord_feature.label = m_chordnames[chordpath[iFrame]];
+                fsOut[0].push_back(chord_feature);
+                oldchord = chordpath[iFrame];         
+            }
+        }
+        
+        // cerr << chordpath[0] << endl;
+	} else {
+        /* Simple chord estimation
+           I just take the local chord estimates ("currentChordSalience") and average them over time, then
+           take the maximum. Very simple, don't do this at home...
+        */
+        cerr << "[NNLS Chroma Plugin] Chord Estimation ... ";
+        count = 0; 
+        int halfwindowlength = m_inputSampleRate / m_stepSize;
+        vector<int> chordSequence;
+        for (vector<Vamp::RealTime>::iterator it = timestamps.begin(); it != timestamps.end(); ++it) { // initialise the score chordogram
+            vector<int> temp = vector<int>(nChord,0);
+            scoreChordogram.push_back(temp);
+        }
+        for (vector<Vamp::RealTime>::iterator it = timestamps.begin(); it < timestamps.end()-2*halfwindowlength-1; ++it) {		
+            int startIndex = count + 1;
+            int endIndex = count + 2 * halfwindowlength;
 
-    for (FeatureList::iterator it = chromaList.begin(); it != chromaList.end(); ++it) { // initialise the score chordogram
-        vector<int> temp = vector<int>(nChord,0);
-        scoreChordogram.push_back(temp);
-    }
+            float chordThreshold = 2.5/nChord;//*(2*halfwindowlength+1);
 
-    for (FeatureList::iterator it = chromaList.begin(); it < chromaList.end()-2*halfwindowlength-1; ++it) {		
-        int startIndex = count + 1;
-        int endIndex = count + 2 * halfwindowlength;
-			
-        float chordThreshold = 2.5/nChord;//*(2*halfwindowlength+1);
-            
-        vector<int> chordCandidates;
-        for (unsigned iChord = 0; iChord < nChord-1; iChord++) {
-            // float currsum = 0;
-            // for (unsigned iFrame = startIndex; iFrame < endIndex; ++iFrame) {
-            //  currsum += chordogram[iFrame][iChord];
-            // }
-            //                 if (currsum > chordThreshold) chordCandidates.push_back(iChord);
-            for (unsigned iFrame = startIndex; iFrame < endIndex; ++iFrame) {
-                if (chordogram[iFrame][iChord] > chordThreshold) {
-                    chordCandidates.push_back(iChord);
-                    break;
-                }                    
-            }
-        }
-        chordCandidates.push_back(nChord-1);
-//        cerr << chordCandidates.size() << endl;          
-	        
-        float maxval = 0; // will be the value of the most salient *chord change* in this frame
-        float maxindex = 0; //... and the index thereof
-        unsigned bestchordL = nChord-1; // index of the best "left" chord
-        unsigned bestchordR = nChord-1; // index of the best "right" chord
- 	 		
-        for (int iWF = 1; iWF < 2*halfwindowlength; ++iWF) {
-            // now find the max values on both sides of iWF
-            // left side:
-            float maxL = 0;
-            unsigned maxindL = nChord-1;
-            for (unsigned kChord = 0; kChord < chordCandidates.size(); kChord++) {
-                unsigned iChord = chordCandidates[kChord];
-                float currsum = 0;
-                for (unsigned iFrame = 0; iFrame < iWF-1; ++iFrame) {
-                    currsum += chordogram[count+iFrame][iChord];
-                }
-                if (iChord == nChord-1) currsum *= 0.8;
-                if (currsum > maxL) {
-                    maxL = currsum;
-                    maxindL = iChord;
-                }
-            }				
-            // right side:
-            float maxR = 0;
-            unsigned maxindR = nChord-1;
-            for (unsigned kChord = 0; kChord < chordCandidates.size(); kChord++) {
-                unsigned iChord = chordCandidates[kChord];
-                float currsum = 0;
-                for (unsigned iFrame = iWF-1; iFrame < 2*halfwindowlength; ++iFrame) {
-                    currsum += chordogram[count+iFrame][iChord];
-                }
-                if (iChord == nChord-1) currsum *= 0.8;
-                if (currsum > maxR) {
-                    maxR = currsum;
-                    maxindR = iChord;
+            vector<int> chordCandidates;
+            for (unsigned iChord = 0; iChord < nChord-1; iChord++) {
+                // float currsum = 0;
+                // for (unsigned iFrame = startIndex; iFrame < endIndex; ++iFrame) {
+                //  currsum += chordogram[iFrame][iChord];
+                // }
+                //                 if (currsum > chordThreshold) chordCandidates.push_back(iChord);
+                for (unsigned iFrame = startIndex; iFrame < endIndex; ++iFrame) {
+                    if (chordogram[iFrame][iChord] > chordThreshold) {
+                        chordCandidates.push_back(iChord);
+                        break;
+                    }                    
                 }
             }
-            if (maxL+maxR > maxval) {					
-                maxval = maxL+maxR;
-                maxindex = iWF;
-                bestchordL = maxindL;
-                bestchordR = maxindR;
-            }
-				
-        }
-//        cerr << "maxindex: " << maxindex << ", bestchordR is " << bestchordR << ", of frame " << count << endl;
-        // add a score to every chord-frame-point that was part of a maximum 
-        for (unsigned iFrame = 0; iFrame < maxindex-1; ++iFrame) {
-            scoreChordogram[iFrame+count][bestchordL]++;
-        }
-        for (unsigned iFrame = maxindex-1; iFrame < 2*halfwindowlength; ++iFrame) {
-            scoreChordogram[iFrame+count][bestchordR]++;
-        }
-        if (bestchordL != bestchordR) chordchange[maxindex+count] += (halfwindowlength - abs(maxindex-halfwindowlength)) * 2.0 / halfwindowlength;
-        count++;	
-    }
-//    cerr << "*******  agent finished   *******" << endl;
-    count = 0;
-    for (FeatureList::iterator it = chromaList.begin(); it != chromaList.end(); ++it) { 
-        float maxval = 0; // will be the value of the most salient chord in this frame
-        float maxindex = 0; //... and the index thereof
-        for (unsigned iChord = 0; iChord < nChord; iChord++) {
-            if (scoreChordogram[count][iChord] > maxval) {
-                maxval = scoreChordogram[count][iChord];
-                maxindex = iChord;
-                // cerr << iChord << endl;
-            }
-        }
-        chordSequence.push_back(maxindex);
-        // cerr << "before modefilter, maxindex: " << maxindex << endl;
-        count++;
-    }
-//    cerr << "*******  mode filter done *******" << endl;
+            chordCandidates.push_back(nChord-1);
+            // cerr << chordCandidates.size() << endl;          
 
-	
-    // mode filter on chordSequence
-    count = 0;
-    string oldChord = "";
-    for (FeatureList::iterator it = chromaList.begin(); it != chromaList.end(); ++it) {
-        Feature f6 = *it;
-        Feature f7; // chord estimate
-        f7.hasTimestamp = true;
-        f7.timestamp = f6.timestamp;
-        Feature f8; // chord estimate
-        f8.hasTimestamp = true;
-        f8.timestamp = f6.timestamp;
-			
-        vector<int> chordCount = vector<int>(nChord,0);
-        int maxChordCount = 0;
-        int maxChordIndex = nChord-1;
-        string maxChord;
-        int startIndex = max(count - halfwindowlength/2,0);
-        int endIndex = min(int(chordogram.size()), count + halfwindowlength/2);
-        for (int i = startIndex; i < endIndex; i++) {				
-            chordCount[chordSequence[i]]++;
-            if (chordCount[chordSequence[i]] > maxChordCount) {
-                // cerr << "start index " << startIndex << endl;
-                maxChordCount++;
-                maxChordIndex = chordSequence[i];
-                maxChord = m_chordnames[maxChordIndex];
+            float maxval = 0; // will be the value of the most salient *chord change* in this frame
+            float maxindex = 0; //... and the index thereof
+            unsigned bestchordL = nChord-1; // index of the best "left" chord
+            unsigned bestchordR = nChord-1; // index of the best "right" chord
+
+            for (int iWF = 1; iWF < 2*halfwindowlength; ++iWF) {
+                // now find the max values on both sides of iWF
+                // left side:
+                float maxL = 0;
+                unsigned maxindL = nChord-1;
+                for (unsigned kChord = 0; kChord < chordCandidates.size(); kChord++) {
+                    unsigned iChord = chordCandidates[kChord];
+                    float currsum = 0;
+                    for (unsigned iFrame = 0; iFrame < iWF-1; ++iFrame) {
+                        currsum += chordogram[count+iFrame][iChord];
+                    }
+                    if (iChord == nChord-1) currsum *= 0.8;
+                    if (currsum > maxL) {
+                        maxL = currsum;
+                        maxindL = iChord;
+                    }
+                }				
+                // right side:
+                float maxR = 0;
+                unsigned maxindR = nChord-1;
+                for (unsigned kChord = 0; kChord < chordCandidates.size(); kChord++) {
+                    unsigned iChord = chordCandidates[kChord];
+                    float currsum = 0;
+                    for (unsigned iFrame = iWF-1; iFrame < 2*halfwindowlength; ++iFrame) {
+                        currsum += chordogram[count+iFrame][iChord];
+                    }
+                    if (iChord == nChord-1) currsum *= 0.8;
+                    if (currsum > maxR) {
+                        maxR = currsum;
+                        maxindR = iChord;
+                    }
+                }
+                if (maxL+maxR > maxval) {					
+                    maxval = maxL+maxR;
+                    maxindex = iWF;
+                    bestchordL = maxindL;
+                    bestchordR = maxindR;
+                }
+
             }
+            // cerr << "maxindex: " << maxindex << ", bestchordR is " << bestchordR << ", of frame " << count << endl;
+            // add a score to every chord-frame-point that was part of a maximum 
+            for (unsigned iFrame = 0; iFrame < maxindex-1; ++iFrame) {
+                scoreChordogram[iFrame+count][bestchordL]++;
+            }
+            for (unsigned iFrame = maxindex-1; iFrame < 2*halfwindowlength; ++iFrame) {
+                scoreChordogram[iFrame+count][bestchordR]++;
+            }
+            if (bestchordL != bestchordR) chordchange[maxindex+count] += (halfwindowlength - abs(maxindex-halfwindowlength)) * 2.0 / halfwindowlength;
+            count++;	
         }
-        // chordSequence[count] = maxChordIndex;
-        // cerr << maxChordIndex << endl;
-        f8.values.push_back(chordchange[count]/(halfwindowlength*2));
-        // cerr << chordchange[count] << endl;
-        fsOut[m_outputHarmonicChange].push_back(f8);
-        if (oldChord != maxChord) {
-            oldChord = maxChord;
-            f7.label = m_chordnames[maxChordIndex];
-            fsOut[m_outputChords].push_back(f7);
+        // cerr << "*******  agent finished   *******" << endl;
+        count = 0;
+        for (vector<Vamp::RealTime>::iterator it = timestamps.begin(); it != timestamps.end(); ++it) { 
+            float maxval = 0; // will be the value of the most salient chord in this frame
+            float maxindex = 0; //... and the index thereof
+            for (unsigned iChord = 0; iChord < nChord; iChord++) {
+                if (scoreChordogram[count][iChord] > maxval) {
+                    maxval = scoreChordogram[count][iChord];
+                    maxindex = iChord;
+                    // cerr << iChord << endl;
+                }
+            }
+            chordSequence.push_back(maxindex);    
+            count++;
         }
-        count++;
+
+
+        // mode filter on chordSequence
+        count = 0;
+        string oldChord = "";
+        for (vector<Vamp::RealTime>::iterator it = timestamps.begin(); it != timestamps.end(); ++it) {
+            Feature chord_feature; // chord estimate
+            chord_feature.hasTimestamp = true;
+            chord_feature.timestamp = *it;
+            // Feature currentChord; // chord estimate
+            // currentChord.hasTimestamp = true;
+            // currentChord.timestamp = currentChromas.timestamp;
+
+            vector<int> chordCount = vector<int>(nChord,0);
+            int maxChordCount = 0;
+            int maxChordIndex = nChord-1;
+            string maxChord;
+            int startIndex = max(count - halfwindowlength/2,0);
+            int endIndex = min(int(chordogram.size()), count + halfwindowlength/2);
+            for (int i = startIndex; i < endIndex; i++) {				
+                chordCount[chordSequence[i]]++;
+                if (chordCount[chordSequence[i]] > maxChordCount) {
+                    // cerr << "start index " << startIndex << endl;
+                    maxChordCount++;
+                    maxChordIndex = chordSequence[i];
+                    maxChord = m_chordnames[maxChordIndex];
+                }
+            }
+            // chordSequence[count] = maxChordIndex;
+            // cerr << maxChordIndex << endl;
+            // cerr << chordchange[count] << endl;
+            // fsOut[9].push_back(currentChord);
+            if (oldChord != maxChord) {
+                oldChord = maxChord;
+                chord_feature.label = m_chordnames[maxChordIndex];
+                fsOut[0].push_back(chord_feature);
+            }
+            count++;
+        }
     }
-    Feature f7; // last chord estimate
-    f7.hasTimestamp = true;
-    f7.timestamp = chromaList[chromaList.size()-1].timestamp;
-    f7.label = "N";
-    fsOut[m_outputChords].push_back(f7);
+    Feature chord_feature; // last chord estimate
+    chord_feature.hasTimestamp = true;
+    chord_feature.timestamp = timestamps[timestamps.size()-1];
+    chord_feature.label = "N";
+    fsOut[0].push_back(chord_feature);
     cerr << "done." << endl;
-
     return fsOut;     
-
 }
-
