@@ -67,7 +67,7 @@ Tuning::getDescription() const
 {
     // Return something helpful here!
     if (debug_on) cerr << "--> getDescription" << endl;
-    return "This plugin provides a number of features derived from a log-frequency amplitude spectrum of the DFT: some variants of the log-frequency spectrum, including a semitone spectrum derived from approximate transcription using the NNLS algorithm; based on this semitone spectrum, chroma features and a simple chord estimate.";
+    return "The tuning plugin can estimate the local and global tuning of piece. The same tuning method is used for the NNLS Chroma and Chordino plugins.";
 }
 
 Tuning::ParameterList
@@ -79,7 +79,7 @@ Tuning::getParameterDescriptors() const
     ParameterDescriptor d0;
     d0.identifier = "rollon";
     d0.name = "spectral roll-on";
-    d0.description = "The bins below the spectral roll-on quantile will be set to 0.";
+    d0.description = "Consider the cumulative energy spectrum (from low to high frequencies). All bins below the first bin whose cumulative energy exceeds the quantile [spectral roll on] x [total energy] will be set to 0. A value of 0 means that no bins will be changed.";
     d0.unit = "";
     d0.minValue = 0;
     d0.maxValue = 0.05;
@@ -103,7 +103,7 @@ Tuning::getOutputDescriptors() const
     OutputDescriptor d0;
     d0.identifier = "tuning";
     d0.name = "Tuning";
-    d0.description = "The concert pitch.";
+    d0.description = "Returns a single label (at time 0 seconds) containing an estimate of the concert pitch in Hz.";
     d0.unit = "Hz";
     d0.hasFixedBinCount = true;
     d0.binCount = 0;
@@ -119,7 +119,7 @@ Tuning::getOutputDescriptors() const
     OutputDescriptor d10;
     d10.identifier = "localtuning";
     d10.name = "Local Tuning";
-    d10.description = "Tuning based on the history up to this timestamp.";
+    d10.description = "Returns a tuning estimate at every analysis frame, an average of the (recent) previous frame-wise estimates of the concert pitch in Hz.";
     d10.unit = "Hz";
     d10.hasFixedBinCount = true;
     d10.binCount = 1;

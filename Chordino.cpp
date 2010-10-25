@@ -60,7 +60,7 @@ string
 Chordino::getDescription() const
 {
     if (debug_on) cerr << "--> getDescription" << endl;
-    return "This plugin provides a number of features derived from a log-frequency amplitude spectrum of the DFT: some variants of the log-frequency spectrum, including a semitone spectrum derived from approximate transcription using the NNLS algorithm; based on this semitone spectrum, chroma features and a simple chord estimate.";
+    return "Chordino provides a simple chord transcription based on NNLS Chroma (as in the NNLS Chroma plugin). Chord profiles given by the user in the file chord.dict are used to calculate frame-wise chord similarities. Two simple (non-state-of-the-art!) algorithms are available that smooth these to provide a chord transcription: a simple chord change method, and a standard HMM/Viterbi approach.";
 }
 
 Chordino::ParameterList
@@ -96,7 +96,7 @@ Chordino::getParameterDescriptors() const
     ParameterDescriptor d0;
     d0.identifier = "rollon";
     d0.name = "spectral roll-on";
-    d0.description = "The bins below the spectral roll-on quantile will be set to 0.";
+    d0.description = "Consider the cumulative energy spectrum (from low to high frequencies). All bins below the first bin whose cumulative energy exceeds the quantile [spectral roll on] x [total energy] will be set to 0. A value of 0 means that no bins will be changed.";
     d0.unit = "";
     d0.minValue = 0;
     d0.maxValue = 0.05;
@@ -172,7 +172,7 @@ Chordino::getOutputDescriptors() const
     OutputDescriptor d7;
     d7.identifier = "simplechord";
     d7.name = "Chord Estimate";
-    d7.description = "A simple chord estimate based on the inner product of chord templates with the smoothed chroma.";
+    d7.description = "Estimated chord times and labels. Two simple (non-state-of-the-art!) algorithms are available that smooth these to provide a chord transcription: a simple chord change method, and a standard HMM/Viterbi approach.";
     d7.unit = "";
     d7.hasFixedBinCount = true;
     d7.binCount = 0;
@@ -185,9 +185,9 @@ Chordino::getOutputDescriptors() const
     m_outputChords = index++;
     
     OutputDescriptor d8;
-    d8.identifier = "harmonicchange";
+    d8.identifier = "";
     d8.name = "Harmonic Change Value";
-    d8.description = "Harmonic change.";
+    d8.description = "An indication of the likelihood of harmonic change. Depends on the chord dictionary. Calculation is different depending on whether the Viterbi algorithm is used for chord estimation, or the simple chord estimate.";
     d8.unit = "";
     d8.hasFixedBinCount = true;
     d8.binCount = 1;

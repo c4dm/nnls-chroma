@@ -16,7 +16,7 @@
 :nnls-chroma a  vamp:PluginLibrary ;
     vamp:identifier "nnls-chroma"  ; 
     vamp:available_plugin plugbase:chordino ; 
-    vamp:available_plugin plugbase:nnls_chroma ; 
+    vamp:available_plugin plugbase:nnls-chroma ; 
     vamp:available_plugin plugbase:tuning ; 
 #   foaf:page <Place more-information HTML page URL here and uncomment> ;
     .
@@ -24,7 +24,7 @@
 plugbase:chordino a   vamp:Plugin ;
     dc:title              "Chordino" ;
     vamp:name             "Chordino" ;
-    dc:description        """This plugin provides a number of features derived from a log-frequency amplitude spectrum of the DFT: some variants of the log-frequency spectrum, including a semitone spectrum derived from approximate transcription using the NNLS algorithm; based on this semitone spectrum, chroma features and a simple chord estimate.""" ;
+    dc:description        """Chordino provides a simple chord transcription based on NNLS Chroma (as in the NNLS Chroma plugin). Chord profiles given by the user in the file chord.dict are used to calculate frame-wise chord similarities. Two simple (non-state-of-the-art!) algorithms are available that smooth these to provide a chord transcription: a simple chord change method, and a standard HMM/Viterbi approach.""" ;
     foaf:maker            [ foaf:name "Matthias Mauch" ] ; # FIXME could give plugin author's URI here
     dc:rights             """GPL""" ;
 #   cc:license            <Place plugin license URI here and uncomment> ; 
@@ -34,32 +34,46 @@ plugbase:chordino a   vamp:Plugin ;
     vamp:input_domain     vamp:FrequencyDomain ;
 
 
-    vamp:parameter   plugbase:chordino_param_preset ;
+    vamp:parameter   plugbase:chordino_param_useNNLS ;
+    vamp:parameter   plugbase:chordino_param_useHMM ;
     vamp:parameter   plugbase:chordino_param_rollon ;
     vamp:parameter   plugbase:chordino_param_tuningmode ;
-    vamp:parameter   plugbase:chordino_param_chromanormalize ;
+    vamp:parameter   plugbase:chordino_param_whitening ;
+    vamp:parameter   plugbase:chordino_param_s ;
 
     vamp:output      plugbase:chordino_output_simplechord ;
-    vamp:output      plugbase:chordino_output_harmonicchange ;
+    vamp:output      plugbase:chordino_output_ ;
     .
-plugbase:chordino_param_preset a  vamp:QuantizedParameter ;
-    vamp:identifier     "preset" ;
-    dc:title            "preset" ;
+plugbase:chordino_param_useNNLS a  vamp:QuantizedParameter ;
+    vamp:identifier     "useNNLS" ;
+    dc:title            "use approximate transcription (NNLS)" ;
     dc:format           "" ;
     vamp:min_value       0 ;
-    vamp:max_value       3 ;
+    vamp:max_value       1 ;
     vamp:unit           "" ;
     vamp:quantize_step   1  ;
-    vamp:default_value   0 ;
-    vamp:value_names     ( "polyphonic pop" "polyphonic pop (fast)" "solo keyboard" "manual");
+    vamp:default_value   1 ;
+    vamp:value_names     ();
     .
-plugbase:chordino_param_rollon a  vamp:Parameter ;
+plugbase:chordino_param_useHMM a  vamp:QuantizedParameter ;
+    vamp:identifier     "useHMM" ;
+    dc:title            "HMM (Viterbi decoding)" ;
+    dc:format           "" ;
+    vamp:min_value       0 ;
+    vamp:max_value       1 ;
+    vamp:unit           "" ;
+    vamp:quantize_step   1  ;
+    vamp:default_value   1 ;
+    vamp:value_names     ();
+    .
+plugbase:chordino_param_rollon a  vamp:QuantizedParameter ;
     vamp:identifier     "rollon" ;
     dc:title            "spectral roll-on" ;
     dc:format           "" ;
     vamp:min_value       0 ;
-    vamp:max_value       1 ;
-    vamp:unit           ""  ;
+    vamp:max_value       0.05 ;
+    vamp:unit           "" ;
+    vamp:quantize_step   0.005  ;
     vamp:default_value   0 ;
     vamp:value_names     ();
     .
@@ -74,21 +88,30 @@ plugbase:chordino_param_tuningmode a  vamp:QuantizedParameter ;
     vamp:default_value   0 ;
     vamp:value_names     ( "global tuning" "local tuning");
     .
-plugbase:chordino_param_chromanormalize a  vamp:QuantizedParameter ;
-    vamp:identifier     "chromanormalize" ;
-    dc:title            "chroma normalization" ;
+plugbase:chordino_param_whitening a  vamp:Parameter ;
+    vamp:identifier     "whitening" ;
+    dc:title            "spectral whitening" ;
     dc:format           "" ;
     vamp:min_value       0 ;
-    vamp:max_value       3 ;
-    vamp:unit           "" ;
-    vamp:quantize_step   1  ;
-    vamp:default_value   0 ;
-    vamp:value_names     ( "none" "maximum norm" "L1 norm" "L2 norm");
+    vamp:max_value       1 ;
+    vamp:unit           ""  ;
+    vamp:default_value   1 ;
+    vamp:value_names     ();
+    .
+plugbase:chordino_param_s a  vamp:Parameter ;
+    vamp:identifier     "s" ;
+    dc:title            "spectral shape" ;
+    dc:format           "" ;
+    vamp:min_value       0.5 ;
+    vamp:max_value       0.9 ;
+    vamp:unit           ""  ;
+    vamp:default_value   0.7 ;
+    vamp:value_names     ();
     .
 plugbase:chordino_output_simplechord a  vamp:SparseOutput ;
     vamp:identifier       "simplechord" ;
     dc:title              "Chord Estimate" ;
-    dc:description        """A simple chord estimate based on the inner product of chord templates with the smoothed chroma."""  ;
+    dc:description        """Estimated chord times and labels. Two simple (non-state-of-the-art!) algorithms are available that smooth these to provide a chord transcription: a simple chord change method, and a standard HMM/Viterbi approach."""  ;
     vamp:fixed_bin_count  "true" ;
     vamp:unit             "" ;
     vamp:bin_count        0 ;
@@ -98,10 +121,10 @@ plugbase:chordino_output_simplechord a  vamp:SparseOutput ;
 #   vamp:computes_feature      <Place feature attribute URI here and uncomment> ;
 #   vamp:computes_signal_type  <Place signal type URI here and uncomment> ;
     .
-plugbase:chordino_output_harmonicchange a  vamp:DenseOutput ;
-    vamp:identifier       "harmonicchange" ;
+plugbase:chordino_output_ a  vamp:DenseOutput ;
+    vamp:identifier       "" ;
     dc:title              "Harmonic Change Value" ;
-    dc:description        """Harmonic change."""  ;
+    dc:description        """An indication of the likelihood of harmonic change. Depends on the chord dictionary. Calculation is different depending on whether the Viterbi algorithm is used for chord estimation, or the simple chord estimate."""  ;
     vamp:fixed_bin_count  "true" ;
     vamp:unit             "" ;
     a                 vamp:KnownExtentsOutput ;
@@ -112,53 +135,56 @@ plugbase:chordino_output_harmonicchange a  vamp:DenseOutput ;
 #   vamp:computes_feature      <Place feature attribute URI here and uncomment> ;
 #   vamp:computes_signal_type  <Place signal type URI here and uncomment> ;
     .
-plugbase:nnls_chroma a   vamp:Plugin ;
+plugbase:nnls-chroma a   vamp:Plugin ;
     dc:title              "NNLS Chroma" ;
     vamp:name             "NNLS Chroma" ;
-    dc:description        """This plugin provides a number of features derived from a log-frequency amplitude spectrum of the DFT: some variants of the log-frequency spectrum, including a semitone spectrum derived from approximate transcription using the NNLS algorithm; based on this semitone spectrum, chroma features and a simple chord estimate.""" ;
+    dc:description        """This plugin provides a number of features derived from a DFT-based log-frequency amplitude spectrum: some variants of the log-frequency spectrum, including a semitone spectrum derived from approximate transcription using the NNLS algorithm; and based on this semitone spectrum, different chroma features.""" ;
     foaf:maker            [ foaf:name "Matthias Mauch" ] ; # FIXME could give plugin author's URI here
     dc:rights             """GPL""" ;
 #   cc:license            <Place plugin license URI here and uncomment> ; 
-    vamp:identifier       "nnls_chroma" ;
+    vamp:identifier       "nnls-chroma" ;
     vamp:vamp_API_version vamp:api_version_2 ;
     owl:versionInfo       "1" ;
     vamp:input_domain     vamp:FrequencyDomain ;
 
 
-    vamp:parameter   plugbase:nnls_chroma_param_preset ;
-    vamp:parameter   plugbase:nnls_chroma_param_rollon ;
-    vamp:parameter   plugbase:nnls_chroma_param_tuningmode ;
-    vamp:parameter   plugbase:nnls_chroma_param_chromanormalize ;
+    vamp:parameter   plugbase:nnls-chroma_param_useNNLS ;
+    vamp:parameter   plugbase:nnls-chroma_param_rollon ;
+    vamp:parameter   plugbase:nnls-chroma_param_tuningmode ;
+    vamp:parameter   plugbase:nnls-chroma_param_whitening ;
+    vamp:parameter   plugbase:nnls-chroma_param_s ;
+    vamp:parameter   plugbase:nnls-chroma_param_chromanormalize ;
 
-    vamp:output      plugbase:nnls_chroma_output_logfreqspec ;
-    vamp:output      plugbase:nnls_chroma_output_tunedlogfreqspec ;
-    vamp:output      plugbase:nnls_chroma_output_semitonespectrum ;
-    vamp:output      plugbase:nnls_chroma_output_chroma ;
-    vamp:output      plugbase:nnls_chroma_output_basschroma ;
-    vamp:output      plugbase:nnls_chroma_output_bothchroma ;
+    vamp:output      plugbase:nnls-chroma_output_logfreqspec ;
+    vamp:output      plugbase:nnls-chroma_output_tunedlogfreqspec ;
+    vamp:output      plugbase:nnls-chroma_output_semitonespectrum ;
+    vamp:output      plugbase:nnls-chroma_output_chroma ;
+    vamp:output      plugbase:nnls-chroma_output_basschroma ;
+    vamp:output      plugbase:nnls-chroma_output_bothchroma ;
     .
-plugbase:nnls_chroma_param_preset a  vamp:QuantizedParameter ;
-    vamp:identifier     "preset" ;
-    dc:title            "preset" ;
+plugbase:nnls-chroma_param_useNNLS a  vamp:QuantizedParameter ;
+    vamp:identifier     "useNNLS" ;
+    dc:title            "use approximate transcription (NNLS)" ;
     dc:format           "" ;
     vamp:min_value       0 ;
-    vamp:max_value       3 ;
+    vamp:max_value       1 ;
     vamp:unit           "" ;
     vamp:quantize_step   1  ;
-    vamp:default_value   0 ;
-    vamp:value_names     ( "polyphonic pop" "polyphonic pop (fast)" "solo keyboard" "manual");
+    vamp:default_value   1 ;
+    vamp:value_names     ();
     .
-plugbase:nnls_chroma_param_rollon a  vamp:Parameter ;
+plugbase:nnls-chroma_param_rollon a  vamp:QuantizedParameter ;
     vamp:identifier     "rollon" ;
     dc:title            "spectral roll-on" ;
     dc:format           "" ;
     vamp:min_value       0 ;
-    vamp:max_value       1 ;
-    vamp:unit           ""  ;
+    vamp:max_value       0.05 ;
+    vamp:unit           "" ;
+    vamp:quantize_step   0.005  ;
     vamp:default_value   0 ;
     vamp:value_names     ();
     .
-plugbase:nnls_chroma_param_tuningmode a  vamp:QuantizedParameter ;
+plugbase:nnls-chroma_param_tuningmode a  vamp:QuantizedParameter ;
     vamp:identifier     "tuningmode" ;
     dc:title            "tuning mode" ;
     dc:format           "" ;
@@ -169,7 +195,27 @@ plugbase:nnls_chroma_param_tuningmode a  vamp:QuantizedParameter ;
     vamp:default_value   0 ;
     vamp:value_names     ( "global tuning" "local tuning");
     .
-plugbase:nnls_chroma_param_chromanormalize a  vamp:QuantizedParameter ;
+plugbase:nnls-chroma_param_whitening a  vamp:Parameter ;
+    vamp:identifier     "whitening" ;
+    dc:title            "spectral whitening" ;
+    dc:format           "" ;
+    vamp:min_value       0 ;
+    vamp:max_value       1 ;
+    vamp:unit           ""  ;
+    vamp:default_value   1 ;
+    vamp:value_names     ();
+    .
+plugbase:nnls-chroma_param_s a  vamp:Parameter ;
+    vamp:identifier     "s" ;
+    dc:title            "spectral shape" ;
+    dc:format           "" ;
+    vamp:min_value       0.5 ;
+    vamp:max_value       0.9 ;
+    vamp:unit           ""  ;
+    vamp:default_value   0.7 ;
+    vamp:value_names     ();
+    .
+plugbase:nnls-chroma_param_chromanormalize a  vamp:QuantizedParameter ;
     vamp:identifier     "chromanormalize" ;
     dc:title            "chroma normalization" ;
     dc:format           "" ;
@@ -180,7 +226,7 @@ plugbase:nnls_chroma_param_chromanormalize a  vamp:QuantizedParameter ;
     vamp:default_value   0 ;
     vamp:value_names     ( "none" "maximum norm" "L1 norm" "L2 norm");
     .
-plugbase:nnls_chroma_output_logfreqspec a  vamp:DenseOutput ;
+plugbase:nnls-chroma_output_logfreqspec a  vamp:DenseOutput ;
     vamp:identifier       "logfreqspec" ;
     dc:title              "Log-Frequency Spectrum" ;
     dc:description        """A Log-Frequency Spectrum (constant Q) that is obtained by cosine filter mapping."""  ;
@@ -191,7 +237,7 @@ plugbase:nnls_chroma_output_logfreqspec a  vamp:DenseOutput ;
 #   vamp:computes_feature      <Place feature attribute URI here and uncomment> ;
 #   vamp:computes_signal_type  <Place signal type URI here and uncomment> ;
     .
-plugbase:nnls_chroma_output_tunedlogfreqspec a  vamp:DenseOutput ;
+plugbase:nnls-chroma_output_tunedlogfreqspec a  vamp:DenseOutput ;
     vamp:identifier       "tunedlogfreqspec" ;
     dc:title              "Tuned Log-Frequency Spectrum" ;
     dc:description        """A Log-Frequency Spectrum (constant Q) that is obtained by cosine filter mapping, then its tuned using the estimated tuning frequency."""  ;
@@ -202,7 +248,7 @@ plugbase:nnls_chroma_output_tunedlogfreqspec a  vamp:DenseOutput ;
 #   vamp:computes_feature      <Place feature attribute URI here and uncomment> ;
 #   vamp:computes_signal_type  <Place signal type URI here and uncomment> ;
     .
-plugbase:nnls_chroma_output_semitonespectrum a  vamp:DenseOutput ;
+plugbase:nnls-chroma_output_semitonespectrum a  vamp:DenseOutput ;
     vamp:identifier       "semitonespectrum" ;
     dc:title              "Semitone Spectrum" ;
     dc:description        """A semitone-spaced log-frequency spectrum derived from the third-of-a-semitone-spaced tuned log-frequency spectrum."""  ;
@@ -213,34 +259,34 @@ plugbase:nnls_chroma_output_semitonespectrum a  vamp:DenseOutput ;
 #   vamp:computes_feature      <Place feature attribute URI here and uncomment> ;
 #   vamp:computes_signal_type  <Place signal type URI here and uncomment> ;
     .
-plugbase:nnls_chroma_output_chroma a  vamp:DenseOutput ;
+plugbase:nnls-chroma_output_chroma a  vamp:DenseOutput ;
     vamp:identifier       "chroma" ;
     dc:title              "Chromagram" ;
-    dc:description        """Tuning-adjusted chromagram from NNLS soft transcription, with an emphasis on the medium note range."""  ;
+    dc:description        """Tuning-adjusted chromagram from NNLS approximate transcription, with an emphasis on the medium note range."""  ;
     vamp:fixed_bin_count  "true" ;
     vamp:unit             "" ;
     vamp:bin_count        12 ;
-    vamp:bin_names        ( "A  (bass)" "Bb (bass)" "B  (bass)" "C  (bass)" "C# (bass)" "D  (bass)" "Eb (bass)" "E  (bass)" "F  (bass)" "F# (bass)" "G  (bass)" "Ab (bass)");
+    vamp:bin_names        ( "A" "Bb" "B" "C" "C#" "D" "Eb" "E" "F" "F#" "G" "Ab");
 #   vamp:computes_event_type   <Place event type URI here and uncomment> ;
 #   vamp:computes_feature      <Place feature attribute URI here and uncomment> ;
 #   vamp:computes_signal_type  <Place signal type URI here and uncomment> ;
     .
-plugbase:nnls_chroma_output_basschroma a  vamp:DenseOutput ;
+plugbase:nnls-chroma_output_basschroma a  vamp:DenseOutput ;
     vamp:identifier       "basschroma" ;
     dc:title              "Bass Chromagram" ;
-    dc:description        """Tuning-adjusted bass chromagram from NNLS soft transcription, with an emphasis on the bass note range."""  ;
+    dc:description        """Tuning-adjusted bass chromagram from NNLS approximate transcription, with an emphasis on the bass note range."""  ;
     vamp:fixed_bin_count  "true" ;
     vamp:unit             "" ;
     vamp:bin_count        12 ;
-    vamp:bin_names        ( "A  (bass)" "Bb (bass)" "B  (bass)" "C  (bass)" "C# (bass)" "D  (bass)" "Eb (bass)" "E  (bass)" "F  (bass)" "F# (bass)" "G  (bass)" "Ab (bass)");
+    vamp:bin_names        ( "A" "Bb" "B" "C" "C#" "D" "Eb" "E" "F" "F#" "G" "Ab");
 #   vamp:computes_event_type   <Place event type URI here and uncomment> ;
 #   vamp:computes_feature      <Place feature attribute URI here and uncomment> ;
 #   vamp:computes_signal_type  <Place signal type URI here and uncomment> ;
     .
-plugbase:nnls_chroma_output_bothchroma a  vamp:DenseOutput ;
+plugbase:nnls-chroma_output_bothchroma a  vamp:DenseOutput ;
     vamp:identifier       "bothchroma" ;
     dc:title              "Chromagram and Bass Chromagram" ;
-    dc:description        """Tuning-adjusted chromagram and bass chromagram (stacked on top of each other) from NNLS soft transcription."""  ;
+    dc:description        """Tuning-adjusted chromagram and bass chromagram (stacked on top of each other) from NNLS approximate transcription."""  ;
     vamp:fixed_bin_count  "true" ;
     vamp:unit             "" ;
     vamp:bin_count        24 ;
@@ -252,7 +298,7 @@ plugbase:nnls_chroma_output_bothchroma a  vamp:DenseOutput ;
 plugbase:tuning a   vamp:Plugin ;
     dc:title              "Tuning" ;
     vamp:name             "Tuning" ;
-    dc:description        """This plugin provides a number of features derived from a log-frequency amplitude spectrum of the DFT: some variants of the log-frequency spectrum, including a semitone spectrum derived from approximate transcription using the NNLS algorithm; based on this semitone spectrum, chroma features and a simple chord estimate.""" ;
+    dc:description        """The tuning plugin can estimate the local and global tuning of piece. The same tuning method is used for the NNLS Chroma and Chordino plugins.""" ;
     foaf:maker            [ foaf:name "Matthias Mauch" ] ; # FIXME could give plugin author's URI here
     dc:rights             """GPL""" ;
 #   cc:license            <Place plugin license URI here and uncomment> ; 
@@ -262,61 +308,26 @@ plugbase:tuning a   vamp:Plugin ;
     vamp:input_domain     vamp:FrequencyDomain ;
 
 
-    vamp:parameter   plugbase:tuning_param_preset ;
     vamp:parameter   plugbase:tuning_param_rollon ;
-    vamp:parameter   plugbase:tuning_param_tuningmode ;
-    vamp:parameter   plugbase:tuning_param_chromanormalize ;
 
     vamp:output      plugbase:tuning_output_tuning ;
     vamp:output      plugbase:tuning_output_localtuning ;
     .
-plugbase:tuning_param_preset a  vamp:QuantizedParameter ;
-    vamp:identifier     "preset" ;
-    dc:title            "preset" ;
-    dc:format           "" ;
-    vamp:min_value       0 ;
-    vamp:max_value       3 ;
-    vamp:unit           "" ;
-    vamp:quantize_step   1  ;
-    vamp:default_value   0 ;
-    vamp:value_names     ( "polyphonic pop" "polyphonic pop (fast)" "solo keyboard" "manual");
-    .
-plugbase:tuning_param_rollon a  vamp:Parameter ;
+plugbase:tuning_param_rollon a  vamp:QuantizedParameter ;
     vamp:identifier     "rollon" ;
     dc:title            "spectral roll-on" ;
     dc:format           "" ;
     vamp:min_value       0 ;
-    vamp:max_value       1 ;
-    vamp:unit           ""  ;
+    vamp:max_value       0.05 ;
+    vamp:unit           "" ;
+    vamp:quantize_step   0.005  ;
     vamp:default_value   0 ;
     vamp:value_names     ();
-    .
-plugbase:tuning_param_tuningmode a  vamp:QuantizedParameter ;
-    vamp:identifier     "tuningmode" ;
-    dc:title            "tuning mode" ;
-    dc:format           "" ;
-    vamp:min_value       0 ;
-    vamp:max_value       1 ;
-    vamp:unit           "" ;
-    vamp:quantize_step   1  ;
-    vamp:default_value   0 ;
-    vamp:value_names     ( "global tuning" "local tuning");
-    .
-plugbase:tuning_param_chromanormalize a  vamp:QuantizedParameter ;
-    vamp:identifier     "chromanormalize" ;
-    dc:title            "chroma normalization" ;
-    dc:format           "" ;
-    vamp:min_value       0 ;
-    vamp:max_value       3 ;
-    vamp:unit           "" ;
-    vamp:quantize_step   1  ;
-    vamp:default_value   0 ;
-    vamp:value_names     ( "none" "maximum norm" "L1 norm" "L2 norm");
     .
 plugbase:tuning_output_tuning a  vamp:SparseOutput ;
     vamp:identifier       "tuning" ;
     dc:title              "Tuning" ;
-    dc:description        """The concert pitch."""  ;
+    dc:description        """Returns a single label (at time 0 seconds) containing an estimate of the concert pitch in Hz."""  ;
     vamp:fixed_bin_count  "true" ;
     vamp:unit             "Hz" ;
     a                 vamp:KnownExtentsOutput ;
@@ -324,7 +335,7 @@ plugbase:tuning_output_tuning a  vamp:SparseOutput ;
     vamp:max_value    452.89  ;
     vamp:bin_count        0 ;
     vamp:sample_type      vamp:VariableSampleRate ;
-    vamp:sample_rate      9.06382e-30 ;
+    vamp:sample_rate      2.38221e-44 ;
 #   vamp:computes_event_type   <Place event type URI here and uncomment> ;
 #   vamp:computes_feature      <Place feature attribute URI here and uncomment> ;
 #   vamp:computes_signal_type  <Place signal type URI here and uncomment> ;
@@ -332,7 +343,7 @@ plugbase:tuning_output_tuning a  vamp:SparseOutput ;
 plugbase:tuning_output_localtuning a  vamp:DenseOutput ;
     vamp:identifier       "localtuning" ;
     dc:title              "Local Tuning" ;
-    dc:description        """Tuning based on the history up to this timestamp."""  ;
+    dc:description        """Returns a tuning estimate at every analysis frame, an average of the (recent) previous frame-wise estimates of the concert pitch in Hz."""  ;
     vamp:fixed_bin_count  "true" ;
     vamp:unit             "Hz" ;
     a                 vamp:KnownExtentsOutput ;

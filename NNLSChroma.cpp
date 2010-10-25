@@ -59,7 +59,7 @@ string
 NNLSChroma::getDescription() const
 {
     if (debug_on) cerr << "--> getDescription" << endl;
-    return "This plugin provides a number of features derived from a log-frequency amplitude spectrum of the DFT: some variants of the log-frequency spectrum, including a semitone spectrum derived from approximate transcription using the NNLS algorithm; based on this semitone spectrum, chroma features and a simple chord estimate.";
+    return "This plugin provides a number of features derived from a DFT-based log-frequency amplitude spectrum: some variants of the log-frequency spectrum, including a semitone spectrum derived from approximate transcription using the NNLS algorithm; and based on this semitone spectrum, different chroma features.";
 }
 
 NNLSChroma::OutputList
@@ -128,7 +128,7 @@ NNLSChroma::getOutputDescriptors() const
     OutputDescriptor d4;
     d4.identifier = "chroma";
     d4.name = "Chromagram";
-    d4.description = "Tuning-adjusted chromagram from NNLS soft transcription, with an emphasis on the medium note range.";
+    d4.description = "Tuning-adjusted chromagram from NNLS approximate transcription, with an emphasis on the medium note range.";
     d4.unit = "";
     d4.hasFixedBinCount = true;
     d4.binCount = 12;
@@ -144,7 +144,7 @@ NNLSChroma::getOutputDescriptors() const
     OutputDescriptor d5;
     d5.identifier = "basschroma";
     d5.name = "Bass Chromagram";
-    d5.description = "Tuning-adjusted bass chromagram from NNLS soft transcription, with an emphasis on the bass note range.";
+    d5.description = "Tuning-adjusted bass chromagram from NNLS approximate transcription, with an emphasis on the bass note range.";
     d5.unit = "";
     d5.hasFixedBinCount = true;
     d5.binCount = 12;
@@ -160,7 +160,7 @@ NNLSChroma::getOutputDescriptors() const
     OutputDescriptor d6;
     d6.identifier = "bothchroma";
     d6.name = "Chromagram and Bass Chromagram";
-    d6.description = "Tuning-adjusted chromagram and bass chromagram (stacked on top of each other) from NNLS soft transcription.";
+    d6.description = "Tuning-adjusted chromagram and bass chromagram (stacked on top of each other) from NNLS approximate transcription.";
     d6.unit = "";
     d6.hasFixedBinCount = true;
     d6.binCount = 24;

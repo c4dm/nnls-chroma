@@ -162,7 +162,7 @@ NNLSBase::getParameterDescriptors() const
     ParameterDescriptor d0;
     d0.identifier = "rollon";
     d0.name = "spectral roll-on";
-    d0.description = "The bins below the spectral roll-on quantile will be set to 0.";
+    d0.description = "Consider the cumulative energy spectrum (from low to high frequencies). All bins below the first bin whose cumulative energy exceeds the quantile [spectral roll on] x [total energy] will be set to 0. A value of 0 means that no bins will be changed.";
     d0.unit = "";
     d0.minValue = 0;
     d0.maxValue = 0.05;
