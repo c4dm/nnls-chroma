@@ -41,6 +41,13 @@ Tuning::~Tuning()
     if (debug_on) cerr << "--> ~Tuning" << endl;
 }
 
+size_t 
+Tuning::getPreferredStepSize() const
+{
+    if (debug_on) cerr << "--> getPreferredStepSize" << endl;
+    return 2048*4; 
+}
+
 string
 Tuning::getIdentifier() const
 {
@@ -61,6 +68,28 @@ Tuning::getDescription() const
     // Return something helpful here!
     if (debug_on) cerr << "--> getDescription" << endl;
     return "This plugin provides a number of features derived from a log-frequency amplitude spectrum of the DFT: some variants of the log-frequency spectrum, including a semitone spectrum derived from approximate transcription using the NNLS algorithm; based on this semitone spectrum, chroma features and a simple chord estimate.";
+}
+
+Tuning::ParameterList
+Tuning::getParameterDescriptors() const
+{
+    if (debug_on) cerr << "--> getParameterDescriptors" << endl;
+    ParameterList list;
+
+    ParameterDescriptor d0;
+    d0.identifier = "rollon";
+    d0.name = "spectral roll-on";
+    d0.description = "The bins below the spectral roll-on quantile will be set to 0.";
+    d0.unit = "";
+    d0.minValue = 0;
+    d0.maxValue = 0.05;
+    d0.defaultValue = 0;
+    d0.isQuantized = true;
+	d0.quantizeStep = 0.005;
+    list.push_back(d0);
+
+
+    return list;
 }
 
 Tuning::OutputList

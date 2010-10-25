@@ -55,7 +55,8 @@ NNLSBase::NNLSBase(float inputSampleRate) :
     m_doNormalizeChroma(0),
     m_rollon(0.0),
 	m_s(0.7),
-	m_useNNLS(1)
+	m_useNNLS(1),
+	m_useHMM(1)
 {
     if (debug_on) cerr << "--> NNLSBase" << endl;
 
@@ -166,7 +167,8 @@ NNLSBase::getParameterDescriptors() const
     d0.minValue = 0;
     d0.maxValue = 0.05;
     d0.defaultValue = 0;
-    d0.isQuantized = false;
+    d0.isQuantized = true;
+	d0.quantizeStep = 0.005;
     list.push_back(d0);
 
     ParameterDescriptor d1;
@@ -258,6 +260,11 @@ NNLSBase::getParameter(string identifier) const
     if (identifier == "chromanormalize") {
         return m_doNormalizeChroma;
     }
+    
+    if (identifier == "useHMM") {
+        return m_useHMM;
+    }
+    
     return 0;
     
 }
@@ -278,6 +285,10 @@ NNLSBase::setParameter(string identifier, float value)
         m_s = value;
     }
 
+    if (identifier == "useHMM") {
+        m_useHMM = value;
+    }
+    
     if (identifier == "tuningmode") {
         m_tuneLocal = (value > 0) ? true : false;
         // cerr << "m_tuneLocal :" << m_tuneLocal << endl;

@@ -1,7 +1,7 @@
 ## NNLS Chroma ##
 
-System identifier – vamp:nnls-chroma:nnls_chroma
-RDF URI – http://vamp-plugins.org/rdf/plugins/matthiasm#nnls_chroma (not yet available)
+System identifier – vamp:nnls-chroma:nnls-chroma
+RDF URI – http://vamp-plugins.org/rdf/plugins/nnls-chroma#nnls-chroma (not yet available)
 
 ### General Description ###
 
@@ -14,6 +14,7 @@ The processed log-frequency spectrum is then used as an input for NNLS approxima
 ### Parameters ###
 
 The default settings (in brackets, below) are those used for Matthias Mauch's 2010 MIREX submissions.
+
 * use approximate transcription (NNLS) (on or off; default: on): toggle between NNLS approximate transcription and linear spectral mapping.
 * spectral roll on (0.00 -- 0.05; default: 0.0): consider the cumulative energy spectrum (from low to high frequencies). All bins below the first bin whose cumulative energy exceeds [spectral roll on] x [total energy] will be set to 0. A value of 0 means that no bins will be changed.
 * tuning mode (global or local; default: global): local uses a local average for tuning, global uses ... exactly.
@@ -23,4 +24,58 @@ The default settings (in brackets, below) are those used for Matthias Mauch's 20
 
 ### Outputs ###
 
-### References and Credits ###
+* Log-frequency Spectrum: a spectrum similar to the well-known constant Q spectrum, in which bins are linear in log-frequency. Three bins per semitone.
+* Tuned Log-frequency Spectrum: has the same format as Log-frequency Spectrum, but has been processed by the following processes: tuning, subtraction of background spectrum, spectral whitening.
+* Semitone Spectrum: a spectral representation with one bin per semitone. If NNLS is selected in the parameters, this is the note activation, otherwise just a linear mapping to semitones.
+* Bass Chromagram: a 12-dimensional chromagram, restricted to the bass range. At each frame the Semitone Spectrum is multiplied by a bass pattern and then mapped to the 12 chroma bins. 
+* Chromagram: a 12-dimensional chromagram, restricted with mid-range emphasis. At each frame the Semitone Spectrum is multiplied by a mid-range pattern and then mapped to the 12 chroma bins.
+* Chromagram and Bass Chromagram: a 24-dimensional chromagram, consisting of the both Bass Chromgram and Chromagram, see above. When normalisation is used, this representation will however be scaled differently, and hence be different from the individual chromagrams.
+
+## Chordino ##
+
+System identifier – vamp:nnls-chroma:chordino
+RDF URI – http://vamp-plugins.org/rdf/plugins/nnls-chroma#chordino (not yet available)
+
+### General Description ###
+
+Chordino provides a simple chord transcription based on NNLS Chroma (described above). Chord profiles given by the user in the file "chord.dict" are used to calculate frame-wise chord similarities. Two simple (non-state-of-the-art!) algorithms are available that smooth these to provide a chord transcription: a simple chord change method, and a standard HMM/Viterbi approach.
+
+### Parameters ###
+
+The default settings (in brackets, below) are those used for Matthias Mauch's 2010 MIREX submissions.
+
+* use approximate transcription (NNLS) (on or off; default: on): toggle between NNLS approximate transcription and linear spectral mapping.
+* HMM (Viterbi decoding) (on or off; default: on): uses HMM/Viterbi smoothing. Otherwise: heuristic chord change smoothing.
+* spectral roll on (0.00 -- 0.05; default: 0.0): consider the cumulative energy spectrum (from low to high frequencies). All bins below the first bin whose cumulative energy exceeds [spectral roll on] x [total energy] will be set to 0. A value of 0 means that no bins will be changed.
+* tuning mode (global or local; default: global): local uses a local average for tuning, global uses ... exactly.
+* spectral whitening (0.0 -- 1.0; default: 1.0): determines how much the log-frequency spectrum is whitened. A value of 0.0 means no whitening. For values other than 0.0 the log-freq spectral bins are divided by  [standard deviation of their neighbours]^[spectral whitening], where "^" means "to the power of".
+* spectral shape (0.5 -- 0.9; default: 0.7): the shape of the notes in the NNLS dictionary. Their harmonic amplitude follows a geometrically decreasing pattern, in which the i-th harmonic has an amplitude of [spectral shape]^[i-1], where "^" means "to the power of".
+* chroma normalisation (none, maximum norm, L1 norm, L2 norm; default: none): determines whether or how the chromagrams are normalised. If the setting is not 'none', then each chroma frame separately is divided by the chosen vector norm. Note that normalisation implies that the joint 24-dim. "Chroma and Bass Chromagram" output will be different from the individual 12-dim. "Chromagram" and "Bass Chromagram" outputs.
+
+### Outputs ###
+
+* Chord Estimate: estimated chord times and labels.
+* Harmonic Change Value: an indication of the likelihood harmonic change. Depends on the chord dictionary. Calculation is different depending on whether the Viterbi algorithm is used for chord estimation, or the simple chord estimate.
+
+## Tuning ##
+
+System identifier – vamp:nnls-chroma:tuning
+RDF URI – http://vamp-plugins.org/rdf/plugins/nnls-chroma#tuning (not yet available)
+
+### General Description ###
+
+The tuning plugin can estimate the local and global tuning of piece. The same tuning method is used for the NNLS Chroma and Chordino plugins.
+
+### Parameter ###
+
+* spectral roll on (0.00 -- 0.05; default: 0.0): consider the cumulative energy spectrum (from low to high frequencies). All bins below the first bin whose cumulative energy exceeds [spectral roll on] x [total energy] will be set to 0. A value of 0 means that no bins will be changed.
+
+### Outputs ###
+
+* Tuning: returns a single label at time 0 seconds containing the tuning information in Hz.
+* Local Tuning: returns a tuning estimate at every analysis frame, an average of the (recent) previous frame-wise tuning estimates.
+
+## References and Credits ##
+
+Mauch, Matthias and Dixon, Simon: [*Approximate Note Transcription for the Improved Identification of Difficult Chords*](http://schall-und-mauch.de/artificialmusicality/?p=89), Proceedings of the 11th International Society for Music Information Retrieval Conference (ISMIR 2010), 2010.
+
