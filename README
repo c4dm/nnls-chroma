@@ -57,7 +57,25 @@ The default settings (in brackets, below) are those used for Matthias Mauch's 20
 * Chord Estimate: estimated chord times and labels.
 * Harmonic Change Value: an indication of the likelihood harmonic change. Depends on the chord dictionary. Calculation is different depending on whether the Viterbi algorithm is used for chord estimation, or the simple chord estimate.
 
+## Tuning ##
+
+System identifier – vamp:nnls-chroma:tuning
+RDF URI – http://vamp-plugins.org/rdf/plugins/nnls-chroma#tuning (not yet available)
+
+### General Description ###
+
+The tuning plugin can estimate the local and global tuning of piece. The same tuning method is used for the NNLS Chroma and Chordino plugins.
+
+### Parameter ###
+
+* spectral roll on (0.00 -- 0.05; default: 0.0): consider the cumulative energy spectrum (from low to high frequencies). All bins below the first bin whose cumulative energy exceeds [spectral roll on] x [total energy] will be set to 0. A value of 0 means that no bins will be changed.
+
+### Outputs ###
+
+* Tuning: returns a single label at time 0 seconds containing the tuning information in Hz.
+* Local Tuning: returns a tuning estimate at every analysis frame, an average of the (recent) previous frame-wise tuning estimates.
+
 ## References and Credits ##
 
-
+Mauch, Matthias and Dixon, Simon: [*Approximate Note Transcription for the Improved Identification of Difficult Chords*](http://schall-und-mauch.de/artificialmusicality/?p=89), Proceedings of the 11th International Society for Music Information Retrieval Conference (ISMIR 2010), 2010.
 
