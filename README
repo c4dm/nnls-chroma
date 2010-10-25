@@ -16,7 +16,7 @@ The processed log-frequency spectrum is then used as an input for NNLS approxima
 The default settings (in brackets, below) are those used for Matthias Mauch's 2010 MIREX submissions.
 
 * use approximate transcription (NNLS) (on or off; default: on): toggle between NNLS approximate transcription and linear spectral mapping.
-* spectral roll on (0.00 -- 0.05; default: 0.0): consider the cumulative energy spectrum (from low to high frequencies). All bins below the first bin whose cumulative energy exceeds the quantile [spectral roll on] x [total energy] will be set to 0. A value of 0 means that no bins will be changed.
+* spectral roll on spectral roll on (0 % -- 5 %; default: 0 %): consider the cumulative energy spectrum (from low to high frequencies). All bins below the first bin whose cumulative energy exceeds the quantile [spectral roll on] x [total energy] will be set to 0. A value of 0 means that no bins will be changed.
 * tuning mode (global or local; default: global): local uses a local average for tuning, global uses all audio frames. Local tuning is only advisable when the tuning is likely to change over the audio, for example in podcasts, or in a cappella singing.
 * spectral whitening (0.0 -- 1.0; default: 1.0): determines how much the log-frequency spectrum is whitened. A value of 0.0 means no whitening. For values other than 0.0 the log-freq spectral bins are divided by  [standard deviation of their neighbours]^[spectral whitening], where "^" means "to the power of".
 * spectral shape (0.5 -- 0.9; default: 0.7): the shape of the notes in the NNLS dictionary. Their harmonic amplitude follows a geometrically decreasing pattern, in which the i-th harmonic has an amplitude of [spectral shape]^[i-1], where "^" means "to the power of".
@@ -46,7 +46,7 @@ The default settings (in brackets, below) are those used for Matthias Mauch's 20
 
 * use approximate transcription (NNLS) (on or off; default: on): toggle between NNLS approximate transcription and linear spectral mapping.
 * HMM (Viterbi decoding) (on or off; default: on): uses HMM/Viterbi smoothing. Otherwise: heuristic chord change smoothing.
-* * spectral roll on (0.00 -- 0.05; default: 0.0): consider the cumulative energy spectrum (from low to high frequencies). All bins below the first bin whose cumulative energy exceeds the quantile [spectral roll on] x [total energy] will be set to 0. A value of 0 means that no bins will be changed.
+* spectral roll on (0 % -- 5 %; default: 0 %): consider the cumulative energy spectrum (from low to high frequencies). All bins below the first bin whose cumulative energy exceeds the quantile [spectral roll on] x [total energy] will be set to 0. A value of 0 means that no bins will be changed.
 * tuning mode (global or local; default: global): local uses a local average for tuning. Local tuning is only advisable when the tuning is likely to change over the audio, for example in podcasts, or in a cappella singing.
 * spectral whitening (0.0 -- 1.0; default: 1.0): determines how much the log-frequency spectrum is whitened. A value of 0.0 means no whitening. For values other than 0.0 the log-freq spectral bins are divided by  [standard deviation of their neighbours]^[spectral whitening], where "^" means "to the power of".
 * spectral shape (0.5 -- 0.9; default: 0.7): the shape of the notes in the NNLS dictionary. Their harmonic amplitude follows a geometrically decreasing pattern, in which the i-th harmonic has an amplitude of [spectral shape]^[i-1], where "^" means "to the power of".
@@ -68,7 +68,7 @@ The tuning plugin can estimate the local and global tuning of piece. The same tu
 
 ### Parameter ###
 
-* spectral roll on (0.00 -- 0.05; default: 0.0): consider the cumulative energy spectrum (from low to high frequencies). All bins below the first bin whose cumulative energy exceeds the quantile [spectral roll on] x [total energy] will be set to 0. A value of 0 means that no bins will be changed.
+* spectral roll on spectral roll on (0 % -- 5 %; default: 0 %): consider the cumulative energy spectrum (from low to high frequencies). All bins below the first bin whose cumulative energy exceeds the quantile [spectral roll on] x [total energy] will be set to 0. A value of 0 means that no bins will be changed.
 
 ### Outputs ###
 

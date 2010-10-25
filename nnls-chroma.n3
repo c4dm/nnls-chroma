@@ -17,8 +17,10 @@
     vamp:identifier "nnls-chroma"  ; 
     vamp:available_plugin plugbase:chordino ; 
     vamp:available_plugin plugbase:nnls-chroma ; 
-    vamp:available_plugin plugbase:tuning ; 
-#   foaf:page <Place more-information HTML page URL here and uncomment> ;
+    vamp:available_plugin plugbase:tuning ;  
+    foaf:page <http://www.isophonics.net/> ;
+    foaf:page <http://www.omras2.org/> ;
+    foaf:page <http://www.matthiasmauch.net/> ; 
     .
 
 plugbase:chordino a   vamp:Plugin ;
@@ -71,9 +73,9 @@ plugbase:chordino_param_rollon a  vamp:QuantizedParameter ;
     dc:title            "spectral roll-on" ;
     dc:format           "" ;
     vamp:min_value       0 ;
-    vamp:max_value       0.05 ;
-    vamp:unit           "" ;
-    vamp:quantize_step   0.005  ;
+    vamp:max_value       5 ;
+    vamp:unit           "%" ;
+    vamp:quantize_step   0.5  ;
     vamp:default_value   0 ;
     vamp:value_names     ();
     .
@@ -113,13 +115,13 @@ plugbase:chordino_output_simplechord a  vamp:SparseOutput ;
     dc:title              "Chord Estimate" ;
     dc:description        """Estimated chord times and labels. Two simple (non-state-of-the-art!) algorithms are available that smooth these to provide a chord transcription: a simple chord change method, and a standard HMM/Viterbi approach."""  ;
     vamp:fixed_bin_count  "true" ;
-    vamp:unit             "" ;
+    vamp:unit             "chord" ;
+    a                     vamp:QuantizedOutput ;
+    vamp:quantize_step    1  ;
     vamp:bin_count        0 ;
     vamp:sample_type      vamp:VariableSampleRate ;
     vamp:sample_rate      21.5332 ;
-#   vamp:computes_event_type   <Place event type URI here and uncomment> ;
-#   vamp:computes_feature      <Place feature attribute URI here and uncomment> ;
-#   vamp:computes_signal_type  <Place signal type URI here and uncomment> ;
+    vamp:computes_event_type   af:ChordSegment ;
     .
 plugbase:chordino_output_ a  vamp:DenseOutput ;
     vamp:identifier       "" ;
@@ -131,9 +133,7 @@ plugbase:chordino_output_ a  vamp:DenseOutput ;
     vamp:min_value    0  ;
     vamp:max_value    0.999  ;
     vamp:bin_count        1 ;
-#   vamp:computes_event_type   <Place event type URI here and uncomment> ;
-#   vamp:computes_feature      <Place feature attribute URI here and uncomment> ;
-#   vamp:computes_signal_type  <Place signal type URI here and uncomment> ;
+    vamp:computes_signal_type  af:TonalChangeDetectionFunction;
     .
 plugbase:nnls-chroma a   vamp:Plugin ;
     dc:title              "NNLS Chroma" ;
@@ -178,9 +178,9 @@ plugbase:nnls-chroma_param_rollon a  vamp:QuantizedParameter ;
     dc:title            "spectral roll-on" ;
     dc:format           "" ;
     vamp:min_value       0 ;
-    vamp:max_value       0.05 ;
-    vamp:unit           "" ;
-    vamp:quantize_step   0.005  ;
+    vamp:max_value       5 ;
+    vamp:unit           "%" ;
+    vamp:quantize_step   0.5  ;
     vamp:default_value   0 ;
     vamp:value_names     ();
     .
@@ -233,9 +233,7 @@ plugbase:nnls-chroma_output_logfreqspec a  vamp:DenseOutput ;
     vamp:fixed_bin_count  "true" ;
     vamp:unit             "" ;
     vamp:bin_count        256 ;
-#   vamp:computes_event_type   <Place event type URI here and uncomment> ;
-#   vamp:computes_feature      <Place feature attribute URI here and uncomment> ;
-#   vamp:computes_signal_type  <Place signal type URI here and uncomment> ;
+    vamp:computes_signal_type  af:Spectrogram ;    
     .
 plugbase:nnls-chroma_output_tunedlogfreqspec a  vamp:DenseOutput ;
     vamp:identifier       "tunedlogfreqspec" ;
@@ -244,9 +242,7 @@ plugbase:nnls-chroma_output_tunedlogfreqspec a  vamp:DenseOutput ;
     vamp:fixed_bin_count  "true" ;
     vamp:unit             "" ;
     vamp:bin_count        256 ;
-#   vamp:computes_event_type   <Place event type URI here and uncomment> ;
-#   vamp:computes_feature      <Place feature attribute URI here and uncomment> ;
-#   vamp:computes_signal_type  <Place signal type URI here and uncomment> ;
+    vamp:computes_signal_type  af:Spectrogram ;
     .
 plugbase:nnls-chroma_output_semitonespectrum a  vamp:DenseOutput ;
     vamp:identifier       "semitonespectrum" ;
@@ -255,9 +251,7 @@ plugbase:nnls-chroma_output_semitonespectrum a  vamp:DenseOutput ;
     vamp:fixed_bin_count  "true" ;
     vamp:unit             "" ;
     vamp:bin_count        84 ;
-#   vamp:computes_event_type   <Place event type URI here and uncomment> ;
-#   vamp:computes_feature      <Place feature attribute URI here and uncomment> ;
-#   vamp:computes_signal_type  <Place signal type URI here and uncomment> ;
+    vamp:computes_signal_type  af:Spectrogram ;    
     .
 plugbase:nnls-chroma_output_chroma a  vamp:DenseOutput ;
     vamp:identifier       "chroma" ;
@@ -267,9 +261,7 @@ plugbase:nnls-chroma_output_chroma a  vamp:DenseOutput ;
     vamp:unit             "" ;
     vamp:bin_count        12 ;
     vamp:bin_names        ( "A" "Bb" "B" "C" "C#" "D" "Eb" "E" "F" "F#" "G" "Ab");
-#   vamp:computes_event_type   <Place event type URI here and uncomment> ;
-#   vamp:computes_feature      <Place feature attribute URI here and uncomment> ;
-#   vamp:computes_signal_type  <Place signal type URI here and uncomment> ;
+    vamp:computes_signal_type  af:Chromagram ;
     .
 plugbase:nnls-chroma_output_basschroma a  vamp:DenseOutput ;
     vamp:identifier       "basschroma" ;
@@ -279,9 +271,7 @@ plugbase:nnls-chroma_output_basschroma a  vamp:DenseOutput ;
     vamp:unit             "" ;
     vamp:bin_count        12 ;
     vamp:bin_names        ( "A" "Bb" "B" "C" "C#" "D" "Eb" "E" "F" "F#" "G" "Ab");
-#   vamp:computes_event_type   <Place event type URI here and uncomment> ;
-#   vamp:computes_feature      <Place feature attribute URI here and uncomment> ;
-#   vamp:computes_signal_type  <Place signal type URI here and uncomment> ;
+    vamp:computes_signal_type  af:Chromagram ;
     .
 plugbase:nnls-chroma_output_bothchroma a  vamp:DenseOutput ;
     vamp:identifier       "bothchroma" ;
@@ -291,9 +281,7 @@ plugbase:nnls-chroma_output_bothchroma a  vamp:DenseOutput ;
     vamp:unit             "" ;
     vamp:bin_count        24 ;
     vamp:bin_names        ( "A  (bass)" "Bb (bass)" "B  (bass)" "C  (bass)" "C# (bass)" "D  (bass)" "Eb (bass)" "E  (bass)" "F  (bass)" "F# (bass)" "G  (bass)" "Ab (bass)" "A" "Bb" "B" "C" "C#" "D" "Eb" "E" "F" "F#" "G" "Ab");
-#   vamp:computes_event_type   <Place event type URI here and uncomment> ;
-#   vamp:computes_feature      <Place feature attribute URI here and uncomment> ;
-#   vamp:computes_signal_type  <Place signal type URI here and uncomment> ;
+    vamp:computes_signal_type  af:Chromagram ;
     .
 plugbase:tuning a   vamp:Plugin ;
     dc:title              "Tuning" ;
@@ -318,9 +306,9 @@ plugbase:tuning_param_rollon a  vamp:QuantizedParameter ;
     dc:title            "spectral roll-on" ;
     dc:format           "" ;
     vamp:min_value       0 ;
-    vamp:max_value       0.05 ;
-    vamp:unit           "" ;
-    vamp:quantize_step   0.005  ;
+    vamp:max_value       5 ;
+    vamp:unit           "%" ;
+    vamp:quantize_step   0.5  ;
     vamp:default_value   0 ;
     vamp:value_names     ();
     .
@@ -336,9 +324,7 @@ plugbase:tuning_output_tuning a  vamp:SparseOutput ;
     vamp:bin_count        0 ;
     vamp:sample_type      vamp:VariableSampleRate ;
     vamp:sample_rate      2.38221e-44 ;
-#   vamp:computes_event_type   <Place event type URI here and uncomment> ;
-#   vamp:computes_feature      <Place feature attribute URI here and uncomment> ;
-#   vamp:computes_signal_type  <Place signal type URI here and uncomment> ;
+    vamp:computes_event_type   af:MusicSegment;
     .
 plugbase:tuning_output_localtuning a  vamp:DenseOutput ;
     vamp:identifier       "localtuning" ;

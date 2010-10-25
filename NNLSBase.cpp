@@ -163,12 +163,12 @@ NNLSBase::getParameterDescriptors() const
     d0.identifier = "rollon";
     d0.name = "spectral roll-on";
     d0.description = "Consider the cumulative energy spectrum (from low to high frequencies). All bins below the first bin whose cumulative energy exceeds the quantile [spectral roll on] x [total energy] will be set to 0. A value of 0 means that no bins will be changed.";
-    d0.unit = "";
+    d0.unit = "%";
     d0.minValue = 0;
-    d0.maxValue = 0.05;
+    d0.maxValue = 5;
     d0.defaultValue = 0;
     d0.isQuantized = true;
-	d0.quantizeStep = 0.005;
+	d0.quantizeStep = 0.5;
     list.push_back(d0);
 
     ParameterDescriptor d1;
@@ -436,7 +436,7 @@ NNLSBase::baseProcess(const float *const *inputBuffers, Vamp::RealTime timestamp
     if (m_rollon > 0) {
         for (size_t iBin = 2; iBin < m_blockSize/2; iBin++) {
             cumenergy +=  pow(magnitude[iBin],2);
-            if (cumenergy < energysum * m_rollon) magnitude[iBin-2] = 0;
+            if (cumenergy < energysum * m_rollon / 100) magnitude[iBin-2] = 0;
             else break;
         }
     }

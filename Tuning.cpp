@@ -80,12 +80,12 @@ Tuning::getParameterDescriptors() const
     d0.identifier = "rollon";
     d0.name = "spectral roll-on";
     d0.description = "Consider the cumulative energy spectrum (from low to high frequencies). All bins below the first bin whose cumulative energy exceeds the quantile [spectral roll on] x [total energy] will be set to 0. A value of 0 means that no bins will be changed.";
-    d0.unit = "";
+    d0.unit = "%";
     d0.minValue = 0;
-    d0.maxValue = 0.05;
+    d0.maxValue = 5;
     d0.defaultValue = 0;
     d0.isQuantized = true;
-	d0.quantizeStep = 0.005;
+	d0.quantizeStep = 0.5;
     list.push_back(d0);
 
 
@@ -195,12 +195,13 @@ Tuning::getRemainingFeatures()
 		    
     char buffer0 [50];
 		
-    sprintf(buffer0, "estimated tuning: %0.1f Hz", cumulativetuning);
+    sprintf(buffer0, "%0.1f Hz", cumulativetuning);
 		    
     // push tuning to FeatureSet fsOut
     Feature f0; // tuning
     f0.hasTimestamp = true;
-    f0.timestamp = Vamp::RealTime::frame2RealTime(0, lrintf(m_inputSampleRate));;
+    f0.timestamp = Vamp::RealTime::frame2RealTime(0, lrintf(m_inputSampleRate));
+    f0.values.push_back(cumulativetuning);
     f0.label = buffer0;
     fsOut[m_outputTuning].push_back(f0);  
 		    
