@@ -33,7 +33,9 @@ public:
     string getIdentifier() const;
     string getName() const;
     string getDescription() const;
-
+    size_t getPreferredStepSize() const;
+    
+    ParameterList getParameterDescriptors() const;
     OutputList getOutputDescriptors() const;
 
     FeatureSet process(const float *const *inputBuffers,
