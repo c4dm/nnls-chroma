@@ -83,7 +83,7 @@ Chordino::getParameterDescriptors() const
 
     ParameterDescriptor d4;
     d4.identifier = "useHMM";
-    d4.name = "Viterbi decoding";
+    d4.name = "HMM (Viterbi decoding)";
     d4.description = "Turns on Viterbi decoding (when off, the simple chord estimator is used).";
     d4.unit = "";
     d4.minValue = 0.0;
