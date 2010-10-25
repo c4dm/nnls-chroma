@@ -63,6 +63,104 @@ Chordino::getDescription() const
     return "This plugin provides a number of features derived from a log-frequency amplitude spectrum of the DFT: some variants of the log-frequency spectrum, including a semitone spectrum derived from approximate transcription using the NNLS algorithm; based on this semitone spectrum, chroma features and a simple chord estimate.";
 }
 
+Chordino::ParameterList
+Chordino::getParameterDescriptors() const
+{
+    if (debug_on) cerr << "--> getParameterDescriptors" << endl;
+    ParameterList list;
+
+    ParameterDescriptor d;
+    d.identifier = "useNNLS";
+    d.name = "use approximate transcription (NNLS)";
+    d.description = "Toggles approximate transcription (NNLS).";
+    d.unit = "";
+    d.minValue = 0.0;
+    d.maxValue = 1.0;
+    d.defaultValue = 1.0;
+    d.isQuantized = true;
+	d.quantizeStep = 1.0;
+    list.push_back(d);
+
+    ParameterDescriptor d4;
+    d4.identifier = "useHMM";
+    d4.name = "Viterbi decoding";
+    d4.description = "Turns on Viterbi decoding (when off, the simple chord estimator is used).";
+    d4.unit = "";
+    d4.minValue = 0.0;
+    d4.maxValue = 1.0;
+    d4.defaultValue = 1.0;
+    d4.isQuantized = true;
+	d4.quantizeStep = 1.0;
+    list.push_back(d4);
+
+    ParameterDescriptor d0;
+    d0.identifier = "rollon";
+    d0.name = "spectral roll-on";
+    d0.description = "The bins below the spectral roll-on quantile will be set to 0.";
+    d0.unit = "";
+    d0.minValue = 0;
+    d0.maxValue = 0.05;
+    d0.defaultValue = 0;
+    d0.isQuantized = true;
+	d0.quantizeStep = 0.005;
+    list.push_back(d0);
+
+    ParameterDescriptor d1;
+    d1.identifier = "tuningmode";
+    d1.name = "tuning mode";
+    d1.description = "Tuning can be performed locally or on the whole extraction segment. Local tuning is only advisable when the tuning is likely to change over the audio, for example in podcasts, or in a cappella singing.";
+    d1.unit = "";
+    d1.minValue = 0;
+    d1.maxValue = 1;
+    d1.defaultValue = 0;
+    d1.isQuantized = true;
+    d1.valueNames.push_back("global tuning");
+    d1.valueNames.push_back("local tuning");
+    d1.quantizeStep = 1.0;
+    list.push_back(d1);
+
+    ParameterDescriptor d2;
+    d2.identifier = "whitening";
+    d2.name = "spectral whitening";
+    d2.description = "Spectral whitening: no whitening - 0; whitening - 1.";
+    d2.unit = "";
+    d2.isQuantized = true;
+    d2.minValue = 0.0;
+    d2.maxValue = 1.0;
+    d2.defaultValue = 1.0;
+    d2.isQuantized = false;
+    list.push_back(d2);
+
+    ParameterDescriptor d3;
+    d3.identifier = "s";
+    d3.name = "spectral shape";
+    d3.description = "Determines how individual notes in the note dictionary look: higher values mean more dominant higher harmonics.";
+    d3.unit = "";
+    d3.minValue = 0.5;
+    d3.maxValue = 0.9;
+    d3.defaultValue = 0.7;
+    d3.isQuantized = false;
+    list.push_back(d3);
+
+    // ParameterDescriptor d4;
+    // d4.identifier = "chromanormalize";
+    // d4.name = "chroma normalization";
+    // d4.description = "How shall the chroma vector be normalized?";
+    // d4.unit = "";
+    // d4.minValue = 0;
+    // d4.maxValue = 3;
+    // d4.defaultValue = 0;
+    // d4.isQuantized = true;
+    // d4.valueNames.push_back("none");
+    // d4.valueNames.push_back("maximum norm");
+    // d4.valueNames.push_back("L1 norm");
+    // d4.valueNames.push_back("L2 norm");
+    // d4.quantizeStep = 1.0;
+    // list.push_back(d4);
+
+    return list;
+}
+
 Chordino::OutputList
 Chordino::getOutputDescriptors() const
 {
@@ -369,7 +467,7 @@ Chordino::getRemainingFeatures()
             }
             if (iChord == nChord-1) tempchordvalue *= .7;
             if (tempchordvalue < 0) tempchordvalue = 0.0;
-            tempchordvalue = pow(1.5,tempchordvalue);
+            tempchordvalue = pow(1.3,tempchordvalue);
             sumchordvalue+=tempchordvalue;
             currentChordSalience.push_back(tempchordvalue);
         }
@@ -387,8 +485,8 @@ Chordino::getRemainingFeatures()
     cerr << "done." << endl;
 		
 
-    bool m_useHMM = true; // this will go into the chordino header file.
-	if (m_useHMM) {
+    // bool m_useHMM = true; // this will go into the chordino header file.
+	if (m_useHMM == 1.0) {
         cerr << "[Chordino Plugin] HMM Chord Estimation ... ";
         int oldchord = nChord-1;
         double selftransprob = 0.99;
@@ -396,13 +494,16 @@ Chordino::getRemainingFeatures()
         // vector<double> init = vector<double>(nChord,1.0/nChord);
         vector<double> init = vector<double>(nChord,0); init[nChord-1] = 1;
         
+        double *delta;
+        delta = (double *)malloc(sizeof(double)*nFrame*nChord);                
+        
         vector<vector<double> > trans;
         for (int iChord = 0; iChord < nChord; iChord++) {
             vector<double> temp = vector<double>(nChord,(1-selftransprob)/(nChord-1));            
             temp[iChord] = selftransprob;
             trans.push_back(temp);
         }
-        vector<int> chordpath = ViterbiPath(init,trans,chordogram);
+        vector<int> chordpath = ViterbiPath(init, trans, chordogram, delta);
 
 
         Feature chord_feature; // chord estimate
@@ -411,7 +512,7 @@ Chordino::getRemainingFeatures()
         chord_feature.label = m_chordnames[chordpath[0]];
         fsOut[0].push_back(chord_feature);
         
-        for (int iFrame = 0; iFrame < chordpath.size(); ++iFrame) {
+        for (int iFrame = 1; iFrame < chordpath.size(); ++iFrame) {
             // cerr << chordpath[iFrame] << endl;
             if (chordpath[iFrame] != oldchord ) {
                 Feature chord_feature; // chord estimate
@@ -420,6 +521,10 @@ Chordino::getRemainingFeatures()
                 chord_feature.label = m_chordnames[chordpath[iFrame]];
                 fsOut[0].push_back(chord_feature);
                 oldchord = chordpath[iFrame];         
+            }
+            /* calculating simple chord change prob */            
+            for (int iChord = 0; iChord < nChord; iChord++) {
+                chordchange[iFrame-1] += delta[(iFrame-1)*nChord + iChord] * log(delta[(iFrame-1)*nChord + iChord]/delta[iFrame*nChord + iChord]);
             }
         }
         
@@ -513,7 +618,9 @@ Chordino::getRemainingFeatures()
             for (unsigned iFrame = maxindex-1; iFrame < 2*halfwindowlength; ++iFrame) {
                 scoreChordogram[iFrame+count][bestchordR]++;
             }
-            if (bestchordL != bestchordR) chordchange[maxindex+count] += (halfwindowlength - abs(maxindex-halfwindowlength)) * 2.0 / halfwindowlength;
+            if (bestchordL != bestchordR) {
+                chordchange[maxindex+count] += (halfwindowlength - abs(maxindex-halfwindowlength)) * 2.0 / halfwindowlength;
+            }
             count++;	
         }
         // cerr << "*******  agent finished   *******" << endl;
@@ -561,8 +668,7 @@ Chordino::getRemainingFeatures()
             }
             // chordSequence[count] = maxChordIndex;
             // cerr << maxChordIndex << endl;
-            // cerr << chordchange[count] << endl;
-            // fsOut[9].push_back(currentChord);
+            // cerr << chordchange[count] << endl;            
             if (oldChord != maxChord) {
                 oldChord = maxChord;
                 chord_feature.label = m_chordnames[maxChordIndex];
@@ -577,5 +683,17 @@ Chordino::getRemainingFeatures()
     chord_feature.label = "N";
     fsOut[0].push_back(chord_feature);
     cerr << "done." << endl;
+    
+    for (int iFrame = 0; iFrame < nFrame; iFrame++) {
+        Feature chordchange_feature;
+        chordchange_feature.hasTimestamp = true;
+        chordchange_feature.timestamp = timestamps[iFrame];
+        chordchange_feature.values.push_back(chordchange[iFrame]);
+        fsOut[1].push_back(chordchange_feature);
+    }
+    
+    
+    
+    
     return fsOut;     
 }

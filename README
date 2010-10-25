@@ -31,8 +31,6 @@ The default settings (in brackets, below) are those used for Matthias Mauch's 20
 * Chromagram: a 12-dimensional chromagram, restricted with mid-range emphasis. At each frame the Semitone Spectrum is multiplied by a mid-range pattern and then mapped to the 12 chroma bins.
 * Chromagram and Bass Chromagram: a 24-dimensional chromagram, consisting of the both Bass Chromgram and Chromagram, see above. When normalisation is used, this representation will however be scaled differently, and hence be different from the individual chromagrams.
 
-### References and Credits ###
-
 ## Chordino ##
 
 System identifier – vamp:nnls-chroma:chordino
@@ -40,13 +38,14 @@ RDF URI – http://vamp-plugins.org/rdf/plugins/nnls-chroma#chordino (not yet av
 
 ### General Description ###
 
-Chordino provides a simple chord transcription based on NNLS Chroma (described above). 
+Chordino provides a simple chord transcription based on NNLS Chroma (described above). Chord profiles given by the user in the file "chord.dict" are used to calculate frame-wise chord similarities. Two simple (non-state-of-the-art!) algorithms are available that smooth these to provide a chord transcription: a simple chord change method, and a standard HMM/Viterbi approach.
 
 ### Parameters ###
 
 The default settings (in brackets, below) are those used for Matthias Mauch's 2010 MIREX submissions.
 
 * use approximate transcription (NNLS) (on or off; default: on): toggle between NNLS approximate transcription and linear spectral mapping.
+* Viterbi decoding (on or off; default: on): uses HMM/Viterbi smoothing. Otherwise: heuristic chord change smoothing.
 * spectral roll on (0.00 -- 0.05; default: 0.0): consider the cumulative energy spectrum (from low to high frequencies). All bins below the first bin whose cumulative energy exceeds [spectral roll on] x [total energy] will be set to 0. A value of 0 means that no bins will be changed.
 * tuning mode (global or local; default: global): local uses a local average for tuning, global uses ... exactly.
 * spectral whitening (0.0 -- 1.0; default: 1.0): determines how much the log-frequency spectrum is whitened. A value of 0.0 means no whitening. For values other than 0.0 the log-freq spectral bins are divided by  [standard deviation of their neighbours]^[spectral whitening], where "^" means "to the power of".
@@ -55,5 +54,8 @@ The default settings (in brackets, below) are those used for Matthias Mauch's 20
 
 ### Outputs ###
 
-### References and Credits ###
+* Chord Estimate: estimated chord times and labels.
+* Harmonic Change Value: an indication of the likelihood harmonic change. Depends on the chord dictionary. Calculation is different depending on whether the Viterbi algorithm is used for chord estimation, or the simple chord estimate.
+
+## References and Credits ##
 
