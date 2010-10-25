@@ -166,7 +166,8 @@ NNLSBase::getParameterDescriptors() const
     d0.minValue = 0;
     d0.maxValue = 0.05;
     d0.defaultValue = 0;
-    d0.isQuantized = false;
+    d0.isQuantized = true;
+	d0.quantizeStep = 0.005;
     list.push_back(d0);
 
     ParameterDescriptor d1;

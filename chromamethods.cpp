@@ -378,6 +378,7 @@ vector<string> chordDictionary(vector<float> *mchorddict) {
         //      
         // }
         
+        float exponent = 2.0;
         
         for (int iChord = 0; iChord < loadedChordDict.size()/24; iChord++) {
             float sum = 0;
@@ -386,10 +387,10 @@ vector<string> chordDictionary(vector<float> *mchorddict) {
                 sum += loadedChordDict[24 * iChord + iST];
             }
             for (int iST = 0; iST < 24; ++iST) {
-                loadedChordDict[24 * iChord + iST] -= sum/24;
-                stand += pow(loadedChordDict[24 * iChord + iST],2)/24;
+                // loadedChordDict[24 * iChord + iST] -= sum/24;
+                stand += pow(abs(loadedChordDict[24 * iChord + iST]),exponent)/24;
             }
-            stand = sqrt(stand);
+            stand = pow(stand,(float)1.0/exponent);
             for (int iST = 0; iST < 24; ++iST) {
                 loadedChordDict[24 * iChord + iST] /= stand;            
             }

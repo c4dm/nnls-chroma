@@ -367,7 +367,9 @@ Chordino::getRemainingFeatures()
             for (int iBin = 12; iBin < 24; iBin++) {
                 tempchordvalue += m_chorddict[24 * iChord + iBin] * chroma[iBin];
             }
-            if (tempchordvalue < 0) tempchordvalue = 0;
+            if (iChord == nChord-1) tempchordvalue *= .7;
+            if (tempchordvalue < 0) tempchordvalue = 0.0;
+            tempchordvalue = pow(1.5,tempchordvalue);
             sumchordvalue+=tempchordvalue;
             currentChordSalience.push_back(tempchordvalue);
         }
@@ -389,9 +391,11 @@ Chordino::getRemainingFeatures()
 	if (m_useHMM) {
         cerr << "[Chordino Plugin] HMM Chord Estimation ... ";
         int oldchord = nChord-1;
-        double selftransprob = 0.9;
+        double selftransprob = 0.99;
 	    
-        vector<double> init = vector<double>(nChord,1.0/nChord);
+        // vector<double> init = vector<double>(nChord,1.0/nChord);
+        vector<double> init = vector<double>(nChord,0); init[nChord-1] = 1;
+        
         vector<vector<double> > trans;
         for (int iChord = 0; iChord < nChord; iChord++) {
             vector<double> temp = vector<double>(nChord,(1-selftransprob)/(nChord-1));            
@@ -399,10 +403,17 @@ Chordino::getRemainingFeatures()
             trans.push_back(temp);
         }
         vector<int> chordpath = ViterbiPath(init,trans,chordogram);
+
+
+        Feature chord_feature; // chord estimate
+        chord_feature.hasTimestamp = true;
+        chord_feature.timestamp = timestamps[0];
+        chord_feature.label = m_chordnames[chordpath[0]];
+        fsOut[0].push_back(chord_feature);
         
         for (int iFrame = 0; iFrame < chordpath.size(); ++iFrame) {
             // cerr << chordpath[iFrame] << endl;
-            if (chordpath[iFrame] != oldchord) {
+            if (chordpath[iFrame] != oldchord ) {
                 Feature chord_feature; // chord estimate
                 chord_feature.hasTimestamp = true;
                 chord_feature.timestamp = timestamps[iFrame];
