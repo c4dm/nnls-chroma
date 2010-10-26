@@ -287,13 +287,19 @@ vector<string> chordDictionary(vector<float> *mchorddict) {
 
     vector<string> ppath = getPluginPath();
     for (int i = 0; i < ppath.size(); ++i) {
-	chordDictFilename = ppath[i] + "/" + chordDictBase;
-	cerr << "Looking for chord.dict in " << chordDictFilename << "..." << endl;
-	if (iostreams::stream<iostreams::file_source>(chordDictFilename.c_str())
-	    .is_open()) {
-	    cerr << "(Success)" << endl;
-	    break;
-	}
+    	chordDictFilename = ppath[i] + "/" + chordDictBase;
+    	cerr << "Looking for chord.dict in " << chordDictFilename << "..." ;
+    	fstream fin;
+        fin.open(chordDictFilename.c_str(),ios::in);
+        if( fin.is_open() )
+        {
+            fin.close();
+    	    cerr << " success." << endl;
+    	    break;
+        } else {
+            if (i < ppath.size()-1) cerr << " (not found yet) ..." << endl;
+            else cerr << "* ERROR: failed to find chord dictionary." << endl;
+        }
     }
 
     iostreams::stream<iostreams::file_source> chordDictFile(chordDictFilename);
