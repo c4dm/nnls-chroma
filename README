@@ -1,11 +1,7 @@
 ### NNLS Chroma ###
 
 System identifier – vamp:nnls-chroma:nnls-chroma
-<<<<<<< local
-RDF URI – http://vamp-plugins.org/rdf/plugins/nnls-chroma#nnls-chroma 
-=======
 RDF URI – http://vamp-plugins.org/rdf/plugins/nnls-chroma#nnls-chroma
->>>>>>> other
 
 #### General Description ####
 
@@ -38,19 +34,13 @@ The default settings (in brackets, below) are those used for Matthias Mauch's 20
 ### Chordino ###
 
 System identifier – vamp:nnls-chroma:chordino
-<<<<<<< local
-RDF URI – http://vamp-plugins.org/rdf/plugins/nnls-chroma#chordino 
-=======
 RDF URI – http://vamp-plugins.org/rdf/plugins/nnls-chroma#chordino
->>>>>>> other
 
 #### General Description ####
 
 Chordino provides a simple chord transcription based on NNLS Chroma (described above). Chord profiles given by the user in the file "chord.dict" are used to calculate frame-wise chord similarities. Two simple (non-state-of-the-art!) algorithms are available that smooth these to provide a chord transcription: a simple chord change method, and a standard HMM/Viterbi approach.
 
 #### Parameters ####
-
-The default settings (in brackets, below) are those used for Matthias Mauch's 2010 MIREX submissions.
 
 * use approximate transcription (NNLS) (on or off; default: on): toggle between NNLS approximate transcription and linear spectral mapping.
 * HMM (Viterbi decoding) (on or off; default: on): uses HMM/Viterbi smoothing. Otherwise: heuristic chord change smoothing.
@@ -68,11 +58,7 @@ The default settings (in brackets, below) are those used for Matthias Mauch's 20
 ### Tuning ###
 
 System identifier – vamp:nnls-chroma:tuning
-<<<<<<< local
-RDF URI – http://vamp-plugins.org/rdf/plugins/nnls-chroma#tuning 
-=======
 RDF URI – http://vamp-plugins.org/rdf/plugins/nnls-chroma#tuning
->>>>>>> other
 
 #### General Description ####
 
