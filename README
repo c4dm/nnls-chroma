@@ -1,7 +1,7 @@
 ## NNLS Chroma ##
 
 System identifier – vamp:nnls-chroma:nnls-chroma
-RDF URI – http://vamp-plugins.org/rdf/plugins/nnls-chroma#nnls-chroma (not yet available)
+RDF URI – http://vamp-plugins.org/rdf/plugins/nnls-chroma#nnls-chroma
 
 ### General Description ###
 
@@ -34,7 +34,7 @@ The default settings (in brackets, below) are those used for Matthias Mauch's 20
 ## Chordino ##
 
 System identifier – vamp:nnls-chroma:chordino
-RDF URI – http://vamp-plugins.org/rdf/plugins/nnls-chroma#chordino (not yet available)
+RDF URI – http://vamp-plugins.org/rdf/plugins/nnls-chroma#chordino
 
 ### General Description ###
 
@@ -60,7 +60,7 @@ The default settings (in brackets, below) are those used for Matthias Mauch's 20
 ## Tuning ##
 
 System identifier – vamp:nnls-chroma:tuning
-RDF URI – http://vamp-plugins.org/rdf/plugins/nnls-chroma#tuning (not yet available)
+RDF URI – http://vamp-plugins.org/rdf/plugins/nnls-chroma#tuning
 
 ### General Description ###
 
