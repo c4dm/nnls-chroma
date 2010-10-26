@@ -18,7 +18,7 @@
     vamp:available_plugin plugbase:chordino ; 
     vamp:available_plugin plugbase:nnls-chroma ; 
     vamp:available_plugin plugbase:tuning ;  
-    foaf:page <http://www.isophonics.net/> ;
+    foaf:page <http://www.isophonics.net/nnls-chroma> ;
     foaf:page <http://www.omras2.org/> ;
     foaf:page <http://www.matthiasmauch.net/> ; 
     .
