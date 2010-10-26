@@ -44,7 +44,7 @@ plugbase:chordino a   vamp:Plugin ;
     vamp:parameter   plugbase:chordino_param_s ;
 
     vamp:output      plugbase:chordino_output_simplechord ;
-    vamp:output      plugbase:chordino_output_ ;
+    vamp:output      plugbase:chordino_output_harmonicchange ;
     .
 plugbase:chordino_param_useNNLS a  vamp:QuantizedParameter ;
     vamp:identifier     "useNNLS" ;
@@ -123,8 +123,8 @@ plugbase:chordino_output_simplechord a  vamp:SparseOutput ;
     vamp:sample_rate      21.5332 ;
     vamp:computes_event_type   af:ChordSegment ;
     .
-plugbase:chordino_output_ a  vamp:DenseOutput ;
-    vamp:identifier       "" ;
+plugbase:chordino_output_harmonicchange a  vamp:DenseOutput ;
+    vamp:identifier       "harmonicchange" ;
     dc:title              "Harmonic Change Value" ;
     dc:description        """An indication of the likelihood of harmonic change. Depends on the chord dictionary. Calculation is different depending on whether the Viterbi algorithm is used for chord estimation, or the simple chord estimate."""  ;
     vamp:fixed_bin_count  "true" ;

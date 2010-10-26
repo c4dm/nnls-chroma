@@ -185,15 +185,15 @@ Chordino::getOutputDescriptors() const
     m_outputChords = index++;
     
     OutputDescriptor d8;
-    d8.identifier = "";
+    d8.identifier = "harmonicchange";
     d8.name = "Harmonic Change Value";
     d8.description = "An indication of the likelihood of harmonic change. Depends on the chord dictionary. Calculation is different depending on whether the Viterbi algorithm is used for chord estimation, or the simple chord estimate.";
     d8.unit = "";
     d8.hasFixedBinCount = true;
     d8.binCount = 1;
-    d8.hasKnownExtents = true;
-    d8.minValue = 0.0;
-    d8.maxValue = 0.999;
+    d8.hasKnownExtents = false;
+    // d8.minValue = 0.0;
+    // d8.maxValue = 0.999;
     d8.isQuantized = false;
     d8.sampleType = OutputDescriptor::FixedSampleRate;
     d8.hasDuration = false;
@@ -510,8 +510,9 @@ Chordino::getRemainingFeatures()
         chord_feature.hasTimestamp = true;
         chord_feature.timestamp = timestamps[0];
         chord_feature.label = m_chordnames[chordpath[0]];
-        fsOut[0].push_back(chord_feature);
+        fsOut[m_outputChords].push_back(chord_feature);
         
+        chordchange[0] = 0;
         for (int iFrame = 1; iFrame < chordpath.size(); ++iFrame) {
             // cerr << chordpath[iFrame] << endl;
             if (chordpath[iFrame] != oldchord ) {
@@ -519,7 +520,7 @@ Chordino::getRemainingFeatures()
                 chord_feature.hasTimestamp = true;
                 chord_feature.timestamp = timestamps[iFrame];
                 chord_feature.label = m_chordnames[chordpath[iFrame]];
-                fsOut[0].push_back(chord_feature);
+                fsOut[m_outputChords].push_back(chord_feature);
                 oldchord = chordpath[iFrame];         
             }
             /* calculating simple chord change prob */            
@@ -672,7 +673,7 @@ Chordino::getRemainingFeatures()
             if (oldChord != maxChord) {
                 oldChord = maxChord;
                 chord_feature.label = m_chordnames[maxChordIndex];
-                fsOut[0].push_back(chord_feature);
+                fsOut[m_outputChords].push_back(chord_feature);
             }
             count++;
         }
@@ -681,7 +682,7 @@ Chordino::getRemainingFeatures()
     chord_feature.hasTimestamp = true;
     chord_feature.timestamp = timestamps[timestamps.size()-1];
     chord_feature.label = "N";
-    fsOut[0].push_back(chord_feature);
+    fsOut[m_outputChords].push_back(chord_feature);
     cerr << "done." << endl;
     
     for (int iFrame = 0; iFrame < nFrame; iFrame++) {
@@ -689,10 +690,11 @@ Chordino::getRemainingFeatures()
         chordchange_feature.hasTimestamp = true;
         chordchange_feature.timestamp = timestamps[iFrame];
         chordchange_feature.values.push_back(chordchange[iFrame]);
-        fsOut[1].push_back(chordchange_feature);
+        // cerr << chordchange[iFrame] << endl;
+        fsOut[m_outputHarmonicChange].push_back(chordchange_feature);
     }
     
-    
+    // for (int iFrame = 0; iFrame < nFrame; iFrame++) cerr << fsOut[m_outputHarmonicChange][iFrame].values[0] << endl;
     
     
     return fsOut;     

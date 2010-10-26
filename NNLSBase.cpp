@@ -49,11 +49,11 @@ NNLSBase::NNLSBase(float inputSampleRate) :
     m_kernelFftIndex(0),
     m_kernelNoteIndex(0),
     m_dict(0),
-    m_tuneLocal(false),
+    m_tuneLocal(0),
     m_chorddict(0),
     m_chordnames(0),
     m_doNormalizeChroma(0),
-    m_rollon(0.0),
+    m_rollon(0),
 	m_s(0.7),
 	m_useNNLS(1),
 	m_useHMM(1)
@@ -290,7 +290,8 @@ NNLSBase::setParameter(string identifier, float value)
     }
     
     if (identifier == "tuningmode") {
-        m_tuneLocal = (value > 0) ? true : false;
+        // m_tuneLocal = (value > 0) ? true : false;
+        m_tuneLocal = value;
         // cerr << "m_tuneLocal :" << m_tuneLocal << endl;
     }
     // if (identifier == "preset") {
@@ -555,7 +556,7 @@ NNLSBase::getRemainingFeatures()
         f2.timestamp = f1.timestamp;
         f2.values.push_back(0.0); f2.values.push_back(0.0); // set lower edge to zero
 		
-        if (m_tuneLocal) {
+        if (m_tuneLocal == 1.0) {
             intShift = floor(m_localTuning[count] * 3);
             intFactor = m_localTuning[count] * 3 - intShift; // intFactor is a really bad name for this
         }
