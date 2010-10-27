@@ -321,10 +321,10 @@ plugbase:tuning_output_tuning a  vamp:SparseOutput ;
     a                 vamp:KnownExtentsOutput ;
     vamp:min_value    427.47  ;
     vamp:max_value    452.89  ;
-    vamp:bin_count        0 ;
+    vamp:bin_count        1 ;
     vamp:sample_type      vamp:VariableSampleRate ;
     vamp:sample_rate      2.38221e-44 ;
-    vamp:computes_event_type   af:MusicSegment;
+    vamp:computes_event_type   af:Segment;
     .
 plugbase:tuning_output_localtuning a  vamp:DenseOutput ;
     vamp:identifier       "localtuning" ;

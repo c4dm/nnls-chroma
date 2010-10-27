@@ -106,13 +106,13 @@ Tuning::getOutputDescriptors() const
     d0.description = "Returns a single label (at time 0 seconds) containing an estimate of the concert pitch in Hz.";
     d0.unit = "Hz";
     d0.hasFixedBinCount = true;
-    d0.binCount = 0;
+    d0.binCount = 1;
     d0.hasKnownExtents = true;
     d0.minValue = 427.47;
     d0.maxValue = 452.89;
     d0.isQuantized = false;
     d0.sampleType = OutputDescriptor::VariableSampleRate;
-    d0.hasDuration = false;
+    d0.hasDuration = true;
     list.push_back(d0);
     m_outputTuning = index++;
 	
@@ -203,6 +203,8 @@ Tuning::getRemainingFeatures()
     f0.timestamp = Vamp::RealTime::frame2RealTime(0, lrintf(m_inputSampleRate));
     f0.values.push_back(cumulativetuning);
     f0.label = buffer0;
+    f0.hasDuration = true;
+    f0.duration = m_logSpectrum[m_logSpectrum.size()-1].timestamp;
     fsOut[m_outputTuning].push_back(f0);  
 		    
     return fsOut;     
