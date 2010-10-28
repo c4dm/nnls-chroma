@@ -8,12 +8,12 @@ VAMP_SDK_DIR = ../vamp-plugin-sdk
 CC=gcc
 CXX=g++
 
-CFLAGS = -I$(VAMP_SDK_DIR) -Wall -O3 -ffast-math -msse -msse2 -mfpmath=sse -ftree-vectorize -fPIC
+CFLAGS = -I$(VAMP_SDK_DIR) -Wall -O3 -fno-exceptions -ffast-math -msse -msse2 -mfpmath=sse -ftree-vectorize -fPIC
 #CFLAGS = -g -I$(VAMP_SDK_DIR) -Wall -fPIC
 CXXFLAGS = -I$(VAMP_SDK_DIR) -I../boost_1_44_0 -Wall -fPIC
 PLUGIN_EXT = .dll
 PLUGIN = $(PLUGIN_LIBRARY_NAME)$(PLUGIN_EXT)
-LDFLAGS = -shared -Wl,-soname=$(PLUGIN) $(VAMP_SDK_DIR)/libvamp-sdk.a -Wl,--version-script=vamp-plugin.map 
+LDFLAGS = -shared -static-libgcc -Wl,-soname=$(PLUGIN) $(VAMP_SDK_DIR)/libvamp-sdk.a -Wl,--version-script=vamp-plugin.map 
 
 
 $(PLUGIN): $(PLUGIN_CODE_OBJECTS)
