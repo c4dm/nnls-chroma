@@ -81,6 +81,7 @@ protected:
     vector<string> m_chordnames;
     float m_doNormalizeChroma;
     float m_rollon;
+    vector<float> hw;
 };
 
 

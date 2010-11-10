@@ -29,8 +29,6 @@
 
 const bool debug_on = false;
 
-const vector<float> hw(hammingwind, hammingwind+19);
-
 Chordino::Chordino(float inputSampleRate) :
     NNLSBase(inputSampleRate)
 {
@@ -99,10 +97,10 @@ Chordino::getParameterDescriptors() const
     d0.description = "Consider the cumulative energy spectrum (from low to high frequencies). All bins below the first bin whose cumulative energy exceeds the quantile [spectral roll on] x [total energy] will be set to 0. A value of 0 means that no bins will be changed.";
     d0.unit = "%";
     d0.minValue = 0;
-    d0.maxValue = 0.05;
+    d0.maxValue = 5;
     d0.defaultValue = 0;
     d0.isQuantized = true;
-	d0.quantizeStep = 0.005;
+	d0.quantizeStep = 0.5;
     list.push_back(d0);
 
     ParameterDescriptor d1;
@@ -210,7 +208,7 @@ Chordino::initialise(size_t channels, size_t stepSize, size_t blockSize)
     if (debug_on) {
         cerr << "--> initialise";
     }
-
+    
     if (!NNLSBase::initialise(channels, stepSize, blockSize)) {
         return false;
     }
@@ -238,6 +236,7 @@ Chordino::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
 Chordino::FeatureSet
 Chordino::getRemainingFeatures()
 {
+    cerr << hw[0] << hw[1] << endl;
     if (debug_on) cerr << "--> getRemainingFeatures" << endl;
     FeatureSet fsOut;
     if (m_logSpectrum.size() == 0) return fsOut;

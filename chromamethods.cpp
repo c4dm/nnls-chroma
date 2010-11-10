@@ -370,20 +370,6 @@ vector<string> chordDictionary(vector<float> *mchorddict) {
         for (unsigned kSemitone = 0; kSemitone < 12; kSemitone++) loadedChordDict.push_back(0.5);
         for (unsigned kSemitone = 0; kSemitone < 12; kSemitone++) loadedChordDict.push_back(1.0);
 	
-        // normalise
-        // float sum = 0;
-        // for (int i = 0; i < loadedChordDict.size(); i++) {
-        //     sum += pow(loadedChordDict[i],2);
-        //     if (i % 24 == 23) {
-        //         float invertedsum = 1.0/sqrt(sum);
-        //         for (int k = 0; k < 24; k++) {
-        //             loadedChordDict[i-k] *= invertedsum; 
-        //         }
-        //         sum = 0;
-        //     }
-        //      
-        // }
-        
         float exponent = 2.0;
         float boostN = 1.1;
         

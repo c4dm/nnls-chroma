@@ -28,8 +28,6 @@
 
 const bool debug_on = false;
 
-const vector<float> hw(hammingwind, hammingwind+19);
-
 NNLSBase::NNLSBase(float inputSampleRate) :
     Plugin(inputSampleRate),
     m_logSpectrum(0),
@@ -353,6 +351,14 @@ NNLSBase::initialise(size_t channels, size_t stepSize, size_t blockSize)
     if (debug_on) {
         cerr << "--> initialise";
     }
+	
+	int hamwinlength = nBPS * 6 + 1;
+    float hamwinsum = 0;
+    for (int i = 0; i < hamwinlength; ++i) { 
+        hw.push_back(0.54 - 0.46 * cos((2*M_PI*i)/(hamwinlength-1)));    
+        hamwinsum += 0.54 - 0.46 * cos((2*M_PI*i)/(hamwinlength-1));
+    }
+    for (int i = 0; i < hamwinlength; ++i) hw[i] = round(hw[i] / hamwinsum * 10000)*1.0/10000;
 	
     if (channels < getMinChannelCount() ||
 	channels > getMaxChannelCount()) return false;

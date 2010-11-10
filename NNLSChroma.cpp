@@ -28,8 +28,6 @@
 
 const bool debug_on = false;
 
-const vector<float> hw(hammingwind, hammingwind+19);
-
 NNLSChroma::NNLSChroma(float inputSampleRate) :
     NNLSBase(inputSampleRate)
 {
