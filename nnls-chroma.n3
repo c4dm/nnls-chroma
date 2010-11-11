@@ -295,7 +295,6 @@ plugbase:tuning a   vamp:Plugin ;
     owl:versionInfo       "1" ;
     vamp:input_domain     vamp:FrequencyDomain ;
 
-
     vamp:parameter   plugbase:tuning_param_rollon ;
 
     vamp:output      plugbase:tuning_output_tuning ;
