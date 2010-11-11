@@ -50,7 +50,7 @@ vector<float> SpecialConvolution(vector<float> convolvee, vector<float> kernel)
     int lenConvolvee = convolvee.size();
     int lenKernel = kernel.size();
 
-    vector<float> Z(256,0);
+    vector<float> Z(nNote,0);
     assert(lenKernel % 2 != 0); // no exception handling !!!
     
     for (n = lenKernel - 1; n < lenConvolvee; n++) {
@@ -206,7 +206,7 @@ void dictionaryMatrix(float* dm, float s_param) {
             // cerr << "curramp" << curr_amp << endl;
             for (unsigned iNote = 0; iNote < nNote; ++iNote) {
                 if (abs(iNote+1.0-floatbin)<2) {
-                    dm[iNote  + 256 * iOut] += cospuls(iNote+1.0, floatbin, binspersemitone + 0.0) * curr_amp;
+                    dm[iNote  + nNote * iOut] += cospuls(iNote+1.0, floatbin, binspersemitone + 0.0) * curr_amp;
                     // dm[iNote + nNote * iOut] += 1 * curr_amp;
                 }
             }

@@ -24,7 +24,7 @@
 
 const int nBPS = 3; // bins per semitone
 const int nOctave = 7;
-const int nNote = nOctave * 12 * nBPS + 2 * (nBPS/2); // a core over all octaves, plus some overlap at top and bottom
+const int nNote = nOctave * 12 * nBPS + 2 * (nBPS/2+1); // a core over all octaves, plus some overlap at top and bottom
 
 extern std::vector<float> SpecialConvolution(std::vector<float> convolvee, std::vector<float> kernel);
 extern void dictionaryMatrix(float* dm, float s_param);

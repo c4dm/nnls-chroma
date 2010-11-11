@@ -358,14 +358,14 @@ NNLSBase::initialise(size_t channels, size_t stepSize, size_t blockSize)
         hw.push_back(0.54 - 0.46 * cos((2*M_PI*i)/(hamwinlength-1)));    
         hamwinsum += 0.54 - 0.46 * cos((2*M_PI*i)/(hamwinlength-1));
     }
-    for (int i = 0; i < hamwinlength; ++i) hw[i] = round(hw[i] / hamwinsum * 10000)*1.0/10000;
+    for (int i = 0; i < hamwinlength; ++i) hw[i] = hw[i] / hamwinsum;
 	
     if (channels < getMinChannelCount() ||
 	channels > getMaxChannelCount()) return false;
     m_blockSize = blockSize;
     m_stepSize = stepSize;
     m_frameCount = 0;
-    int tempn = 256 * m_blockSize/2;
+    int tempn = nNote * m_blockSize/2;
     // cerr << "length of tempkernel : " <<  tempn << endl;
     float *tempkernel;
 
@@ -577,11 +577,11 @@ NNLSBase::getRemainingFeatures()
         f2.values.push_back(0.0); f2.values.push_back(0.0); f2.values.push_back(0.0); // upper edge
         vector<float> runningmean = SpecialConvolution(f2.values,hw);
         vector<float> runningstd;
-        for (int i = 0; i < 256; i++) { // first step: squared values into vector (variance)
+        for (int i = 0; i < nNote; i++) { // first step: squared values into vector (variance)
             runningstd.push_back((f2.values[i] - runningmean[i]) * (f2.values[i] - runningmean[i]));
         }
         runningstd = SpecialConvolution(runningstd,hw); // second step convolve
-        for (int i = 0; i < 256; i++) { 
+        for (int i = 0; i < nNote; i++) { 
             runningstd[i] = sqrt(runningstd[i]); // square root to finally have running std
             if (runningstd[i] > 0) {
                 // f2.values[i] = (f2.values[i] / runningmean[i]) > thresh ? 
@@ -637,12 +637,12 @@ NNLSBase::getRemainingFeatures()
         f6.hasTimestamp = true;
         f6.timestamp = f2.timestamp;
 	        
-			float b[256];
+			float b[nNote];
 	
         bool some_b_greater_zero = false;
         float sumb = 0;
-        for (int i = 0; i < 256; i++) {
-            // b[i] = m_dict[(256 * count + i) % (256 * 84)];
+        for (int i = 0; i < nNote; i++) {
+            // b[i] = m_dict[(nNote * count + i) % (nNote * 84)];
             b[i] = f2.values[i];
             sumb += b[i];
             if (b[i] > 0) {
@@ -690,12 +690,12 @@ NNLSBase::getRemainingFeatures()
 				    float zz[84+1000];
                 int indx[84+1000];
                 int mode;
-                int dictsize = 256*signifIndex.size();
+                int dictsize = nNote*signifIndex.size();
                 // cerr << "dictsize is " << dictsize << "and values size" << f3.values.size()<< endl;
 					float *curr_dict = new float[dictsize];
                 for (unsigned iNote = 0; iNote < signifIndex.size(); ++iNote) {
-                    for (unsigned iBin = 0; iBin < 256; iBin++) {
-                        curr_dict[iNote * 256 + iBin] = 1.0 * m_dict[signifIndex[iNote] * 256 + iBin];
+                    for (unsigned iBin = 0; iBin < nNote; iBin++) {
+                        curr_dict[iNote * nNote + iBin] = 1.0 * m_dict[signifIndex[iNote] * nNote + iBin];
                     }
                 }
 					nnls(curr_dict, nNote, nNote, signifIndex.size(), b, x, &rnorm, w, zz, indx, &mode);

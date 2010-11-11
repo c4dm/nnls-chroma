@@ -298,11 +298,11 @@ Chordino::getRemainingFeatures()
         currentTunedSpec.values.push_back(0.0); currentTunedSpec.values.push_back(0.0); currentTunedSpec.values.push_back(0.0); // upper edge
         vector<float> runningmean = SpecialConvolution(currentTunedSpec.values,hw);
         vector<float> runningstd;
-        for (int i = 0; i < 256; i++) { // first step: squared values into vector (variance)
+        for (int i = 0; i < nNote; i++) { // first step: squared values into vector (variance)
             runningstd.push_back((currentTunedSpec.values[i] - runningmean[i]) * (currentTunedSpec.values[i] - runningmean[i]));
         }
         runningstd = SpecialConvolution(runningstd,hw); // second step convolve
-        for (int i = 0; i < 256; i++) { 
+        for (int i = 0; i < nNote; i++) { 
             runningstd[i] = sqrt(runningstd[i]); // square root to finally have running std
             if (runningstd[i] > 0) {
                 // currentTunedSpec.values[i] = (currentTunedSpec.values[i] / runningmean[i]) > thresh ? 
@@ -348,12 +348,12 @@ Chordino::getRemainingFeatures()
         currentChromas.hasTimestamp = true;
         currentChromas.timestamp = currentTunedSpec.timestamp;    
 
-        float b[256];
+        float b[nNote];
 	
         bool some_b_greater_zero = false;
         float sumb = 0;
-        for (int i = 0; i < 256; i++) {
-            // b[i] = m_dict[(256 * count + i) % (256 * 84)];
+        for (int i = 0; i < nNote; i++) {
+            // b[i] = m_dict[(nNote * count + i) % (nNote * 84)];
             b[i] = currentTunedSpec.values[i];
             sumb += b[i];
             if (b[i] > 0) {
@@ -399,11 +399,11 @@ Chordino::getRemainingFeatures()
                 float zz[84+1000];
                 int indx[84+1000];
                 int mode;
-                int dictsize = 256*signifIndex.size();
+                int dictsize = nNote*signifIndex.size();
                 float *curr_dict = new float[dictsize];
                 for (unsigned iNote = 0; iNote < signifIndex.size(); ++iNote) {
-                    for (unsigned iBin = 0; iBin < 256; iBin++) {
-                        curr_dict[iNote * 256 + iBin] = 1.0 * m_dict[signifIndex[iNote] * 256 + iBin];
+                    for (unsigned iBin = 0; iBin < nNote; iBin++) {
+                        curr_dict[iNote * nNote + iBin] = 1.0 * m_dict[signifIndex[iNote] * nNote + iBin];
                     }
                 }
                 nnls(curr_dict, nNote, nNote, signifIndex.size(), b, x, &rnorm, w, zz, indx, &mode);
