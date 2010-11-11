@@ -246,12 +246,16 @@ Chordino::getRemainingFeatures()
          calculate tuning from (using the angle of the complex number defined by the 
          cumulative mean real and imag values)
     **/
-    float meanTuningImag = sinvalue * m_meanTuning1 - sinvalue * m_meanTuning2;
-    float meanTuningReal = m_meanTuning0 + cosvalue * m_meanTuning1 + cosvalue * m_meanTuning2;
+    float meanTuningImag = 0;
+    float meanTuningReal = 0;
+    for (int iBPS = 0; iBPS < nBPS; ++iBPS) {
+        meanTuningReal += m_meanTunings[iBPS] * cosvalues[iBPS];
+        meanTuningImag += m_meanTunings[iBPS] * sinvalues[iBPS];
+    }
     float cumulativetuning = 440 * pow(2,atan2(meanTuningImag, meanTuningReal)/(24*M_PI));
     float normalisedtuning = atan2(meanTuningImag, meanTuningReal)/(2*M_PI);
     int intShift = floor(normalisedtuning * 3);
-    float intFactor = normalisedtuning * 3 - intShift; // intFactor is a really bad name for this
+    float floatShift = normalisedtuning * 3 - intShift; // floatShift is a really bad name for this
 		    
     char buffer0 [50];
 		
@@ -285,13 +289,13 @@ Chordino::getRemainingFeatures()
 		
         if (m_tuneLocal) {
             intShift = floor(m_localTuning[count] * 3);
-            intFactor = m_localTuning[count] * 3 - intShift; // intFactor is a really bad name for this
+            floatShift = m_localTuning[count] * 3 - intShift; // floatShift is a really bad name for this
         }
 		        
-        // cerr << intShift << " " << intFactor << endl;
+        // cerr << intShift << " " << floatShift << endl;
 		        
         for (unsigned k = 2; k < currentLogSpectum.values.size() - 3; ++k) { // interpolate all inner bins
-            tempValue = currentLogSpectum.values[k + intShift] * (1-intFactor) + currentLogSpectum.values[k+intShift+1] * intFactor;
+            tempValue = currentLogSpectum.values[k + intShift] * (1-floatShift) + currentLogSpectum.values[k+intShift+1] * floatShift;
             currentTunedSpec.values.push_back(tempValue);
         }
 		        

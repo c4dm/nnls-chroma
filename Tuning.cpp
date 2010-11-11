@@ -187,8 +187,15 @@ Tuning::getRemainingFeatures()
          calculate tuning from (using the angle of the complex number defined by the 
          cumulative mean real and imag values)
     **/
-    float meanTuningImag = sinvalue * m_meanTuning1 - sinvalue * m_meanTuning2;
-    float meanTuningReal = m_meanTuning0 + cosvalue * m_meanTuning1 + cosvalue * m_meanTuning2;
+    
+    float meanTuningImag = 0;
+    float meanTuningReal = 0;
+    for (int iBPS = 0; iBPS < nBPS; ++iBPS) {
+        meanTuningReal += m_meanTunings[iBPS] * cosvalues[iBPS];
+        meanTuningImag += m_meanTunings[iBPS] * sinvalues[iBPS];
+    }
+    
+
     float cumulativetuning = 440 * pow(2,atan2(meanTuningImag, meanTuningReal)/(24*M_PI));
 		    
     char buffer0 [50];

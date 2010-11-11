@@ -219,12 +219,16 @@ NNLSChroma::getRemainingFeatures()
          calculate tuning from (using the angle of the complex number defined by the 
          cumulative mean real and imag values)
     **/
-    float meanTuningImag = sinvalue * m_meanTuning1 - sinvalue * m_meanTuning2;
-    float meanTuningReal = m_meanTuning0 + cosvalue * m_meanTuning1 + cosvalue * m_meanTuning2;
+    float meanTuningImag = 0;
+    float meanTuningReal = 0;
+    for (int iBPS = 0; iBPS < nBPS; ++iBPS) {
+        meanTuningReal += m_meanTunings[iBPS] * cosvalues[iBPS];
+        meanTuningImag += m_meanTunings[iBPS] * sinvalues[iBPS];
+    }
     float cumulativetuning = 440 * pow(2,atan2(meanTuningImag, meanTuningReal)/(24*M_PI));
     float normalisedtuning = atan2(meanTuningImag, meanTuningReal)/(2*M_PI);
     int intShift = floor(normalisedtuning * 3);
-    float intFactor = normalisedtuning * 3 - intShift; // intFactor is a really bad name for this
+    float floatShift = normalisedtuning * 3 - intShift; // floatShift is a really bad name for this
 		    
     char buffer0 [50];
 		
@@ -244,8 +248,6 @@ NNLSChroma::getRemainingFeatures()
     // cerr << "tune local ? " << m_tuneLocal << endl;
     int count = 0;
 
-    cerr << nNote;
-    cerr << endl << "-------------------------------------"<< endl;
 		
     for (FeatureList::iterator i = m_logSpectrum.begin(); i != m_logSpectrum.end(); ++i) {
         Feature f1 = *i;
@@ -256,13 +258,13 @@ NNLSChroma::getRemainingFeatures()
 		
         if (m_tuneLocal) {
             intShift = floor(m_localTuning[count] * 3);
-            intFactor = m_localTuning[count] * 3 - intShift; // intFactor is a really bad name for this
+            floatShift = m_localTuning[count] * 3 - intShift; // floatShift is a really bad name for this
         }
 		        
-        // cerr << intShift << " " << intFactor << endl;
+        // cerr << intShift << " " << floatShift << endl;
 		        
         for (unsigned k = 2; k < f1.values.size() - 3; ++k) { // interpolate all inner bins
-            tempValue = f1.values[k + intShift] * (1-intFactor) + f1.values[k+intShift+1] * intFactor;
+            tempValue = f1.values[k + intShift] * (1-floatShift) + f1.values[k+intShift+1] * floatShift;
             f2.values.push_back(tempValue);
         }
 		        
@@ -349,11 +351,11 @@ NNLSChroma::getRemainingFeatures()
 			
         if (some_b_greater_zero) {
             if (m_useNNLS == 0) {
-                for (unsigned iNote = 2; iNote < nNote - 2; iNote += 3) {
+                for (unsigned iNote = nBPS/2 + 2; iNote < nNote - nBPS/2; iNote += nBPS) {
                     currval = 0;
-                    currval += b[iNote + 1 + -1] * 0.5;						
-                    currval += b[iNote + 1 +  0] * 1.0;						
-                    currval += b[iNote + 1 +  1] * 0.5;						
+                    for (int iBPS = -nBPS/2; iBPS < nBPS/2+1; ++iBPS) {
+                        currval += b[iNote + iBPS] * (1-abs(iBPS*1.0/(nBPS/2+1)));						
+                    }
                     f3.values.push_back(currval);
                     chroma[iSemitone % 12] += currval * treblewindow[iSemitone];
                     basschroma[iSemitone % 12] += currval * basswindow[iSemitone];
@@ -366,11 +368,11 @@ NNLSChroma::getRemainingFeatures()
                 vector<int> signifIndex;
                 int index=0;
                 sumb /= 84.0;
-                for (unsigned iNote = 2; iNote < nNote - 2; iNote += 3) {
+                for (unsigned iNote = nBPS/2 + 2; iNote < nNote - nBPS/2; iNote += nBPS) {
                     float currval = 0;
-                    currval += b[iNote + 1 + -1]; 
-                    currval += b[iNote + 1 +  0]; 
-                    currval += b[iNote + 1 +  1];
+                    for (int iBPS = -nBPS/2; iBPS < nBPS/2+1; ++iBPS) {
+                        currval += b[iNote + iBPS]; 
+                    }
                     if (currval > 0) signifIndex.push_back(index);
                     f3.values.push_back(0); // fill the values, change later
                     index++;

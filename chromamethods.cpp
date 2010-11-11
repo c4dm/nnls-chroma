@@ -105,7 +105,7 @@ float pitchCospuls(float x, float centre, int binsperoctave)
 
 bool logFreqMatrix(int fs, int blocksize, float *outmatrix) {
 	
-    int binspersemitone = 3; // this must be 3
+    int binspersemitone = nBPS; 
     int minoctave = 0; // this must be 0
     int maxoctave = 7; // this must be 7
     int oversampling = 80;
@@ -128,14 +128,14 @@ bool logFreqMatrix(int fs, int blocksize, float *outmatrix) {
     int maxMIDI = 21 + maxoctave * 12; // this includes one additional semitone!
     vector<float> cq_f;
     float oob = 1.0/binspersemitone; // one over binspersemitone
-    cq_f.push_back(440 * pow(2.0,0.083333 * (minMIDI-69))); // 0.083333 is approx 1/12
-    cq_f.push_back(440 * pow(2.0,0.083333 * (minMIDI+oob-69)));
-    for (int i = minMIDI + 1; i < maxMIDI; ++i) {
-        for (int k = -1; k < 2; ++k)	 {
+    // cq_f.push_back(440 * pow(2.0,0.083333 * (minMIDI-69))); // 0.083333 is approx 1/12
+    // cq_f.push_back(440 * pow(2.0,0.083333 * (minMIDI+oob-69)));
+    for (int i = minMIDI; i < maxMIDI; ++i) {
+        for (int k = 0; k < binspersemitone; ++k)	 {
             cq_f.push_back(440 * pow(2.0,0.083333333333 * (i+oob*k-69)));
         }
     }
-    cq_f.push_back(440 * pow(2.0,0.083333 * (minMIDI-oob-69)));
+    // cq_f.push_back(440 * pow(2.0,0.083333 * (minMIDI-oob-69)));
     cq_f.push_back(440 * pow(2.0,0.083333 * (maxMIDI-69)));
 
     int nFFT = fft_f.size();
@@ -171,7 +171,7 @@ bool logFreqMatrix(int fs, int blocksize, float *outmatrix) {
 }
 
 void dictionaryMatrix(float* dm, float s_param) {
-    int binspersemitone = 3; // this must be 3
+    int binspersemitone = nBPS;
     int minoctave = 0; // this must be 0
     int maxoctave = 7; // this must be 7
     // float s_param = 0.7;
@@ -181,14 +181,14 @@ void dictionaryMatrix(float* dm, float s_param) {
     int maxMIDI = 21 + maxoctave * 12; // this includes one additional semitone!
     vector<float> cq_f;
     float oob = 1.0/binspersemitone; // one over binspersemitone
-    cq_f.push_back(440 * pow(2.0,0.083333 * (minMIDI-69))); // 0.083333 is approx 1/12
-    cq_f.push_back(440 * pow(2.0,0.083333 * (minMIDI+oob-69)));
-    for (int i = minMIDI + 1; i < maxMIDI; ++i) {
-        for (int k = -1; k < 2; ++k)	 {
+    // cq_f.push_back(440 * pow(2.0,0.083333 * (minMIDI-69))); // 0.083333 is approx 1/12
+    // cq_f.push_back(440 * pow(2.0,0.083333 * (minMIDI+oob-69)));
+    for (int i = minMIDI; i < maxMIDI; ++i) {
+        for (int k = 0; k < binspersemitone; ++k)	 {
             cq_f.push_back(440 * pow(2.0,0.083333333333 * (i+oob*k-69)));
         }
     }
-    cq_f.push_back(440 * pow(2.0,0.083333 * (minMIDI-oob-69)));
+    // cq_f.push_back(440 * pow(2.0,0.083333 * (minMIDI-oob-69)));
     cq_f.push_back(440 * pow(2.0,0.083333 * (maxMIDI-69)));
 
     float curr_f;

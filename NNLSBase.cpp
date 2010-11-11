@@ -34,12 +34,8 @@ NNLSBase::NNLSBase(float inputSampleRate) :
     m_blockSize(0),
     m_stepSize(0),
     m_lengthOfNoteIndex(0),
-    m_meanTuning0(0),
-    m_meanTuning1(0),
-    m_meanTuning2(0),
-    m_localTuning0(0),
-    m_localTuning1(0),
-    m_localTuning2(0),
+    m_meanTunings(0),
+    m_localTunings(0),
     m_whitening(1.0),
     m_preset(0.0),
     m_localTuning(0),
@@ -54,7 +50,9 @@ NNLSBase::NNLSBase(float inputSampleRate) :
     m_rollon(0),
 	m_s(0.7),
 	m_useNNLS(1),
-	m_useHMM(1)
+	m_useHMM(1),
+	sinvalues(0),
+	cosvalues(0)
 {
     if (debug_on) cerr << "--> NNLSBase" << endl;
 
@@ -352,6 +350,14 @@ NNLSBase::initialise(size_t channels, size_t stepSize, size_t blockSize)
         cerr << "--> initialise";
     }
 	
+	// make things for tuning estimation
+	for (int iBPS = 0; iBPS < nBPS; ++iBPS) {
+        sinvalues.push_back(sin(2*M_PI*(iBPS*1.0/nBPS)));
+        cosvalues.push_back(cos(2*M_PI*(iBPS*1.0/nBPS)));
+    }
+    
+	
+	// make hamming window of length 1/2 octave
 	int hamwinlength = nBPS * 6 + 1;
     float hamwinsum = 0;
     for (int i = 0; i < hamwinlength; ++i) { 
@@ -359,6 +365,13 @@ NNLSBase::initialise(size_t channels, size_t stepSize, size_t blockSize)
         hamwinsum += 0.54 - 0.46 * cos((2*M_PI*i)/(hamwinlength-1));
     }
     for (int i = 0; i < hamwinlength; ++i) hw[i] = hw[i] / hamwinsum;
+    
+    
+    // initialise the tuning
+    for (int iBPS = 0; iBPS < nBPS; ++iBPS) {
+        m_meanTunings.push_back(0);
+        m_localTunings.push_back(0);
+    }
 	
     if (channels < getMinChannelCount() ||
 	channels > getMaxChannelCount()) return false;
@@ -411,12 +424,10 @@ NNLSBase::reset()
     m_frameCount = 0;
     // m_dictID = 0;
     m_logSpectrum.clear();
-    m_meanTuning0 = 0;
-    m_meanTuning1 = 0;
-    m_meanTuning2 = 0;
-    m_localTuning0 = 0;
-    m_localTuning1 = 0;
-    m_localTuning2 = 0;
+    for (int iBPS = 0; iBPS < nBPS; ++iBPS) {
+        m_meanTunings[iBPS] = 0;
+        m_localTunings[iBPS] = 0;
+    }
     m_localTuning.clear();
 }
 
@@ -473,24 +484,28 @@ NNLSBase::baseProcess(const float *const *inputBuffers, Vamp::RealTime timestamp
 	
     float one_over_N = 1.0/m_frameCount;
     // update means of complex tuning variables
-    m_meanTuning0 *= float(m_frameCount-1)*one_over_N;
-    m_meanTuning1 *= float(m_frameCount-1)*one_over_N;
-    m_meanTuning2 *= float(m_frameCount-1)*one_over_N;
-	
-    for (int iTone = 0; iTone < 160; iTone = iTone + 3) {
-        m_meanTuning0 += nm[iTone + 0]*one_over_N;
-    	m_meanTuning1 += nm[iTone + 1]*one_over_N;
-    	m_meanTuning2 += nm[iTone + 2]*one_over_N;
+    for (int iBPS = 0; iBPS < nBPS; ++iBPS) m_meanTunings[iBPS] *= float(m_frameCount-1)*one_over_N;
+    
+    for (int iTone = 0; iTone < round(nNote*0.62/nBPS)*nBPS+1; iTone = iTone + nBPS) {
+        for (int iBPS = 0; iBPS < nBPS; ++iBPS) m_meanTunings[iBPS] += nm[iTone + iBPS]*one_over_N;
         float ratioOld = 0.997;
-        m_localTuning0 *= ratioOld; m_localTuning0 += nm[iTone + 0] * (1 - ratioOld);
-        m_localTuning1 *= ratioOld; m_localTuning1 += nm[iTone + 1] * (1 - ratioOld);
-        m_localTuning2 *= ratioOld; m_localTuning2 += nm[iTone + 2] * (1 - ratioOld);
+        for (int iBPS = 0; iBPS < nBPS; ++iBPS) {
+            m_localTunings[iBPS] *= ratioOld; 
+            m_localTunings[iBPS] += nm[iTone + iBPS] * (1 - ratioOld);
+        }
     }
-	
     // if (m_tuneLocal) {
     // local tuning
-    float localTuningImag = sinvalue * m_localTuning1 - sinvalue * m_localTuning2;
-    float localTuningReal = m_localTuning0 + cosvalue * m_localTuning1 + cosvalue * m_localTuning2;
+    // float localTuningImag = sinvalue * m_localTunings[1] - sinvalue * m_localTunings[2];
+    // float localTuningReal = m_localTunings[0] + cosvalue * m_localTunings[1] + cosvalue * m_localTunings[2];
+    
+    float localTuningImag = 0;
+    float localTuningReal = 0;
+    for (int iBPS = 0; iBPS < nBPS; ++iBPS) {
+        localTuningReal += m_localTunings[iBPS] * cosvalues[iBPS];
+        localTuningImag += m_localTunings[iBPS] * sinvalues[iBPS];
+    }
+    
     float normalisedtuning = atan2(localTuningImag, localTuningReal)/(2*M_PI);
     m_localTuning.push_back(normalisedtuning);
     
@@ -523,12 +538,12 @@ NNLSBase::getRemainingFeatures()
          calculate tuning from (using the angle of the complex number defined by the 
          cumulative mean real and imag values)
     **/
-    float meanTuningImag = sinvalue * m_meanTuning1 - sinvalue * m_meanTuning2;
-    float meanTuningReal = m_meanTuning0 + cosvalue * m_meanTuning1 + cosvalue * m_meanTuning2;
+    float meanTuningImag = sinvalue * m_meanTunings[1] - sinvalue * m_meanTunings[2];
+    float meanTuningReal = m_meanTunings[0] + cosvalue * m_meanTunings[1] + cosvalue * m_meanTunings[2];
     float cumulativetuning = 440 * pow(2,atan2(meanTuningImag, meanTuningReal)/(24*M_PI));
     float normalisedtuning = atan2(meanTuningImag, meanTuningReal)/(2*M_PI);
     int intShift = floor(normalisedtuning * 3);
-    float intFactor = normalisedtuning * 3 - intShift; // intFactor is a really bad name for this
+    float floatShift = normalisedtuning * 3 - intShift; // floatShift is a really bad name for this
 		    
     char buffer0 [50];
 		
@@ -564,13 +579,13 @@ NNLSBase::getRemainingFeatures()
 		
         if (m_tuneLocal == 1.0) {
             intShift = floor(m_localTuning[count] * 3);
-            intFactor = m_localTuning[count] * 3 - intShift; // intFactor is a really bad name for this
+            floatShift = m_localTuning[count] * 3 - intShift; // floatShift is a really bad name for this
         }
 		        
-        // cerr << intShift << " " << intFactor << endl;
+        // cerr << intShift << " " << floatShift << endl;
 		        
         for (unsigned k = 2; k < f1.values.size() - 3; ++k) { // interpolate all inner bins
-            tempValue = f1.values[k + intShift] * (1-intFactor) + f1.values[k+intShift+1] * intFactor;
+            tempValue = f1.values[k + intShift] * (1-floatShift) + f1.values[k+intShift+1] * floatShift;
             f2.values.push_back(tempValue);
         }
 		        

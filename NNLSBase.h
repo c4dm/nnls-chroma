@@ -60,12 +60,8 @@ protected:
     size_t m_blockSize;
     size_t m_stepSize;
     int m_lengthOfNoteIndex;
-    float m_meanTuning0;
-    float m_meanTuning1;
-    float m_meanTuning2;
-    float m_localTuning0;
-    float m_localTuning1;
-    float m_localTuning2;
+    vector<float> m_meanTunings;
+    vector<float> m_localTunings;
     float m_whitening;
     float m_preset;
 	float m_s;
@@ -82,6 +78,8 @@ protected:
     float m_doNormalizeChroma;
     float m_rollon;
     vector<float> hw;
+    vector<float> sinvalues;
+    vector<float> cosvalues;
 };
 
 
