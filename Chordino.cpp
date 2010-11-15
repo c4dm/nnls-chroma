@@ -374,11 +374,11 @@ Chordino::getRemainingFeatures()
 			
         if (some_b_greater_zero) {
             if (m_useNNLS == 0) {
-                for (unsigned iNote = 2; iNote < nNote - 2; iNote += 3) {
+                for (unsigned iNote = nBPS/2 + 2; iNote < nNote - nBPS/2; iNote += nBPS) {
                     currval = 0;
-                    currval += b[iNote + 1 + -1] * 0.5;
-                    currval += b[iNote + 1 +  0] * 1.0; 
-                    currval += b[iNote + 1 +  1] * 0.5; 
+                    for (int iBPS = -nBPS/2; iBPS < nBPS/2+1; ++iBPS) {
+                        currval += b[iNote + iBPS] * (1-abs(iBPS*1.0/(nBPS/2+1)));						
+                    }
                     chroma[iSemitone % 12] += currval * treblewindow[iSemitone];
                     basschroma[iSemitone % 12] += currval * basswindow[iSemitone];
                     iSemitone++;
@@ -390,11 +390,11 @@ Chordino::getRemainingFeatures()
                 vector<int> signifIndex;
                 int index=0;
                 sumb /= 84.0;
-                for (unsigned iNote = 2; iNote < nNote - 2; iNote += 3) {
+                for (unsigned iNote = nBPS/2 + 2; iNote < nNote - nBPS/2; iNote += nBPS) {
                     float currval = 0;
-                    currval += b[iNote + 1 + -1];						
-                    currval += b[iNote + 1 +  0];						
-                    currval += b[iNote + 1 +  1];
+                    for (int iBPS = -nBPS/2; iBPS < nBPS/2+1; ++iBPS) {
+                        currval += b[iNote + iBPS]; 
+                    }
                     if (currval > 0) signifIndex.push_back(index);
                     index++;
                 }
@@ -404,6 +404,7 @@ Chordino::getRemainingFeatures()
                 int indx[84+1000];
                 int mode;
                 int dictsize = nNote*signifIndex.size();
+                // cerr << "dictsize is " << dictsize << "and values size" << f3.values.size()<< endl;
                 float *curr_dict = new float[dictsize];
                 for (unsigned iNote = 0; iNote < signifIndex.size(); ++iNote) {
                     for (unsigned iBin = 0; iBin < nNote; iBin++) {
