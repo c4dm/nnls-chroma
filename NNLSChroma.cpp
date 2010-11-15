@@ -399,6 +399,8 @@ NNLSChroma::getRemainingFeatures()
                     basschroma[signifIndex[iNote] % 12] += x[iNote] * basswindow[signifIndex[iNote]];
                 }
             }	
+        } else {
+            for (int i = 0; i < 84; ++i) f3.values.push_back(0);
         }
 			
         f4.values = chroma; 
