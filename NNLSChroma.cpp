@@ -171,6 +171,21 @@ NNLSChroma::getOutputDescriptors() const
     list.push_back(d6);
     m_outputBothChroma = index++;
   
+    OutputDescriptor d7;
+    d7.identifier = "consonance";
+    d7.name = "Consonance estimate.";
+    d7.description = "A simple consonance value based on the convolution of a consonance profile with the semitone spectrum.";
+    d7.unit = "";
+    d7.hasFixedBinCount = true;
+    d7.binCount = 1;
+    d7.hasKnownExtents = false;
+    d7.isQuantized = false;
+    d7.sampleType = OutputDescriptor::FixedSampleRate;
+    d7.hasDuration = false;
+    d7.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
+    list.push_back(d7);
+    m_outputConsonance = index++;
+  
     return list;
 }
 

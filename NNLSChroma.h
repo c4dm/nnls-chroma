@@ -50,6 +50,7 @@ protected:
     mutable int m_outputChroma;
     mutable int m_outputBassChroma;
     mutable int m_outputBothChroma;
+    mutable int m_outputConsonance;
 };
 
 
