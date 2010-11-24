@@ -227,8 +227,8 @@ NNLSChroma::FeatureSet
 NNLSChroma::getRemainingFeatures()
 {
     
-    float consonancepattern[] = {0,-1,-1,1,1,1,-1,1,1,1,-1,-1};
-    for (int i = 0; i< 12,++i) cerr << consonancepattern[i]<< cerr; 
+    float consonancepattern[24] = {0,-1,-1,1,1,1,-1,1,1,1,-1,-1,1,-1,-1,1,1,1,-1,1,1,1,-1,-1};
+    for (int i = 0; i< 12; ++i) cerr << consonancepattern[i]<< endl; 
     if (debug_on) cerr << "--> getRemainingFeatures" << endl;
     FeatureSet fsOut;
     if (m_logSpectrum.size() == 0) return fsOut;
@@ -273,6 +273,7 @@ NNLSChroma::getRemainingFeatures()
         f2.hasTimestamp = true;
         f2.timestamp = f1.timestamp;
         f2.values.push_back(0.0); f2.values.push_back(0.0); // set lower edge to zero
+		
 		
         if (m_tuneLocal) {
             intShift = floor(m_localTuning[count] * 3);
@@ -334,7 +335,8 @@ NNLSChroma::getRemainingFeatures()
         Feature f4; // treble chromagram
         Feature f5; // bass chromagram
         Feature f6; // treble and bass chromagram
-	
+	    Feature consonance;
+	    
         f3.hasTimestamp = true;
         f3.timestamp = f2.timestamp;
 	        
@@ -347,6 +349,9 @@ NNLSChroma::getRemainingFeatures()
         f6.hasTimestamp = true;
         f6.timestamp = f2.timestamp;
 	        
+        consonance.hasTimestamp = true;
+        consonance.timestamp = f2.timestamp;
+	    
         float b[nNote];
 	
         bool some_b_greater_zero = false;
@@ -420,7 +425,20 @@ NNLSChroma::getRemainingFeatures()
         } else {
             for (int i = 0; i < 84; ++i) f3.values.push_back(0);
         }
-			
+		
+        float notesum = 0;
+        
+        consonance.values.push_back(0);
+        for (int iSemitone = 0; iSemitone < 84-24; ++iSemitone) {            
+            notesum += f3.values[iSemitone];
+            float tempconsonance = 0;
+            for (int jSemitone = 1; jSemitone < 24; ++jSemitone) {
+                tempconsonance += f3.values[iSemitone+jSemitone] * (consonancepattern[jSemitone]);
+            }
+            consonance.values[0] += (f3.values[iSemitone] * tempconsonance);
+        }
+        if (notesum > 0) consonance.values[0] /= (notesum * notesum);
+		
         f4.values = chroma; 
         f5.values = basschroma;
         chroma.insert(chroma.begin(), basschroma.begin(), basschroma.end()); // just stack the both chromas 
@@ -483,6 +501,7 @@ NNLSChroma::getRemainingFeatures()
         fsOut[m_outputChroma].push_back(f4);
         fsOut[m_outputBassChroma].push_back(f5);
         fsOut[m_outputBothChroma].push_back(f6);
+        fsOut[m_outputConsonance].push_back(consonance);
         count++;
     }
     cerr << "done." << endl;
