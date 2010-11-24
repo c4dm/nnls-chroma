@@ -226,6 +226,9 @@ NNLSChroma::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
 NNLSChroma::FeatureSet
 NNLSChroma::getRemainingFeatures()
 {
+    
+    float consonancepattern[] = {0,-1,-1,1,1,1,-1,1,1,1,-1,-1};
+    for (int i = 0; i< 12,++i) cerr << consonancepattern[i]<< cerr; 
     if (debug_on) cerr << "--> getRemainingFeatures" << endl;
     FeatureSet fsOut;
     if (m_logSpectrum.size() == 0) return fsOut;
