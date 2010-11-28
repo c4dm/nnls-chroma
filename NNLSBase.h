@@ -73,8 +73,6 @@ protected:
     vector<int> m_kernelNoteIndex;
     float *m_dict;
     bool m_tuneLocal;
-    vector<float> m_chorddict;
-    vector<string> m_chordnames;
     float m_doNormalizeChroma;
     float m_rollon;
     vector<float> hw;

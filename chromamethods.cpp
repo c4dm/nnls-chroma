@@ -277,8 +277,8 @@ getPluginPath()
     return path;
 }
 
-vector<string> chordDictionary(vector<float> *mchorddict) {
-
+vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *m_chordnotes) {    
+    
     typedef tokenizer<char_separator<char> > Tok;
     char_separator<char> sep(",; ","=");
 
@@ -310,7 +310,7 @@ vector<string> chordDictionary(vector<float> *mchorddict) {
     vector<string> loadedChordNames;
     vector<float> loadedChordDict;
     if (chordDictFile.is_open()) {
-        while (std::getline(chordDictFile, line)) { // loop over lines in chord.dict file		
+        while (std::getline(chordDictFile, line)) { // loop over lines in chord.dict file	            	
             // first, get the chord definition
             string chordType;
             vector<float> tempPCVector;			
@@ -333,7 +333,8 @@ vector<string> chordDictionary(vector<float> *mchorddict) {
                 }
 					
                 // now make all 12 chords of every type
-                for (unsigned iSemitone = 0; iSemitone < 12; iSemitone++) {				
+                for (unsigned iSemitone = 0; iSemitone < 12; iSemitone++) {	
+                    vector<int> tempchordnotes;			
                     // add bass slash notation
                     string slashNotation = "";
                     for (unsigned kSemitone = 1; kSemitone < 12; kSemitone++) {
@@ -346,6 +347,7 @@ vector<string> chordDictionary(vector<float> *mchorddict) {
                         float bassValue = 0;
                         if (tempPCVector[(kSemitone - iSemitone + 12) % 12]==1) {
                             bassValue = 1;
+                            tempchordnotes.push_back(MIDI_basenote + (kSemitone+12) % 12);
                         } else {
                             if (tempPCVector[((kSemitone - iSemitone + 12) % 12) + 12] == 1) bassValue = 0.5;
                         }
@@ -353,6 +355,7 @@ vector<string> chordDictionary(vector<float> *mchorddict) {
                     }
                     for (unsigned kSemitone = 0; kSemitone < 12; kSemitone++) { // chord pitch classes
                         loadedChordDict.push_back(tempPCVector[((kSemitone - iSemitone + 12) % 12) + 12]);
+                        if (tempPCVector[((kSemitone - iSemitone + 12) % 12) + 12] > 0) tempchordnotes.push_back(MIDI_basenote + (kSemitone+12+6) % 12 - 6 + 24);
                     }
                     ostringstream os;				
                     if (slashNotation.empty()) {
@@ -362,6 +365,11 @@ vector<string> chordDictionary(vector<float> *mchorddict) {
                     }
                     // cerr << os.str() << endl;
                     loadedChordNames.push_back(os.str());
+                    m_chordnotes->push_back(tempchordnotes);
+                    for (int iNote = 0; iNote < tempchordnotes.size(); ++iNote) {
+                        cerr << tempchordnotes[iNote] << " ";
+                    }
+                    cerr << endl;
                 }
             }
         }
@@ -369,7 +377,8 @@ vector<string> chordDictionary(vector<float> *mchorddict) {
         loadedChordNames.push_back("N");
         for (unsigned kSemitone = 0; kSemitone < 12; kSemitone++) loadedChordDict.push_back(0.5);
         for (unsigned kSemitone = 0; kSemitone < 12; kSemitone++) loadedChordDict.push_back(1.0);
-	
+        vector<int> tempchordvector;
+        m_chordnotes->push_back(tempchordvector);
         float exponent = 2.0;
         float boostN = 1.1;
         

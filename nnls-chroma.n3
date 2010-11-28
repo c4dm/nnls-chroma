@@ -44,6 +44,7 @@ plugbase:chordino a   vamp:Plugin ;
     vamp:parameter   plugbase:chordino_param_s ;
 
     vamp:output      plugbase:chordino_output_simplechord ;
+    vamp:output      plugbase:chordino_output_chordnotes ;
     vamp:output      plugbase:chordino_output_harmonicchange ;
     .
 plugbase:chordino_param_useNNLS a  vamp:QuantizedParameter ;
@@ -122,6 +123,21 @@ plugbase:chordino_output_simplechord a  vamp:SparseOutput ;
     vamp:sample_type      vamp:VariableSampleRate ;
     vamp:sample_rate      21.5332 ;
     vamp:computes_event_type   af:ChordSegment ;
+
+plugbase:chordino_output_chordnotes a vamp:SparseOutput ;
+    vamp:identifier       "chordnotes" ;
+    dc:title              "Note Representation of Chord Estimate" ;
+    dc:description        """A simple represenation of the estimated chord with bass note (if applicable) and chord notes."""  ;
+    vamp:fixed_bin_count  "true" ;
+    vamp:unit             "MIDI units" ;
+    a                     vamp:QuantizedOutput ;
+    vamp:quantize_step    1  ;
+    a                 vamp:KnownExtentsOutput ;
+    vamp:min_value    0  ;
+    vamp:max_value    127  ;
+    vamp:bin_count        1 ;
+    vamp:sample_type      vamp:VariableSampleRate ;
+    vamp:computes_event_type   af:Note ;
     .
 plugbase:chordino_output_harmonicchange a  vamp:DenseOutput ;
     vamp:identifier       "harmonicchange" ;

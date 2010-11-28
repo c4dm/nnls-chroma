@@ -430,14 +430,14 @@ NNLSChroma::getRemainingFeatures()
         
         consonance.values.push_back(0);
         for (int iSemitone = 0; iSemitone < 84-24; ++iSemitone) {            
-            notesum += f3.values[iSemitone];
+            notesum += f3.values[iSemitone] * f3.values[iSemitone];
             float tempconsonance = 0;
             for (int jSemitone = 1; jSemitone < 24; ++jSemitone) {
                 tempconsonance += f3.values[iSemitone+jSemitone] * (consonancepattern[jSemitone]);
             }
             consonance.values[0] += (f3.values[iSemitone] * tempconsonance);
         }
-        if (notesum > 0) consonance.values[0] /= (notesum * notesum);
+        if (notesum > 0) consonance.values[0] /= notesum;
 		
         f4.values = chroma; 
         f5.values = basschroma;

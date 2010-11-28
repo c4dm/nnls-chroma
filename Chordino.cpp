@@ -30,9 +30,15 @@
 const bool debug_on = false;
 
 Chordino::Chordino(float inputSampleRate) :
-    NNLSBase(inputSampleRate)
+    NNLSBase(inputSampleRate),
+    m_chorddict(0),
+    m_chordnotes(0),
+    m_chordnames(0)    
 {
     if (debug_on) cerr << "--> Chordino" << endl;
+    // get the *chord* dictionary from file (if the file exists)
+    m_chordnames = chordDictionary(&m_chorddict, &m_chordnotes);
+    
 }
 
 Chordino::~Chordino()
@@ -181,6 +187,24 @@ Chordino::getOutputDescriptors() const
     d7.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
     list.push_back(d7);
     m_outputChords = index++;
+    
+    OutputDescriptor chordnotes;
+    chordnotes.identifier = "chordnotes";
+    chordnotes.name = "Note Representation of Chord Estimate";
+    chordnotes.description = "A simple represenation of the estimated chord with bass note (if applicable) and chord notes.";
+    chordnotes.unit = "MIDI units";
+    chordnotes.hasFixedBinCount = true;
+    chordnotes.binCount = 1;
+    chordnotes.hasKnownExtents = true;
+    chordnotes.minValue = 0;
+    chordnotes.maxValue = 127;
+    chordnotes.isQuantized = true;
+    chordnotes.quantizeStep = 1;
+    chordnotes.sampleType = OutputDescriptor::VariableSampleRate;
+    chordnotes.hasDuration = true;
+    chordnotes.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
+    list.push_back(chordnotes);
+    m_outputChordnotes = index++;
     
     OutputDescriptor d8;
     d8.identifier = "harmonicchange";
@@ -488,6 +512,7 @@ Chordino::getRemainingFeatures()
     }
     cerr << "done." << endl;
 		
+    vector<Feature> oldnotes;
 
     // bool m_useHMM = true; // this will go into the chordino header file.
 	if (m_useHMM == 1.0) {
@@ -520,12 +545,28 @@ Chordino::getRemainingFeatures()
         for (int iFrame = 1; iFrame < chordpath.size(); ++iFrame) {
             // cerr << chordpath[iFrame] << endl;
             if (chordpath[iFrame] != oldchord ) {
+                // chord
                 Feature chord_feature; // chord estimate
                 chord_feature.hasTimestamp = true;
                 chord_feature.timestamp = timestamps[iFrame];
                 chord_feature.label = m_chordnames[chordpath[iFrame]];
                 fsOut[m_outputChords].push_back(chord_feature);
                 oldchord = chordpath[iFrame];         
+                // chord notes
+                for (int iNote = 0; iNote < oldnotes.size(); ++iNote) { // finish duration of old chord
+                    oldnotes[iNote].duration = oldnotes[iNote].duration + timestamps[iFrame];
+                    fsOut[m_outputChordnotes].push_back(oldnotes[iNote]);
+                }
+                oldnotes.clear();
+                for (int iNote = 0; iNote < m_chordnotes[chordpath[iFrame]].size(); ++iNote) { // prepare notes of current chord
+                    Feature chordnote_feature;
+                    chordnote_feature.hasTimestamp = true;
+                    chordnote_feature.timestamp = timestamps[iFrame];
+                    chordnote_feature.values.push_back(m_chordnotes[chordpath[iFrame]][iNote]);
+                    chordnote_feature.hasDuration = true;
+                    chordnote_feature.duration = -timestamps[iFrame]; // this will be corrected at the next chord
+                    oldnotes.push_back(chordnote_feature);
+                }
             }
             /* calculating simple chord change prob */            
             for (int iChord = 0; iChord < nChord; iChord++) {
@@ -678,6 +719,20 @@ Chordino::getRemainingFeatures()
                 oldChord = maxChord;
                 chord_feature.label = m_chordnames[maxChordIndex];
                 fsOut[m_outputChords].push_back(chord_feature);
+                for (int iNote = 0; iNote < oldnotes.size(); ++iNote) { // finish duration of old chord
+                    oldnotes[iNote].duration = oldnotes[iNote].duration + chord_feature.timestamp;
+                    fsOut[m_outputChordnotes].push_back(oldnotes[iNote]);
+                }
+                oldnotes.clear();
+                for (int iNote = 0; iNote < m_chordnotes[maxChordIndex].size(); ++iNote) { // prepare notes of current chord
+                    Feature chordnote_feature;
+                    chordnote_feature.hasTimestamp = true;
+                    chordnote_feature.timestamp = chord_feature.timestamp;
+                    chordnote_feature.values.push_back(m_chordnotes[maxChordIndex][iNote]);
+                    chordnote_feature.hasDuration = true;
+                    chordnote_feature.duration = -chord_feature.timestamp; // this will be corrected at the next chord
+                    oldnotes.push_back(chordnote_feature);
+                }
             }
             count++;
         }
@@ -687,6 +742,12 @@ Chordino::getRemainingFeatures()
     chord_feature.timestamp = timestamps[timestamps.size()-1];
     chord_feature.label = "N";
     fsOut[m_outputChords].push_back(chord_feature);
+    
+    for (int iNote = 0; iNote < oldnotes.size(); ++iNote) { // finish duration of old chord
+        oldnotes[iNote].duration = oldnotes[iNote].duration + timestamps[timestamps.size()-1];
+        fsOut[m_outputChordnotes].push_back(oldnotes[iNote]);
+    }
+    
     cerr << "done." << endl;
     
     for (int iFrame = 0; iFrame < nFrame; iFrame++) {
