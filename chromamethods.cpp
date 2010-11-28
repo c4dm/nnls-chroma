@@ -342,6 +342,7 @@ vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *
                             slashNotation = bassnames[iSemitone][kSemitone];
                         }
                     }
+                    if (slashNotation=="") tempchordnotes.push_back(MIDI_basenote + (iSemitone+12) % 12);
                     for (unsigned kSemitone = 0; kSemitone < 12; kSemitone++) { // bass pitch classes
                         // cerr << ((kSemitone - iSemitone + 12) % 12) << endl;
                         float bassValue = 0;
@@ -351,7 +352,7 @@ vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *
                         } else {
                             if (tempPCVector[((kSemitone - iSemitone + 12) % 12) + 12] == 1) bassValue = 0.5;
                         }
-                        loadedChordDict.push_back(bassValue);
+                        loadedChordDict.push_back(bassValue);                        
                     }
                     for (unsigned kSemitone = 0; kSemitone < 12; kSemitone++) { // chord pitch classes
                         loadedChordDict.push_back(tempPCVector[((kSemitone - iSemitone + 12) % 12) + 12]);
@@ -364,7 +365,8 @@ vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *
                         os << notenames[12+iSemitone] << chordType << "/" << slashNotation;
                     }
                     // cerr << os.str() << endl;
-                    loadedChordNames.push_back(os.str());
+                    loadedChordNames.push_back(os.str());                
+                    
                     m_chordnotes->push_back(tempchordnotes);
                     for (int iNote = 0; iNote < tempchordnotes.size(); ++iNote) {
                         cerr << tempchordnotes[iNote] << " ";
