@@ -228,7 +228,7 @@ NNLSChroma::getRemainingFeatures()
 {
     
     float consonancepattern[24] = {0,-1,-1,1,1,1,-1,1,1,1,-1,-1,1,-1,-1,1,1,1,-1,1,1,1,-1,-1};
-    for (int i = 0; i< 12; ++i) cerr << consonancepattern[i]<< endl; 
+    // for (int i = 0; i< 12; ++i) cerr << consonancepattern[i]<< endl; 
     if (debug_on) cerr << "--> getRemainingFeatures" << endl;
     FeatureSet fsOut;
     if (m_logSpectrum.size() == 0) return fsOut;

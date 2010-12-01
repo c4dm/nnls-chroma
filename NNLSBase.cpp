@@ -30,6 +30,7 @@ const bool debug_on = false;
 
 NNLSBase::NNLSBase(float inputSampleRate) :
     Plugin(inputSampleRate),
+    m_frameCount(0),
     m_logSpectrum(0),
     m_blockSize(0),
     m_stepSize(0),
@@ -38,6 +39,8 @@ NNLSBase::NNLSBase(float inputSampleRate) :
     m_localTunings(0),
     m_whitening(1.0),
     m_preset(0.0),
+    m_useNNLS(1),
+	m_useHMM(1),
     m_localTuning(0),
     m_kernelValue(0),
     m_kernelFftIndex(0),
@@ -46,9 +49,8 @@ NNLSBase::NNLSBase(float inputSampleRate) :
     m_tuneLocal(0),
     m_doNormalizeChroma(0),
     m_rollon(0),
+    m_boostN(1.1),
 	m_s(0.7),
-	m_useNNLS(1),
-	m_useHMM(1),
 	sinvalues(0),
 	cosvalues(0)
 {
@@ -238,6 +240,10 @@ NNLSBase::getParameter(string identifier) const
         return m_rollon; 
     }
     
+    if (identifier == "boostn") {
+        return m_boostN; 
+    }
+    
     if (identifier == "tuningmode") {
         if (m_tuneLocal) {
             return 1.0;
@@ -278,6 +284,10 @@ NNLSBase::setParameter(string identifier, float value)
 
     if (identifier == "useHMM") {
         m_useHMM = value;
+    }
+    
+    if (identifier == "boostn") {
+        m_boostN = value;
     }
     
     if (identifier == "tuningmode") {

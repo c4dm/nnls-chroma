@@ -64,7 +64,6 @@ protected:
     vector<float> m_localTunings;
     float m_whitening;
     float m_preset;
-	float m_s;
 	float m_useNNLS;
     float m_useHMM;
     vector<float> m_localTuning;
@@ -75,6 +74,8 @@ protected:
     bool m_tuneLocal;
     float m_doNormalizeChroma;
     float m_rollon;
+    float m_boostN;
+    float m_s;
     vector<float> hw;
     vector<float> sinvalues;
     vector<float> cosvalues;

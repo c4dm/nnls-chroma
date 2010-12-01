@@ -277,7 +277,7 @@ getPluginPath()
     return path;
 }
 
-vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *m_chordnotes) {    
+vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *m_chordnotes, float boostN) {    
     
     typedef tokenizer<char_separator<char> > Tok;
     char_separator<char> sep(",; ","=");
@@ -304,7 +304,7 @@ vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *
 
     iostreams::stream<iostreams::file_source> chordDictFile(chordDictFilename);
     string line;
-    int iElement = 0;
+    // int iElement = 0;
     int nChord = 0;
 	
     vector<string> loadedChordNames;
@@ -368,10 +368,10 @@ vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *
                     loadedChordNames.push_back(os.str());                
                     
                     m_chordnotes->push_back(tempchordnotes);
-                    for (int iNote = 0; iNote < tempchordnotes.size(); ++iNote) {
-                        cerr << tempchordnotes[iNote] << " ";
-                    }
-                    cerr << endl;
+                    // for (int iNote = 0; iNote < tempchordnotes.size(); ++iNote) {
+                    //     cerr << tempchordnotes[iNote] << " ";
+                    // }
+                    // cerr << endl;
                 }
             }
         }
@@ -382,8 +382,8 @@ vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *
         vector<int> tempchordvector;
         m_chordnotes->push_back(tempchordvector);
         float exponent = 2.0;
-        float boostN = 1.1;
-        
+        // float m_boostN = 1.1;
+        // cerr << " N BOOST : " << boostN << endl << endl;
         for (int iChord = 0; iChord < loadedChordDict.size()/24; iChord++) {
             float sum = 0;
             float stand = 0;

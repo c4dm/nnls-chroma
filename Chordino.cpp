@@ -37,7 +37,6 @@ Chordino::Chordino(float inputSampleRate) :
 {
     if (debug_on) cerr << "--> Chordino" << endl;
     // get the *chord* dictionary from file (if the file exists)
-    m_chordnames = chordDictionary(&m_chorddict, &m_chordnotes);
     
 }
 
@@ -146,21 +145,16 @@ Chordino::getParameterDescriptors() const
     d3.isQuantized = false;
     list.push_back(d3);
 
-    // ParameterDescriptor d4;
-    // d4.identifier = "chromanormalize";
-    // d4.name = "chroma normalization";
-    // d4.description = "How shall the chroma vector be normalized?";
-    // d4.unit = "";
-    // d4.minValue = 0;
-    // d4.maxValue = 3;
-    // d4.defaultValue = 0;
-    // d4.isQuantized = true;
-    // d4.valueNames.push_back("none");
-    // d4.valueNames.push_back("maximum norm");
-    // d4.valueNames.push_back("L1 norm");
-    // d4.valueNames.push_back("L2 norm");
-    // d4.quantizeStep = 1.0;
-    // list.push_back(d4);
+    ParameterDescriptor boostn;
+    boostn.identifier = "boostn";
+    boostn.name = "boost N";
+    boostn.description = "Relative weight of the N label.";
+    boostn.unit = "";
+    boostn.minValue = 1.0;
+    boostn.maxValue = 2.0;
+    boostn.defaultValue = 1.0;
+    boostn.isQuantized = false;
+    list.push_back(boostn);
 
     return list;
 }
@@ -236,7 +230,7 @@ Chordino::initialise(size_t channels, size_t stepSize, size_t blockSize)
     if (!NNLSBase::initialise(channels, stepSize, blockSize)) {
         return false;
     }
-
+    m_chordnames = chordDictionary(&m_chorddict, &m_chordnotes, m_boostN);
     return true;
 }
 
@@ -260,8 +254,8 @@ Chordino::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
 Chordino::FeatureSet
 Chordino::getRemainingFeatures()
 {
-    cerr << hw[0] << hw[1] << endl;
-    if (debug_on) cerr << "--> getRemainingFeatures" << endl;
+    // cerr << hw[0] << hw[1] << endl;
+    if (debug_on) cerr << "--> getRemainingFeatures" << endl;    
     FeatureSet fsOut;
     if (m_logSpectrum.size() == 0) return fsOut;
     int nChord = m_chordnames.size();
