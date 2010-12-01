@@ -44,8 +44,6 @@ NNLSBase::NNLSBase(float inputSampleRate) :
     m_kernelNoteIndex(0),
     m_dict(0),
     m_tuneLocal(0),
-    m_chorddict(0),
-    m_chordnames(0),
     m_doNormalizeChroma(0),
     m_rollon(0),
 	m_s(0.7),
@@ -60,9 +58,6 @@ NNLSBase::NNLSBase(float inputSampleRate) :
     m_dict = new float[nNote * 84];
     for (unsigned i = 0; i < nNote * 84; ++i) m_dict[i] = 0.0;
     dictionaryMatrix(m_dict, 0.7);
-	
-    // get the *chord* dictionary from file (if the file exists)
-    m_chordnames = chordDictionary(&m_chorddict);
 }
 
 

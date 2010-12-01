@@ -46,7 +46,11 @@ public:
 
 protected:
     mutable int m_outputChords;
+    mutable int m_outputChordnotes;
     mutable int m_outputHarmonicChange;
+    vector<float> m_chorddict;
+    vector<vector<int> > m_chordnotes;
+    vector<string> m_chordnames;
 };
 
 
