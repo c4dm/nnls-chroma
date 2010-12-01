@@ -277,6 +277,59 @@ getPluginPath()
     return path;
 }
 
+
+
+static vector<string> staticChordnames() {
+    vector<string> chordnames;
+    chordnames.push_back("");//=1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,0
+    chordnames.push_back("");// =0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,0
+    chordnames.push_back("m");//=1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,1,0,0,0,0
+    chordnames.push_back("m");//=0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,1,0,0,0,0
+    chordnames.push_back("dim7");//=0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,1,0,0,1,0,0,0,1,0
+    chordnames.push_back("dim7");//=1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,1,0,0,0,1,0
+    chordnames.push_back("6");//=1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,1,0,0
+    chordnames.push_back("7");//=1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,1,0
+    chordnames.push_back("maj7");//=1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,1
+    chordnames.push_back("m7");//=1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,1,0,0,1,0
+    chordnames.push_back("m6");//=1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,1,0,1,0,0
+    chordnames.push_back("");//=0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,0
+    chordnames.push_back("");//=0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,0
+    chordnames.push_back("");//=1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,1,0,0,0,0,0
+    chordnames.push_back("aug");//=1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0
+    chordnames.push_back("");//=0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,0
+    chordnames.push_back("");//=0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,1,0,0,1,0,0,0,0 
+    chordnames.push_back("7");//=0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,1,0
+    return chordnames;
+}
+
+static vector<float> staticChordvalues() {
+    vector<float> chordvalues;
+    float chordvaluearray[] = {1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,0,
+    1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,1,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,1,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,1,0,0,1,0,0,0,1,0,
+    1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,1,0,0,0,1,0,
+    1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,1,0,0,
+    1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,1,0,
+    1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,1,
+    1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,1,0,0,1,0,
+    1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,1,0,1,0,0,
+    0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,0,
+    0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,0,
+    1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,1,0,0,0,0,0,
+    1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,
+    0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,1,0,0,1,0,0,0,0,
+    0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,1,0};
+    for (int iChord = 0; iChord < 18; ++iChord) {
+        for (int iNote = 0; iNote < 24; iNote++) {
+            chordvalues.push_back(chordvaluearray[24*iChord+iNote]);
+        }
+    }
+    return chordvalues;
+}
+
 vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *m_chordnotes, float boostN) {    
     
     typedef tokenizer<char_separator<char> > Tok;
@@ -286,6 +339,9 @@ vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *
     string chordDictFilename;
 
     vector<string> ppath = getPluginPath();
+    
+    bool hasExternalDictinoary = true;
+    
     for (int i = 0; i < ppath.size(); ++i) {
     	chordDictFilename = ppath[i] + "/" + chordDictBase;
     	cerr << "Looking for chord.dict in " << chordDictFilename << "..." ;
@@ -298,7 +354,10 @@ vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *
     	    break;
         } else {
             if (i < ppath.size()-1) cerr << " (not found yet) ..." << endl;
-            else cerr << "* ERROR: failed to find chord dictionary." << endl;
+            else {
+                cerr << "* ERROR: failed to find chord dictionary." << endl;
+                hasExternalDictinoary = false;                
+            } 
         }
     }
 
@@ -307,9 +366,14 @@ vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *
     // int iElement = 0;
     int nChord = 0;
 	
+	vector<string> tempChordNames = staticChordnames();
+	vector<float> tempChordDict = staticChordvalues();;
     vector<string> loadedChordNames;
     vector<float> loadedChordDict;
-    if (chordDictFile.is_open()) {
+    if (hasExternalDictinoary && chordDictFile.is_open()) {
+        cerr << "-----------------> " << tempChordNames.size() << endl;
+        tempChordDict.clear();
+        tempChordNames.clear();
         while (std::getline(chordDictFile, line)) { // loop over lines in chord.dict file	            	
             // first, get the chord definition
             string chordType;
@@ -320,127 +384,115 @@ vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *
                 for(Tok::iterator tok_iter = tok.begin(); tok_iter != tok.end(); ++tok_iter) { // loop over line elements
                     string tempString = *tok_iter;
                     // cerr << tempString << endl;
-                    if (tok_iter == tok.begin()) { // either the chord name or a colon
+                    if (tok_iter == tok.begin()) { // either the chord name or a colon                        
                         if (tempString == "=") {
                             chordType = "";
                         } else {
                             chordType = tempString;
-                            tok_iter++; // is this cheating ? :)
+                            tok_iter++;                            
                         }
                     } else {
-                        tempPCVector.push_back(lexical_cast<float>(*tok_iter));
+                        tempChordDict.push_back(lexical_cast<float>(*tok_iter));
                     }
-                }
-					
-                // now make all 12 chords of every type
-                for (unsigned iSemitone = 0; iSemitone < 12; iSemitone++) {	
-                    vector<int> tempchordnotes;			
-                    // add bass slash notation
-                    string slashNotation = "";
-                    for (unsigned kSemitone = 1; kSemitone < 12; kSemitone++) {
-                        if (tempPCVector[(kSemitone) % 12] > 0.99) {
-                            slashNotation = bassnames[iSemitone][kSemitone];
-                        }
-                    }
-                    if (slashNotation=="") tempchordnotes.push_back(MIDI_basenote + (iSemitone+12) % 12);
-                    for (unsigned kSemitone = 0; kSemitone < 12; kSemitone++) { // bass pitch classes
-                        // cerr << ((kSemitone - iSemitone + 12) % 12) << endl;
-                        float bassValue = 0;
-                        if (tempPCVector[(kSemitone - iSemitone + 12) % 12]==1) {
-                            bassValue = 1;
-                            tempchordnotes.push_back(MIDI_basenote + (kSemitone+12) % 12);
-                        } else {
-                            if (tempPCVector[((kSemitone - iSemitone + 12) % 12) + 12] == 1) bassValue = 0.5;
-                        }
-                        loadedChordDict.push_back(bassValue);                        
-                    }
-                    for (unsigned kSemitone = 0; kSemitone < 12; kSemitone++) { // chord pitch classes
-                        loadedChordDict.push_back(tempPCVector[((kSemitone - iSemitone + 12) % 12) + 12]);
-                        if (tempPCVector[((kSemitone - iSemitone + 12) % 12) + 12] > 0) tempchordnotes.push_back(MIDI_basenote + (kSemitone+12+6) % 12 - 6 + 24);
-                    }
-                    ostringstream os;				
-                    if (slashNotation.empty()) {
-                        os << notenames[12+iSemitone] << chordType;
-                    } else {
-                        os << notenames[12+iSemitone] << chordType << "/" << slashNotation;
-                    }
-                    // cerr << os.str() << endl;
-                    loadedChordNames.push_back(os.str());                
-                    
-                    m_chordnotes->push_back(tempchordnotes);
-                    // for (int iNote = 0; iNote < tempchordnotes.size(); ++iNote) {
-                    //     cerr << tempchordnotes[iNote] << " ";
-                    // }
-                    // cerr << endl;
-                }
+                }                
+                tempChordNames.push_back(chordType);
             }
         }
-        // N type
-        loadedChordNames.push_back("N");
-        for (unsigned kSemitone = 0; kSemitone < 12; kSemitone++) loadedChordDict.push_back(0.5);
-        for (unsigned kSemitone = 0; kSemitone < 12; kSemitone++) loadedChordDict.push_back(1.0);
-        vector<int> tempchordvector;
-        m_chordnotes->push_back(tempchordvector);
-        float exponent = 2.0;
-        // float m_boostN = 1.1;
-        // cerr << " N BOOST : " << boostN << endl << endl;
-        for (int iChord = 0; iChord < loadedChordDict.size()/24; iChord++) {
-            float sum = 0;
-            float stand = 0;
-            for (int iST = 0; iST < 24; ++iST) {
-                sum += loadedChordDict[24 * iChord + iST];
+    }
+    
+    
+        
+    for (int iType = 0; iType < tempChordNames.size(); ++iType) {
+        // now make all 12 chords of every type
+        for (unsigned iSemitone = 0; iSemitone < 12; iSemitone++) {	
+            vector<int> tempchordnotes;			
+            // add bass slash notation
+            string slashNotation = "";
+            for (unsigned kSemitone = 1; kSemitone < 12; kSemitone++) {
+                if (tempChordDict[24*iType+(kSemitone) % 12] > 0.99) {
+                    slashNotation = bassnames[iSemitone][kSemitone];
+                }
             }
-            for (int iST = 0; iST < 24; ++iST) {
-                // loadedChordDict[24 * iChord + iST] -= sum/24;
-                stand += pow(abs(loadedChordDict[24 * iChord + iST]),exponent)/24;
+            if (slashNotation=="") tempchordnotes.push_back(MIDI_basenote + (iSemitone+12) % 12);
+            for (unsigned kSemitone = 0; kSemitone < 12; kSemitone++) { // bass pitch classes
+                // cerr << ((kSemitone - iSemitone + 12) % 12) << endl;
+                float bassValue = 0;
+                if (tempChordDict[24*iType+(kSemitone - iSemitone + 12) % 12]==1) {
+                    bassValue = 1;
+                    tempchordnotes.push_back(MIDI_basenote + (kSemitone+12) % 12);
+                } else {
+                    if (tempChordDict[24*iType+((kSemitone - iSemitone + 12) % 12) + 12] == 1) bassValue = 0.5;
+                }
+                loadedChordDict.push_back(bassValue);                        
             }
-            if (iChord < loadedChordDict.size()/24 - 1) {
-                stand = pow(stand,(float)1.0/exponent);
+            for (unsigned kSemitone = 0; kSemitone < 12; kSemitone++) { // chord pitch classes
+                loadedChordDict.push_back(tempChordDict[24*iType+((kSemitone - iSemitone + 12) % 12) + 12]);
+                if (tempChordDict[24*iType+((kSemitone - iSemitone + 12) % 12) + 12] > 0) tempchordnotes.push_back(MIDI_basenote + (kSemitone+12+6) % 12 - 6 + 24);
+            }
+            ostringstream os;				
+            if (slashNotation.empty()) {
+                os << notenames[12+iSemitone] << tempChordNames[iType];
             } else {
-                stand = pow(stand,(float)1.0/exponent) / boostN;
+                os << notenames[12+iSemitone] << tempChordNames[iType] << "/" << slashNotation;
             }
-            for (int iST = 0; iST < 24; ++iST) {
-                loadedChordDict[24 * iChord + iST] /= stand;            
-            }
+            // cerr << os.str() << endl;
+            loadedChordNames.push_back(os.str());                
             
+            m_chordnotes->push_back(tempchordnotes);
+            // for (int iNote = 0; iNote < tempchordnotes.size(); ++iNote) {
+            //     cerr << tempchordnotes[iNote] << " ";
+            // }
+            // cerr << endl;
+        }
+    }
+    
+
+    // N type
+    loadedChordNames.push_back("N");
+    for (unsigned kSemitone = 0; kSemitone < 12; kSemitone++) loadedChordDict.push_back(0.5);
+    for (unsigned kSemitone = 0; kSemitone < 12; kSemitone++) loadedChordDict.push_back(1.0);
+    vector<int> tempchordvector;
+    m_chordnotes->push_back(tempchordvector);
+    float exponent = 2.0;
+    // float m_boostN = 1.1;
+    // cerr << " N BOOST : " << boostN << endl << endl;
+    for (int iChord = 0; iChord < loadedChordDict.size()/24; iChord++) {
+        float sum = 0;
+        float stand = 0;
+        for (int iST = 0; iST < 24; ++iST) {
+            sum += loadedChordDict[24 * iChord + iST];
+        }
+        for (int iST = 0; iST < 24; ++iST) {
+            // loadedChordDict[24 * iChord + iST] -= sum/24;
+            stand += pow(abs(loadedChordDict[24 * iChord + iST]),exponent)/24;
+        }
+        if (iChord < loadedChordDict.size()/24 - 1) {
+            stand = pow(stand,(float)1.0/exponent);
+        } else {
+            stand = pow(stand,(float)1.0/exponent) / boostN;
+        }
+        for (int iST = 0; iST < 24; ++iST) {
+            loadedChordDict[24 * iChord + iST] /= stand;            
         }
         
-	
-
-        nChord = 0;
-        for (int i = 0; i < loadedChordNames.size(); i++) {
-            nChord++;
-        }
-        chordDictFile.close();
-
-
-        // mchorddict = new float[nChord*24];
-        for (int i = 0; i < nChord*24; i++) {
-            mchorddict->push_back(loadedChordDict[i]);			
-        }
-			
-    } else {// use default from chorddict.cpp
-        // mchorddict = new float[nChorddict];
-        for (int i = 0; i < nChorddict; i++) {
-            mchorddict->push_back(chorddict[i]);
-        }
-		
-        nChord = nChorddict/24;
-        // mchordnames = new string[nChorddict/24];
-        char buffer1 [50];
-        for (int i = 0; i < nChorddict/24; i++) {
-            if (i < nChorddict/24 - 1) {
-                sprintf(buffer1, "%s%s", notenames[i % 12 + 12], chordtypes[i]);
-            } else {
-                sprintf(buffer1, "N");
-            }
-            ostringstream os;
-            os << buffer1;
-            loadedChordNames.push_back(os.str());
-
-        }
-		
     }
+    
+
+
+    nChord = 0;
+    for (int i = 0; i < loadedChordNames.size(); i++) {
+        nChord++;
+    }
+    chordDictFile.close();
+
+
+    // mchorddict = new float[nChord*24];
+    for (int i = 0; i < nChord*24; i++) {
+        mchorddict->push_back(loadedChordDict[i]);			
+    }
+	
     // cerr << "before leaving" << chordnames[1] << endl;
     return loadedChordNames;
 }
+
+    
