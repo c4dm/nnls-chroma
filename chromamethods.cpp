@@ -355,7 +355,7 @@ vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *
         } else {
             if (i < ppath.size()-1) cerr << " (not found yet) ..." << endl;
             else {
-                cerr << "* ERROR: failed to find chord dictionary." << endl;
+                cerr << "* WARNING: failed to find chord dictionary, using default chord dictionary." << endl;
                 hasExternalDictinoary = false;                
             } 
         }
