@@ -447,7 +447,8 @@ NNLSBase::baseProcess(const float *const *inputBuffers, Vamp::RealTime timestamp
     float maxmag = -10000;
     for (size_t iBin = 0; iBin < m_blockSize/2; iBin++) {
         magnitude[iBin] = sqrt(fbuf[2 * iBin] * fbuf[2 * iBin] + 
-                               fbuf[2 * iBin + 1] * fbuf[2 * iBin + 1]);		
+                               fbuf[2 * iBin + 1] * fbuf[2 * iBin + 1]);
+        if (magnitude[iBin]>m_blockSize*1.0) magnitude[iBin] = m_blockSize;
         if (maxmag < magnitude[iBin]) maxmag = magnitude[iBin];
         if (m_rollon > 0) {
             energysum += pow(magnitude[iBin],2);
