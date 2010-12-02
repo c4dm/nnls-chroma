@@ -299,6 +299,17 @@ plugbase:nnls-chroma_output_bothchroma a  vamp:DenseOutput ;
     vamp:bin_names        ( "A  (bass)" "Bb (bass)" "B  (bass)" "C  (bass)" "C# (bass)" "D  (bass)" "Eb (bass)" "E  (bass)" "F  (bass)" "F# (bass)" "G  (bass)" "Ab (bass)" "A" "Bb" "B" "C" "C#" "D" "Eb" "E" "F" "F#" "G" "Ab");
     vamp:computes_signal_type  af:Chromagram ;
     .
+
+plugbase:nnls-chroma_output_consonance a  vamp:DenseOutput ;
+    vamp:identifier       "consonance" ;
+    dc:title              "Consonance estimate." ;
+    dc:description        """A simple consonance value based on the convolution of a consonance profile with the semitone spectrum."""  ;
+    vamp:fixed_bin_count  "true" ;
+    vamp:unit             "" ;
+    vamp:bin_count        1 ; 
+    vamp:computes_signal_type  af:TonalChangeDetectionFunction;
+    .
+
 plugbase:tuning a   vamp:Plugin ;
     dc:title              "Tuning" ;
     vamp:name             "Tuning" ;
