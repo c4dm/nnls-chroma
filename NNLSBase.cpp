@@ -39,23 +39,22 @@ NNLSBase::NNLSBase(float inputSampleRate) :
     m_localTunings(0),
     m_whitening(1.0),
     m_preset(0.0),
-    m_useNNLS(1),
-	m_useHMM(1),
-    m_localTuning(0),
+    m_useNNLS(1.0),
+	m_useHMM(1.0),
+    m_localTuning(0.0),
     m_kernelValue(0),
     m_kernelFftIndex(0),
     m_kernelNoteIndex(0),
     m_dict(0),
-    m_tuneLocal(0),
+    m_tuneLocal(0.0),
     m_doNormalizeChroma(0),
-    m_rollon(0),
+    m_rollon(0.0),
     m_boostN(1.1),
 	m_s(0.7),
 	sinvalues(0),
 	cosvalues(0)
 {
     if (debug_on) cerr << "--> NNLSBase" << endl;
-
     // make the *note* dictionary matrix
     m_dict = new float[nNote * 84];
     for (unsigned i = 0; i < nNote * 84; ++i) m_dict[i] = 0.0;

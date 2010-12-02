@@ -103,7 +103,7 @@ Chordino::getParameterDescriptors() const
     d0.unit = "%";
     d0.minValue = 0;
     d0.maxValue = 5;
-    d0.defaultValue = 0;
+    d0.defaultValue = 0.0;
     d0.isQuantized = true;
 	d0.quantizeStep = 0.5;
     list.push_back(d0);
@@ -115,7 +115,7 @@ Chordino::getParameterDescriptors() const
     d1.unit = "";
     d1.minValue = 0;
     d1.maxValue = 1;
-    d1.defaultValue = 0;
+    d1.defaultValue = 0.0;
     d1.isQuantized = true;
     d1.valueNames.push_back("global tuning");
     d1.valueNames.push_back("local tuning");
@@ -152,7 +152,7 @@ Chordino::getParameterDescriptors() const
     boostn.unit = "";
     boostn.minValue = 1.0;
     boostn.maxValue = 2.0;
-    boostn.defaultValue = 1.0;
+    boostn.defaultValue = 1.1;
     boostn.isQuantized = false;
     list.push_back(boostn);
 
