@@ -119,7 +119,7 @@ bool logFreqMatrix(int fs, int blocksize, float *outmatrix) {
 	
     // linear oversampled frequency vector
     vector<float> oversampled_f;
-    for (unsigned int i = 0; i < oversampling * blocksize/2; ++i) {
+    for (int i = 0; i < oversampling * blocksize/2; ++i) {
         oversampled_f.push_back(i * ((fs * 1.0 / blocksize) / oversampling));
     }
 	
@@ -195,16 +195,16 @@ void dictionaryMatrix(float* dm, float s_param) {
     float floatbin;
     float curr_amp;
     // now for every combination calculate the matrix element
-    for (unsigned iOut = 0; iOut < 12 * (maxoctave - minoctave); ++iOut) {
+    for (int iOut = 0; iOut < 12 * (maxoctave - minoctave); ++iOut) {
         // cerr << iOut << endl;
-        for (unsigned iHarm = 1; iHarm <= 20; ++iHarm) {
+        for (int iHarm = 1; iHarm <= 20; ++iHarm) {
             curr_f = 440 * pow(2,(minMIDI-69+iOut)*1.0/12) * iHarm;
             // if (curr_f > cq_f[nNote-1])  break;
             floatbin = ((iOut + 1) * binspersemitone + 1) + binspersemitone * 12 * log2(iHarm);
             // cerr << floatbin << endl;
             curr_amp = pow(s_param,float(iHarm-1));
             // cerr << "curramp" << curr_amp << endl;
-            for (unsigned iNote = 0; iNote < nNote; ++iNote) {
+            for (int iNote = 0; iNote < nNote; ++iNote) {
                 if (abs(iNote+1.0-floatbin)<2) {
                     dm[iNote  + nNote * iOut] += cospuls(iNote+1.0, floatbin, binspersemitone + 0.0) * curr_amp;
                     // dm[iNote + nNote * iOut] += 1 * curr_amp;
@@ -342,7 +342,7 @@ vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *
     
     bool hasExternalDictinoary = true;
     
-    for (int i = 0; i < ppath.size(); ++i) {
+    for (size_t i = 0; i < ppath.size(); ++i) {
     	chordDictFilename = ppath[i] + "/" + chordDictBase;
     	cerr << "Looking for chord.dict in " << chordDictFilename << "..." ;
     	fstream fin;
@@ -353,7 +353,7 @@ vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *
     	    cerr << " success." << endl;
     	    break;
         } else {
-            if (i < ppath.size()-1) cerr << " (not found yet) ..." << endl;
+            if (i+1 < ppath.size()) cerr << " (not found yet) ..." << endl;
             else {
                 cerr << "* ERROR: failed to find chord dictionary." << endl;
                 hasExternalDictinoary = false;                
@@ -366,8 +366,8 @@ vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *
     // int iElement = 0;
     int nChord = 0;
 	
-	vector<string> tempChordNames = staticChordnames();
-	vector<float> tempChordDict = staticChordvalues();;
+    vector<string> tempChordNames = staticChordnames();
+    vector<float> tempChordDict = staticChordvalues();
     vector<string> loadedChordNames;
     vector<float> loadedChordDict;
     if (hasExternalDictinoary && chordDictFile.is_open()) {
@@ -400,21 +400,20 @@ vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *
         }
     }
     
-    
         
-    for (int iType = 0; iType < tempChordNames.size(); ++iType) {
+    for (int iType = 0; iType < (int)tempChordNames.size(); ++iType) {
         // now make all 12 chords of every type
-        for (unsigned iSemitone = 0; iSemitone < 12; iSemitone++) {	
+        for (int iSemitone = 0; iSemitone < 12; iSemitone++) {	
             vector<int> tempchordnotes;			
             // add bass slash notation
             string slashNotation = "";
-            for (unsigned kSemitone = 1; kSemitone < 12; kSemitone++) {
+            for (int kSemitone = 1; kSemitone < 12; kSemitone++) {
                 if (tempChordDict[24*iType+(kSemitone) % 12] > 0.99) {
                     slashNotation = bassnames[iSemitone][kSemitone];
                 }
             }
             if (slashNotation=="") tempchordnotes.push_back(MIDI_basenote + (iSemitone+12) % 12);
-            for (unsigned kSemitone = 0; kSemitone < 12; kSemitone++) { // bass pitch classes
+            for (int kSemitone = 0; kSemitone < 12; kSemitone++) { // bass pitch classes
                 // cerr << ((kSemitone - iSemitone + 12) % 12) << endl;
                 float bassValue = 0;
                 if (tempChordDict[24*iType+(kSemitone - iSemitone + 12) % 12]==1) {
@@ -425,7 +424,7 @@ vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *
                 }
                 loadedChordDict.push_back(bassValue);                        
             }
-            for (unsigned kSemitone = 0; kSemitone < 12; kSemitone++) { // chord pitch classes
+            for (int kSemitone = 0; kSemitone < 12; kSemitone++) { // chord pitch classes
                 loadedChordDict.push_back(tempChordDict[24*iType+((kSemitone - iSemitone + 12) % 12) + 12]);
                 if (tempChordDict[24*iType+((kSemitone - iSemitone + 12) % 12) + 12] > 0) tempchordnotes.push_back(MIDI_basenote + (kSemitone+12+6) % 12 - 6 + 24);
             }
@@ -456,7 +455,7 @@ vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *
     float exponent = 2.0;
     // float m_boostN = 1.1;
     // cerr << " N BOOST : " << boostN << endl << endl;
-    for (int iChord = 0; iChord < loadedChordDict.size()/24; iChord++) {
+    for (int iChord = 0; iChord < (int)loadedChordDict.size()/24; iChord++) {
         float sum = 0;
         float stand = 0;
         for (int iST = 0; iST < 24; ++iST) {
@@ -466,10 +465,10 @@ vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *
             // loadedChordDict[24 * iChord + iST] -= sum/24;
             stand += pow(abs(loadedChordDict[24 * iChord + iST]),exponent)/24;
         }
-        if (iChord < loadedChordDict.size()/24 - 1) {
-            stand = pow(stand,(float)1.0/exponent);
+        if (iChord < (int)loadedChordDict.size()/24 - 1) {
+            stand = powf(stand,1.0f/exponent);
         } else {
-            stand = pow(stand,(float)1.0/exponent) / boostN;
+            stand = powf(stand,1.0f/exponent) / boostN;
         }
         for (int iST = 0; iST < 24; ++iST) {
             loadedChordDict[24 * iChord + iST] /= stand;            
@@ -480,7 +479,7 @@ vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *
 
 
     nChord = 0;
-    for (int i = 0; i < loadedChordNames.size(); i++) {
+    for (int i = 0; i < (int)loadedChordNames.size(); i++) {
         nChord++;
     }
     chordDictFile.close();
