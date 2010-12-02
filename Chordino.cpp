@@ -148,11 +148,11 @@ Chordino::getParameterDescriptors() const
     ParameterDescriptor boostn;
     boostn.identifier = "boostn";
     boostn.name = "boost N";
-    boostn.description = "Relative weight of the N label.";
+    boostn.description = "Boost likelihood of the N (no chord) label.";
     boostn.unit = "";
-    boostn.minValue = 1.0;
-    boostn.maxValue = 2.0;
-    boostn.defaultValue = 1.1;
+    boostn.minValue = 0.0;
+    boostn.maxValue = 1.0;
+    boostn.defaultValue = 0.1;
     boostn.isQuantized = false;
     list.push_back(boostn);
 

@@ -468,7 +468,7 @@ vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *
         if (iChord < (int)loadedChordDict.size()/24 - 1) {
             stand = powf(stand,1.0f/exponent);
         } else {
-            stand = powf(stand,1.0f/exponent) / boostN;
+            stand = powf(stand,1.0f/exponent) / (1+boostN);
         }
         for (int iST = 0; iST < 24; ++iST) {
             loadedChordDict[24 * iChord + iST] /= stand;            

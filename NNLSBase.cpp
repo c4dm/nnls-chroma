@@ -49,7 +49,7 @@ NNLSBase::NNLSBase(float inputSampleRate) :
     m_tuneLocal(0.0),
     m_doNormalizeChroma(0),
     m_rollon(0.0),
-    m_boostN(1.1),
+    m_boostN(0.1),
 	m_s(0.7),
 	sinvalues(0),
 	cosvalues(0)
@@ -82,7 +82,7 @@ NNLSBase::getPluginVersion() const
     if (debug_on) cerr << "--> getPluginVersion" << endl;
     // Increment this each time you release a version that behaves
     // differently from the previous one
-    return 1;
+    return 2;
 }
 
 string
@@ -448,7 +448,7 @@ NNLSBase::baseProcess(const float *const *inputBuffers, Vamp::RealTime timestamp
     for (size_t iBin = 0; iBin < m_blockSize/2; iBin++) {
         magnitude[iBin] = sqrt(fbuf[2 * iBin] * fbuf[2 * iBin] + 
                                fbuf[2 * iBin + 1] * fbuf[2 * iBin + 1]);
-        if (magnitude[iBin]>m_blockSize*1.0) magnitude[iBin] = m_blockSize;
+        if (magnitude[iBin]>m_blockSize*1.0) magnitude[iBin] = m_blockSize; // a valid audio signal (between -1 and 1) should not be limited here.
         if (maxmag < magnitude[iBin]) maxmag = magnitude[iBin];
         if (m_rollon > 0) {
             energysum += pow(magnitude[iBin],2);
