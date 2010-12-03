@@ -408,14 +408,14 @@ NNLSChroma::getRemainingFeatures()
                 int dictsize = nNote*signifIndex.size();
                 // cerr << "dictsize is " << dictsize << "and values size" << f3.values.size()<< endl;
                 float *curr_dict = new float[dictsize];
-                for (unsigned iNote = 0; iNote < signifIndex.size(); ++iNote) {
-                    for (unsigned iBin = 0; iBin < nNote; iBin++) {
+                for (int iNote = 0; iNote < (int)signifIndex.size(); ++iNote) {
+                    for (int iBin = 0; iBin < nNote; iBin++) {
                         curr_dict[iNote * nNote + iBin] = 1.0 * m_dict[signifIndex[iNote] * nNote + iBin];
                     }
                 }
                 nnls(curr_dict, nNote, nNote, signifIndex.size(), b, x, &rnorm, w, zz, indx, &mode);
                 delete [] curr_dict;
-                for (unsigned iNote = 0; iNote < signifIndex.size(); ++iNote) {
+                for (int iNote = 0; iNote < (int)signifIndex.size(); ++iNote) {
                     f3.values[signifIndex[iNote]] = x[iNote];
                     // cerr << mode << endl;
                     chroma[signifIndex[iNote] % 12] += x[iNote] * treblewindow[signifIndex[iNote]];
@@ -481,17 +481,17 @@ NNLSChroma::getRemainingFeatures()
                 break;
             }
             if (chromanorm[0] > 0) {
-                for (int i = 0; i < f4.values.size(); i++) {
+                for (size_t i = 0; i < f4.values.size(); i++) {
                     f4.values[i] /= chromanorm[0];
                 }
             }
             if (chromanorm[1] > 0) {
-                for (int i = 0; i < f5.values.size(); i++) {
+                for (size_t i = 0; i < f5.values.size(); i++) {
                     f5.values[i] /= chromanorm[1];
                 }
             }
             if (chromanorm[2] > 0) {
-                for (int i = 0; i < f6.values.size(); i++) {
+                for (size_t i = 0; i < f6.values.size(); i++) {
                     f6.values[i] /= chromanorm[2];
                 }
             }

@@ -42,6 +42,7 @@ plugbase:chordino a   vamp:Plugin ;
     vamp:parameter   plugbase:chordino_param_tuningmode ;
     vamp:parameter   plugbase:chordino_param_whitening ;
     vamp:parameter   plugbase:chordino_param_s ;
+    vamp:parameter   plugbase:chordino_param_boostn ;
 
     vamp:output      plugbase:chordino_output_simplechord ;
     vamp:output      plugbase:chordino_output_chordnotes ;
@@ -110,6 +111,16 @@ plugbase:chordino_param_s a  vamp:Parameter ;
     vamp:unit           ""  ;
     vamp:default_value   0.7 ;
     vamp:value_names     ();
+
+plugbase:chordino_param_boostn a  vamp:Parameter ;
+    vamp:identifier     "boostn" ;
+    dc:title            "Boost likelihood of the N (no chord) label." ;
+    dc:format           "" ;
+    vamp:min_value       0 ;
+    vamp:max_value       1 ;
+    vamp:unit           ""  ;
+    vamp:default_value   0.1 ;
+    vamp:value_names     ();
     .
 plugbase:chordino_output_simplechord a  vamp:SparseOutput ;
     vamp:identifier       "simplechord" ;
@@ -177,6 +188,7 @@ plugbase:nnls-chroma a   vamp:Plugin ;
     vamp:output      plugbase:nnls-chroma_output_chroma ;
     vamp:output      plugbase:nnls-chroma_output_basschroma ;
     vamp:output      plugbase:nnls-chroma_output_bothchroma ;
+    vamp:output      plugbase:nnls-chroma_output_consonance ;
     .
 plugbase:nnls-chroma_param_useNNLS a  vamp:QuantizedParameter ;
     vamp:identifier     "useNNLS" ;
@@ -299,6 +311,17 @@ plugbase:nnls-chroma_output_bothchroma a  vamp:DenseOutput ;
     vamp:bin_names        ( "A  (bass)" "Bb (bass)" "B  (bass)" "C  (bass)" "C# (bass)" "D  (bass)" "Eb (bass)" "E  (bass)" "F  (bass)" "F# (bass)" "G  (bass)" "Ab (bass)" "A" "Bb" "B" "C" "C#" "D" "Eb" "E" "F" "F#" "G" "Ab");
     vamp:computes_signal_type  af:Chromagram ;
     .
+
+plugbase:nnls-chroma_output_consonance a  vamp:DenseOutput ;
+    vamp:identifier       "consonance" ;
+    dc:title              "Consonance estimate." ;
+    dc:description        """A simple consonance value based on the convolution of a consonance profile with the semitone spectrum."""  ;
+    vamp:fixed_bin_count  "true" ;
+    vamp:unit             "" ;
+    vamp:bin_count        1 ; 
+    vamp:computes_signal_type  af:TonalChangeDetectionFunction;
+    .
+
 plugbase:tuning a   vamp:Plugin ;
     dc:title              "Tuning" ;
     vamp:name             "Tuning" ;

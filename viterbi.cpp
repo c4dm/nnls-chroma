@@ -12,11 +12,6 @@ std::vector<int> ViterbiPath(std::vector<double> init, std::vector<vector<double
     if (trans[0].size() != nState || trans.size() != nState || obs[0].size() != nState) {
         cerr << "ERROR: matrix sizes inconsistent." << endl;
     }
-    
-    for (int iState = 0; iState < nState; ++iState) delta[iState] = init[iState];
-    for (int iFrame = 1; iFrame < nFrame; ++iFrame) {
-        for (int iState = 0; iState < nState; ++iState) delta[iFrame*nState + iState];
-    }
         
     // vector<vector<double> > delta; // "matrix" of conditional probabilities    
     vector<vector<int> > psi; //  "matrix" of remembered indices of the best transitions
@@ -28,7 +23,7 @@ std::vector<int> ViterbiPath(std::vector<double> init, std::vector<vector<double
     /* initialise first frame */
     // delta.push_back(init);    
     for (int iState = 0; iState < nState; ++iState) {
-        delta[iState] *= obs[0][iState];
+        delta[iState] = init[iState] * obs[0][iState];
         deltasum += delta[iState];
     }
     for (int iState = 0; iState < nState; ++iState) delta[iState] /= deltasum; // normalise (scale)

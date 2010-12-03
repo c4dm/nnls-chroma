@@ -103,7 +103,7 @@ Chordino::getParameterDescriptors() const
     d0.unit = "%";
     d0.minValue = 0;
     d0.maxValue = 5;
-    d0.defaultValue = 0;
+    d0.defaultValue = 0.0;
     d0.isQuantized = true;
 	d0.quantizeStep = 0.5;
     list.push_back(d0);
@@ -115,7 +115,7 @@ Chordino::getParameterDescriptors() const
     d1.unit = "";
     d1.minValue = 0;
     d1.maxValue = 1;
-    d1.defaultValue = 0;
+    d1.defaultValue = 0.0;
     d1.isQuantized = true;
     d1.valueNames.push_back("global tuning");
     d1.valueNames.push_back("local tuning");
@@ -148,11 +148,11 @@ Chordino::getParameterDescriptors() const
     ParameterDescriptor boostn;
     boostn.identifier = "boostn";
     boostn.name = "boost N";
-    boostn.description = "Relative weight of the N label.";
+    boostn.description = "Boost likelihood of the N (no chord) label.";
     boostn.unit = "";
-    boostn.minValue = 1.0;
-    boostn.maxValue = 2.0;
-    boostn.defaultValue = 1.0;
+    boostn.minValue = 0.0;
+    boostn.maxValue = 1.0;
+    boostn.defaultValue = 0.1;
     boostn.isQuantized = false;
     list.push_back(boostn);
 
@@ -282,7 +282,7 @@ Chordino::getRemainingFeatures()
 		    
     /** Tune Log-Frequency Spectrogram
         calculate a tuned log-frequency spectrogram (currentTunedSpec): use the tuning estimated above (kinda f0) to 
-        perform linear interpolation on the existing log-frequency spectrogram (kinda currentLogSpectum).
+        perform linear interpolation on the existing log-frequency spectrogram (kinda currentLogSpectrum).
     **/
     cerr << endl << "[Chordino Plugin] Tuning Log-Frequency Spectrogram ... ";
 					
@@ -298,11 +298,11 @@ Chordino::getRemainingFeatures()
     vector<Vamp::RealTime> timestamps;
 
     for (FeatureList::iterator i = m_logSpectrum.begin(); i != m_logSpectrum.end(); ++i) {
-        Feature currentLogSpectum = *i;
+        Feature currentLogSpectrum = *i;
         Feature currentTunedSpec; // tuned log-frequency spectrum
         currentTunedSpec.hasTimestamp = true;
-        currentTunedSpec.timestamp = currentLogSpectum.timestamp;
-        timestamps.push_back(currentLogSpectum.timestamp);
+        currentTunedSpec.timestamp = currentLogSpectrum.timestamp;
+        timestamps.push_back(currentLogSpectrum.timestamp);
         currentTunedSpec.values.push_back(0.0); currentTunedSpec.values.push_back(0.0); // set lower edge to zero
 		
         if (m_tuneLocal) {
@@ -312,8 +312,8 @@ Chordino::getRemainingFeatures()
 		        
         // cerr << intShift << " " << floatShift << endl;
 		        
-        for (unsigned k = 2; k < currentLogSpectum.values.size() - 3; ++k) { // interpolate all inner bins
-            tempValue = currentLogSpectum.values[k + intShift] * (1-floatShift) + currentLogSpectum.values[k+intShift+1] * floatShift;
+        for (int k = 2; k < (int)currentLogSpectrum.values.size() - 3; ++k) { // interpolate all inner bins
+            tempValue = currentLogSpectrum.values[k + intShift] * (1-floatShift) + currentLogSpectrum.values[k+intShift+1] * floatShift;
             currentTunedSpec.values.push_back(tempValue);
         }
 		        
@@ -388,11 +388,11 @@ Chordino::getRemainingFeatures()
         vector<float> chroma = vector<float>(12, 0);
         vector<float> basschroma = vector<float>(12, 0);
         float currval;
-        unsigned iSemitone = 0;
+        int iSemitone = 0;
 			
         if (some_b_greater_zero) {
             if (m_useNNLS == 0) {
-                for (unsigned iNote = nBPS/2 + 2; iNote < nNote - nBPS/2; iNote += nBPS) {
+                for (int iNote = nBPS/2 + 2; iNote < nNote - nBPS/2; iNote += nBPS) {
                     currval = 0;
                     for (int iBPS = -nBPS/2; iBPS < nBPS/2+1; ++iBPS) {
                         currval += b[iNote + iBPS] * (1-abs(iBPS*1.0/(nBPS/2+1)));						
@@ -408,7 +408,7 @@ Chordino::getRemainingFeatures()
                 vector<int> signifIndex;
                 int index=0;
                 sumb /= 84.0;
-                for (unsigned iNote = nBPS/2 + 2; iNote < nNote - nBPS/2; iNote += nBPS) {
+                for (int iNote = nBPS/2 + 2; iNote < nNote - nBPS/2; iNote += nBPS) {
                     float currval = 0;
                     for (int iBPS = -nBPS/2; iBPS < nBPS/2+1; ++iBPS) {
                         currval += b[iNote + iBPS]; 
@@ -424,14 +424,14 @@ Chordino::getRemainingFeatures()
                 int dictsize = nNote*signifIndex.size();
                 // cerr << "dictsize is " << dictsize << "and values size" << f3.values.size()<< endl;
                 float *curr_dict = new float[dictsize];
-                for (unsigned iNote = 0; iNote < signifIndex.size(); ++iNote) {
-                    for (unsigned iBin = 0; iBin < nNote; iBin++) {
+                for (int iNote = 0; iNote < (int)signifIndex.size(); ++iNote) {
+                    for (int iBin = 0; iBin < nNote; iBin++) {
                         curr_dict[iNote * nNote + iBin] = 1.0 * m_dict[signifIndex[iNote] * nNote + iBin];
                     }
                 }
                 nnls(curr_dict, nNote, nNote, signifIndex.size(), b, x, &rnorm, w, zz, indx, &mode);
                 delete [] curr_dict;
-                for (unsigned iNote = 0; iNote < signifIndex.size(); ++iNote) {
+                for (int iNote = 0; iNote < (int)signifIndex.size(); ++iNote) {
                     // cerr << mode << endl;
                     chroma[signifIndex[iNote] % 12] += x[iNote] * treblewindow[signifIndex[iNote]];
                     basschroma[signifIndex[iNote] % 12] += x[iNote] * basswindow[signifIndex[iNote]];
@@ -466,7 +466,7 @@ Chordino::getRemainingFeatures()
                 break;
             }
             if (chromanorm[2] > 0) {
-                for (int i = 0; i < chroma.size(); i++) {
+                for (int i = 0; i < (int)chroma.size(); i++) {
                     currentChromas.values[i] /= chromanorm[2];
                 }
             }
@@ -536,7 +536,7 @@ Chordino::getRemainingFeatures()
         fsOut[m_outputChords].push_back(chord_feature);
         
         chordchange[0] = 0;
-        for (int iFrame = 1; iFrame < chordpath.size(); ++iFrame) {
+        for (int iFrame = 1; iFrame < (int)chordpath.size(); ++iFrame) {
             // cerr << chordpath[iFrame] << endl;
             if (chordpath[iFrame] != oldchord ) {
                 // chord
@@ -547,12 +547,12 @@ Chordino::getRemainingFeatures()
                 fsOut[m_outputChords].push_back(chord_feature);
                 oldchord = chordpath[iFrame];         
                 // chord notes
-                for (int iNote = 0; iNote < oldnotes.size(); ++iNote) { // finish duration of old chord
+                for (int iNote = 0; iNote < (int)oldnotes.size(); ++iNote) { // finish duration of old chord
                     oldnotes[iNote].duration = oldnotes[iNote].duration + timestamps[iFrame];
                     fsOut[m_outputChordnotes].push_back(oldnotes[iNote]);
                 }
                 oldnotes.clear();
-                for (int iNote = 0; iNote < m_chordnotes[chordpath[iFrame]].size(); ++iNote) { // prepare notes of current chord
+                for (int iNote = 0; iNote < (int)m_chordnotes[chordpath[iFrame]].size(); ++iNote) { // prepare notes of current chord
                     Feature chordnote_feature;
                     chordnote_feature.hasTimestamp = true;
                     chordnote_feature.timestamp = timestamps[iFrame];
@@ -589,13 +589,13 @@ Chordino::getRemainingFeatures()
             float chordThreshold = 2.5/nChord;//*(2*halfwindowlength+1);
 
             vector<int> chordCandidates;
-            for (unsigned iChord = 0; iChord < nChord-1; iChord++) {
+            for (int iChord = 0; iChord+1 < nChord; iChord++) {
                 // float currsum = 0;
-                // for (unsigned iFrame = startIndex; iFrame < endIndex; ++iFrame) {
+                // for (int iFrame = startIndex; iFrame < endIndex; ++iFrame) {
                 //  currsum += chordogram[iFrame][iChord];
                 // }
                 //                 if (currsum > chordThreshold) chordCandidates.push_back(iChord);
-                for (unsigned iFrame = startIndex; iFrame < endIndex; ++iFrame) {
+                for (int iFrame = startIndex; iFrame < endIndex; ++iFrame) {
                     if (chordogram[iFrame][iChord] > chordThreshold) {
                         chordCandidates.push_back(iChord);
                         break;
@@ -607,18 +607,18 @@ Chordino::getRemainingFeatures()
 
             float maxval = 0; // will be the value of the most salient *chord change* in this frame
             float maxindex = 0; //... and the index thereof
-            unsigned bestchordL = nChord-1; // index of the best "left" chord
-            unsigned bestchordR = nChord-1; // index of the best "right" chord
+            int bestchordL = nChord-1; // index of the best "left" chord
+            int bestchordR = nChord-1; // index of the best "right" chord
 
             for (int iWF = 1; iWF < 2*halfwindowlength; ++iWF) {
                 // now find the max values on both sides of iWF
                 // left side:
                 float maxL = 0;
-                unsigned maxindL = nChord-1;
-                for (unsigned kChord = 0; kChord < chordCandidates.size(); kChord++) {
-                    unsigned iChord = chordCandidates[kChord];
+                int maxindL = nChord-1;
+                for (int kChord = 0; kChord < (int)chordCandidates.size(); kChord++) {
+                    int iChord = chordCandidates[kChord];
                     float currsum = 0;
-                    for (unsigned iFrame = 0; iFrame < iWF-1; ++iFrame) {
+                    for (int iFrame = 0; iFrame < iWF-1; ++iFrame) {
                         currsum += chordogram[count+iFrame][iChord];
                     }
                     if (iChord == nChord-1) currsum *= 0.8;
@@ -629,11 +629,11 @@ Chordino::getRemainingFeatures()
                 }				
                 // right side:
                 float maxR = 0;
-                unsigned maxindR = nChord-1;
-                for (unsigned kChord = 0; kChord < chordCandidates.size(); kChord++) {
-                    unsigned iChord = chordCandidates[kChord];
+                int maxindR = nChord-1;
+                for (int kChord = 0; kChord < (int)chordCandidates.size(); kChord++) {
+                    int iChord = chordCandidates[kChord];
                     float currsum = 0;
-                    for (unsigned iFrame = iWF-1; iFrame < 2*halfwindowlength; ++iFrame) {
+                    for (int iFrame = iWF-1; iFrame < 2*halfwindowlength; ++iFrame) {
                         currsum += chordogram[count+iFrame][iChord];
                     }
                     if (iChord == nChord-1) currsum *= 0.8;
@@ -652,10 +652,10 @@ Chordino::getRemainingFeatures()
             }
             // cerr << "maxindex: " << maxindex << ", bestchordR is " << bestchordR << ", of frame " << count << endl;
             // add a score to every chord-frame-point that was part of a maximum 
-            for (unsigned iFrame = 0; iFrame < maxindex-1; ++iFrame) {
+            for (int iFrame = 0; iFrame < maxindex-1; ++iFrame) {
                 scoreChordogram[iFrame+count][bestchordL]++;
             }
-            for (unsigned iFrame = maxindex-1; iFrame < 2*halfwindowlength; ++iFrame) {
+            for (int iFrame = maxindex-1; iFrame < 2*halfwindowlength; ++iFrame) {
                 scoreChordogram[iFrame+count][bestchordR]++;
             }
             if (bestchordL != bestchordR) {
@@ -668,7 +668,7 @@ Chordino::getRemainingFeatures()
         for (vector<Vamp::RealTime>::iterator it = timestamps.begin(); it != timestamps.end(); ++it) { 
             float maxval = 0; // will be the value of the most salient chord in this frame
             float maxindex = 0; //... and the index thereof
-            for (unsigned iChord = 0; iChord < nChord; iChord++) {
+            for (int iChord = 0; iChord < nChord; iChord++) {
                 if (scoreChordogram[count][iChord] > maxval) {
                     maxval = scoreChordogram[count][iChord];
                     maxindex = iChord;
@@ -713,12 +713,12 @@ Chordino::getRemainingFeatures()
                 oldChord = maxChord;
                 chord_feature.label = m_chordnames[maxChordIndex];
                 fsOut[m_outputChords].push_back(chord_feature);
-                for (int iNote = 0; iNote < oldnotes.size(); ++iNote) { // finish duration of old chord
+                for (int iNote = 0; iNote < (int)oldnotes.size(); ++iNote) { // finish duration of old chord
                     oldnotes[iNote].duration = oldnotes[iNote].duration + chord_feature.timestamp;
                     fsOut[m_outputChordnotes].push_back(oldnotes[iNote]);
                 }
                 oldnotes.clear();
-                for (int iNote = 0; iNote < m_chordnotes[maxChordIndex].size(); ++iNote) { // prepare notes of current chord
+                for (int iNote = 0; iNote < (int)m_chordnotes[maxChordIndex].size(); ++iNote) { // prepare notes of current chord
                     Feature chordnote_feature;
                     chordnote_feature.hasTimestamp = true;
                     chordnote_feature.timestamp = chord_feature.timestamp;
@@ -737,7 +737,7 @@ Chordino::getRemainingFeatures()
     chord_feature.label = "N";
     fsOut[m_outputChords].push_back(chord_feature);
     
-    for (int iNote = 0; iNote < oldnotes.size(); ++iNote) { // finish duration of old chord
+    for (int iNote = 0; iNote < (int)oldnotes.size(); ++iNote) { // finish duration of old chord
         oldnotes[iNote].duration = oldnotes[iNote].duration + timestamps[timestamps.size()-1];
         fsOut[m_outputChordnotes].push_back(oldnotes[iNote]);
     }
