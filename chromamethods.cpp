@@ -367,7 +367,7 @@ vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *
     int nChord = 0;
 	
 	vector<string> tempChordNames = staticChordnames();
-	vector<float> tempChordDict = staticChordvalues();;
+	vector<float> tempChordDict = staticChordvalues();
     vector<string> loadedChordNames;
     vector<float> loadedChordDict;
     if (hasExternalDictinoary && chordDictFile.is_open()) {
