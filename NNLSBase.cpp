@@ -57,8 +57,7 @@ NNLSBase::NNLSBase(float inputSampleRate) :
     if (debug_on) cerr << "--> NNLSBase" << endl;
     // make the *note* dictionary matrix
     m_dict = new float[nNote * 84];
-    for (unsigned i = 0; i < nNote * 84; ++i) m_dict[i] = 0.0;
-    dictionaryMatrix(m_dict, 0.7);
+    for (unsigned i = 0; i < nNote * 84; ++i) m_dict[i] = 0.0;    
 }
 
 
@@ -353,6 +352,8 @@ NNLSBase::initialise(size_t channels, size_t stepSize, size_t blockSize)
     if (debug_on) {
         cerr << "--> initialise";
     }
+	
+	dictionaryMatrix(m_dict, m_s);
 	
 	// make things for tuning estimation
 	for (int iBPS = 0; iBPS < nBPS; ++iBPS) {

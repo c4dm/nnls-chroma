@@ -226,9 +226,18 @@ NNLSChroma::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
 NNLSChroma::FeatureSet
 NNLSChroma::getRemainingFeatures()
 {
+    static const int nConsonance = 24;
+    float consonancepattern[nConsonance] = {0,-1,-1,1,1,1,-1,1,1,1,-1,-1,1,-1,-1,1,1,1,-1,1,1,1,-1,-1};
+    float consonancemean = 0;
+    for (int i = 0; i< nConsonance; ++i) {
+        consonancemean += consonancepattern[i]/nConsonance;
+    }
     
-    float consonancepattern[24] = {0,-1,-1,1,1,1,-1,1,1,1,-1,-1,1,-1,-1,1,1,1,-1,1,1,1,-1,-1};
-    // for (int i = 0; i< 12; ++i) cerr << consonancepattern[i]<< endl; 
+    cerr << "consonancemean = " << consonancemean << endl;
+    
+    for (int i = 0; i< nConsonance; ++i) {
+        consonancepattern[i] -= consonancemean;
+    }
     if (debug_on) cerr << "--> getRemainingFeatures" << endl;
     FeatureSet fsOut;
     if (m_logSpectrum.size() == 0) return fsOut;
@@ -430,12 +439,12 @@ NNLSChroma::getRemainingFeatures()
         
         consonance.values.push_back(0);
         for (int iSemitone = 0; iSemitone < 84-24; ++iSemitone) {            
-            notesum += f3.values[iSemitone] * f3.values[iSemitone];
+            notesum += f3.values[iSemitone] * f3.values[iSemitone] * treblewindow[iSemitone] * treblewindow[iSemitone];
             float tempconsonance = 0;
             for (int jSemitone = 1; jSemitone < 24; ++jSemitone) {
-                tempconsonance += f3.values[iSemitone+jSemitone] * (consonancepattern[jSemitone]);
+                tempconsonance += f3.values[iSemitone+jSemitone] * (consonancepattern[jSemitone]) * treblewindow[iSemitone+jSemitone];
             }
-            consonance.values[0] += (f3.values[iSemitone] * tempconsonance);
+            consonance.values[0] += (f3.values[iSemitone] * tempconsonance * treblewindow[iSemitone]);
         }
         if (notesum > 0) consonance.values[0] /= notesum;
 		
