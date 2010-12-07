@@ -185,6 +185,36 @@ NNLSChroma::getOutputDescriptors() const
     d7.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
     list.push_back(d7);
     m_outputConsonance = index++;
+    
+    OutputDescriptor speechity;
+    speechity.identifier = "speechity";
+    speechity.name = "Speech vs music segmenter.";
+    speechity.description = ".";
+    speechity.unit = "";
+    speechity.hasFixedBinCount = true;
+    speechity.binCount = 1;
+    speechity.hasKnownExtents = false;
+    speechity.isQuantized = false;
+    speechity.sampleType = OutputDescriptor::FixedSampleRate;
+    speechity.hasDuration = false;
+    speechity.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
+    list.push_back(speechity);
+    m_outputSpeechity = index++;
+    
+    OutputDescriptor mssegment;
+    mssegment.identifier = "mssegment";
+    mssegment.name = "Speech vs music segmenter.";
+    mssegment.description = ".";
+    mssegment.unit = "";
+    mssegment.hasFixedBinCount = true;
+    mssegment.binCount = 1;
+    mssegment.hasKnownExtents = false;
+    mssegment.isQuantized = false;
+    mssegment.sampleType = OutputDescriptor::FixedSampleRate;
+    mssegment.hasDuration = false;
+    mssegment.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
+    list.push_back(mssegment);
+    m_outputMssegment = index++;
   
     return list;
 }
@@ -345,6 +375,7 @@ NNLSChroma::getRemainingFeatures()
         Feature f5; // bass chromagram
         Feature f6; // treble and bass chromagram
 	    Feature consonance;
+        Feature speechity;
 	    
         f3.hasTimestamp = true;
         f3.timestamp = f2.timestamp;
@@ -360,6 +391,8 @@ NNLSChroma::getRemainingFeatures()
 	        
         consonance.hasTimestamp = true;
         consonance.timestamp = f2.timestamp;
+        speechity.hasTimestamp = true;
+        speechity.timestamp = f2.timestamp;
 	    
         float b[nNote];
 	
@@ -505,16 +538,92 @@ NNLSChroma::getRemainingFeatures()
                 }
             }
         }
-	
+        // float speechityvalue = 0;
+        // for (int iPC = 0; iPC < 12; ++iPC) {
+        //     speechityvalue += abs(f3.values[iPC] - oldchroma[iPC]);
+        //     oldchroma[iPC] = f3.values[iPC];
+        // }
+        // speechity.values.push_back(speechityvalue);
+	    
         fsOut[m_outputSemiSpec].push_back(f3);
         fsOut[m_outputChroma].push_back(f4);
         fsOut[m_outputBassChroma].push_back(f5);
         fsOut[m_outputBothChroma].push_back(f6);
         fsOut[m_outputConsonance].push_back(consonance);
+        // fsOut[m_outputSpeechity].push_back(speechity);
         count++;
     }
     cerr << "done." << endl;
-
+    
+    
+// musicity
+    count = 0;
+    int oldlabeltype = 0; // start value is 0, music is 1, speech is 2
+    vector<float> musicityValue; 
+    for (FeatureList::iterator it = fsOut[4].begin(); it != fsOut[4].end(); ++it) {
+        Feature f4 = *it;
+        
+        int startIndex = max(count - musicitykernelwidth/2,0);
+        int endIndex = min(int(chordogram.size()), startIndex + musicitykernelwidth - 1);
+        float chromasum = 0;
+        float diffsum = 0;
+        for (int k = 0; k < 12; k++) {
+            for (int i = startIndex + 1; i < endIndex; i++) {
+                chromasum += pow(fsOut[4][i].values[k],2);
+                diffsum += abs(fsOut[4][i-1].values[k] - fsOut[4][i].values[k]);
+            }
+        }
+        diffsum /= chromasum;
+        musicityValue.push_back(diffsum);        
+        count++;
+    }
+    
+    float musicityThreshold = 0.44;
+    if (m_stepSize == 4096) {
+        musicityThreshold = 0.74;
+    }
+    if (m_stepSize == 4410) {
+        musicityThreshold = 0.77;
+    }
+    
+    count = 0;
+    for (FeatureList::iterator it = fsOut[4].begin(); it != fsOut[4].end(); ++it) {
+        Feature f4 = *it;
+        Feature speechity; // musicity
+        Feature f9; // musicity segmenter
+        
+        speechity.hasTimestamp = true;
+        speechity.timestamp = f4.timestamp;
+        mssegment.hasTimestamp = true;
+        mssegment.timestamp = f4.timestamp;    
+        
+        int startIndex = max(count - musicitykernelwidth/2,0);
+        int endIndex = min(int(chordogram.size()), startIndex + musicitykernelwidth - 1);
+        int musicityCount = 0;
+        for (int i = startIndex; i <= endIndex; i++) {
+            if (musicityValue[i] > musicityThreshold) musicityCount++;
+        }
+        bool isSpeech = (2 * musicityCount > endIndex - startIndex + 1); 
+        
+        if (isSpeech) {
+            if (oldlabeltype != 2) {
+                mssegment.label = "Speech";
+                fsOut[m_outputMssegment].push_back(mssegment);
+                oldlabeltype = 2;
+            }
+        } else {
+            if (oldlabeltype != 1) {
+                mssegment.label = "Music";
+                fsOut[m_outputMssegment].push_back(mssegment);
+                oldlabeltype = 1;
+            }
+        }
+        speechity.values.push_back(musicityValue[count]);
+        fsOut[m_outputSpeechity].push_back(speechity);
+        count++;
+     }
+    
+    
     return fsOut;     
 
 }

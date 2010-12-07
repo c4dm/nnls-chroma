@@ -51,6 +51,8 @@ protected:
     mutable int m_outputBassChroma;
     mutable int m_outputBothChroma;
     mutable int m_outputConsonance;
+    mutable int m_outputSpeechity;
+    mutable int m_outputMssegment;
 };
 
 
