@@ -186,6 +186,23 @@ NNLSChroma::getOutputDescriptors() const
     list.push_back(d7);
     m_outputConsonance = index++;
   
+    OutputDescriptor monophonicness;
+    monophonicness.identifier = "monophonicness";
+    monophonicness.name = "Monophonicness estimate.";
+    monophonicness.description = ".";
+    monophonicness.unit = "";
+    monophonicness.hasFixedBinCount = true;
+    monophonicness.binCount = 1;
+    monophonicness.hasKnownExtents = true;
+    monophonicness.minValue = 0;
+    monophonicness.maxValue = 1;
+    monophonicness.isQuantized = false;
+    monophonicness.sampleType = OutputDescriptor::FixedSampleRate;
+    monophonicness.hasDuration = false;
+    monophonicness.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
+    list.push_back(monophonicness);
+    m_outputMonophonicness = index++;
+    
     return list;
 }
 
@@ -345,6 +362,7 @@ NNLSChroma::getRemainingFeatures()
         Feature f5; // bass chromagram
         Feature f6; // treble and bass chromagram
 	    Feature consonance;
+        Feature monophonicness;
 	    
         f3.hasTimestamp = true;
         f3.timestamp = f2.timestamp;
@@ -360,6 +378,9 @@ NNLSChroma::getRemainingFeatures()
 	        
         consonance.hasTimestamp = true;
         consonance.timestamp = f2.timestamp;
+        
+        monophonicness.hasTimestamp = true;
+        monophonicness.timestamp = f2.timestamp;
 	    
         float b[nNote];
 	
@@ -439,6 +460,28 @@ NNLSChroma::getRemainingFeatures()
         
         consonance.values.push_back(0);
         
+        float note_max = 0;
+        float note_runnerup = 0;
+        // float note_sum = 0;
+        for (int iSemitone = 0; iSemitone < 84; iSemitone++) {
+            float currvalue = f3.values[iSemitone] * treblewindow[iSemitone];
+            if (currvalue > note_max) {
+                note_runnerup = note_max;
+                note_max = currvalue;                
+            } else if (currvalue > note_runnerup) {
+                note_runnerup = currvalue;
+            }
+            // note_sum += note[iPitchClass];
+        }
+        // float note_monophonicness = 12*note_max/(12*note_max+note_sum);
+        cerr << note_max << endl;
+        cerr << note_runnerup << endl << endl;
+        float note_monophonicness = 0.5;
+        if (note_max > 0) {
+            note_monophonicness = (note_max / (note_max+note_runnerup) - 0.5) * 2;
+        }
+        monophonicness.values.push_back(note_monophonicness);
+        
         for (int iSemitone = 0; iSemitone < 84; ++iSemitone) {            
             float tempconsonance = 0;            
             int sumlength = 1;
@@ -517,6 +560,7 @@ NNLSChroma::getRemainingFeatures()
         fsOut[m_outputBassChroma].push_back(f5);
         fsOut[m_outputBothChroma].push_back(f6);
         fsOut[m_outputConsonance].push_back(consonance);
+        fsOut[m_outputMonophonicness].push_back(monophonicness);
         count++;
     }
     cerr << "done." << endl;
