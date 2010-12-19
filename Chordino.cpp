@@ -217,20 +217,20 @@ Chordino::getOutputDescriptors() const
     list.push_back(d8);
     m_outputHarmonicChange = index++;
   
-    OutputDescriptor meanloglikelihood;
-    meanloglikelihood.identifier = "meanloglikelihood";
-    meanloglikelihood.name = "chord estimate mean log-likelihood";
-    meanloglikelihood.description = ".";
-    meanloglikelihood.unit = "";
-    meanloglikelihood.hasFixedBinCount = true;
-    meanloglikelihood.binCount = 1;
-    meanloglikelihood.hasKnownExtents = false;
-    meanloglikelihood.isQuantized = false;
-    meanloglikelihood.sampleType = OutputDescriptor::FixedSampleRate;
-    meanloglikelihood.hasDuration = false;
-    // meanloglikelihood.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
-    list.push_back(meanloglikelihood);
-    m_outputMeanloglikelihood = index++;
+    OutputDescriptor loglikelihood;
+    loglikelihood.identifier = "loglikelihood";
+    loglikelihood.name = "chord estimate log-likelihood";
+    loglikelihood.description = ".";
+    loglikelihood.unit = "";
+    loglikelihood.hasFixedBinCount = true;
+    loglikelihood.binCount = 1;
+    loglikelihood.hasKnownExtents = false;
+    loglikelihood.isQuantized = false;
+    loglikelihood.sampleType = OutputDescriptor::FixedSampleRate;
+    loglikelihood.hasDuration = false;
+    // loglikelihood.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
+    list.push_back(loglikelihood);
+    m_outputLoglikelihood = index++;
   
     return list;
 }
@@ -592,7 +592,7 @@ Chordino::getRemainingFeatures()
             loglikelihood.timestamp = timestamps[iFrame];
             loglikelihood.values.push_back(-log(scale[iFrame]));
             // cerr << chordchange[iFrame] << endl;
-            fsOut[m_outputMeanloglikelihood].push_back(loglikelihood);
+            fsOut[m_outputLoglikelihood].push_back(loglikelihood);
         }
         logscale /= nFrame;
         cerr << "loglik" << logscale << endl;
