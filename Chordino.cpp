@@ -217,6 +217,21 @@ Chordino::getOutputDescriptors() const
     list.push_back(d8);
     m_outputHarmonicChange = index++;
   
+    OutputDescriptor meanloglikelihood;
+    meanloglikelihood.identifier = "meanloglikelihood";
+    meanloglikelihood.name = "chord estimate mean log-likelihood";
+    meanloglikelihood.description = ".";
+    meanloglikelihood.unit = "";
+    meanloglikelihood.hasFixedBinCount = true;
+    meanloglikelihood.binCount = 1;
+    meanloglikelihood.hasKnownExtents = false;
+    meanloglikelihood.isQuantized = false;
+    meanloglikelihood.sampleType = OutputDescriptor::FixedSampleRate;
+    meanloglikelihood.hasDuration = false;
+    // meanloglikelihood.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
+    list.push_back(meanloglikelihood);
+    m_outputMeanloglikelihood = index++;
+  
     return list;
 }
 
@@ -526,8 +541,9 @@ Chordino::getRemainingFeatures()
             temp[iChord] = selftransprob;
             trans.push_back(temp);
         }
-        vector<int> chordpath = ViterbiPath(init, trans, chordogram, delta);
-
+        vector<double> scale;
+        vector<int> chordpath = ViterbiPath(init, trans, chordogram, delta, &scale);
+        
 
         Feature chord_feature; // chord estimate
         chord_feature.hasTimestamp = true;
@@ -567,6 +583,20 @@ Chordino::getRemainingFeatures()
                 chordchange[iFrame-1] += delta[(iFrame-1)*nChord + iChord] * log(delta[(iFrame-1)*nChord + iChord]/delta[iFrame*nChord + iChord]);
             }
         }
+        
+        float logscale = 0;
+        for (int iFrame = 0; iFrame < nFrame; ++iFrame) {
+            logscale -= log(scale[iFrame]);
+            Feature loglikelihood;
+            loglikelihood.hasTimestamp = true;
+            loglikelihood.timestamp = timestamps[iFrame];
+            loglikelihood.values.push_back(-log(scale[iFrame]));
+            // cerr << chordchange[iFrame] << endl;
+            fsOut[m_outputMeanloglikelihood].push_back(loglikelihood);
+        }
+        logscale /= nFrame;
+        cerr << "loglik" << logscale << endl;
+        
         
         // cerr << chordpath[0] << endl;
 	} else {
