@@ -68,10 +68,10 @@ std::vector<int> ViterbiPath(std::vector<double> init, std::vector<vector<double
     }
     
     /* initialise backward step */
-    int bestValue = 0;
+    double bestValue = 0;
     for (int iState = 0; iState < nState; ++iState) {
         double currentValue = delta[(nFrame-1) * nState + iState];
-        if (currentValue > path[nFrame-1]) {
+        if (currentValue > bestValue) {
             bestValue = currentValue;            
             path[nFrame-1] = iState;
         }
