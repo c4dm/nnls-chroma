@@ -595,7 +595,7 @@ Chordino::getRemainingFeatures()
             fsOut[m_outputLoglikelihood].push_back(loglikelihood);
         }
         logscale /= nFrame;
-        cerr << "loglik" << logscale << endl;
+        // cerr << "loglik" << logscale << endl;
         
         
         // cerr << chordpath[0] << endl;

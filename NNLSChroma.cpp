@@ -250,7 +250,7 @@ NNLSChroma::getRemainingFeatures()
         consonancemean += consonancepattern[i]/nConsonance;
     }
     
-    cerr << "consonancemean = " << consonancemean << endl;
+    // cerr << "consonancemean = " << consonancemean << endl;
     
     for (int i = 0; i< nConsonance; ++i) {
         consonancepattern[i] -= consonancemean;
@@ -474,8 +474,8 @@ NNLSChroma::getRemainingFeatures()
             // note_sum += note[iPitchClass];
         }
         // float note_monophonicness = 12*note_max/(12*note_max+note_sum);
-        cerr << note_max << endl;
-        cerr << note_runnerup << endl << endl;
+        // cerr << note_max << endl;
+        // cerr << note_runnerup << endl << endl;
         float note_monophonicness = 0.5;
         if (note_max > 0) {
             note_monophonicness = (note_max / (note_max+note_runnerup) - 0.5) * 2;
