@@ -156,6 +156,20 @@ Chordino::getParameterDescriptors() const
     boostn.isQuantized = false;
     list.push_back(boostn);
 
+    ParameterDescriptor usehartesyntax;
+    usehartesyntax.identifier = "usehartesyntax";
+    usehartesyntax.name = "use Harte syntax";
+    usehartesyntax.description = "Use the chord syntax proposed by Harte";
+    usehartesyntax.unit = "";
+    usehartesyntax.minValue = 0.0;
+    usehartesyntax.maxValue = 1.0;
+    usehartesyntax.defaultValue = 0.0;
+    usehartesyntax.isQuantized = true;
+	usehartesyntax.quantizeStep = 1.0;
+	usehartesyntax.valueNames.push_back("no");
+    usehartesyntax.valueNames.push_back("yes");
+    list.push_back(usehartesyntax);
+
     return list;
 }
 
@@ -245,7 +259,7 @@ Chordino::initialise(size_t channels, size_t stepSize, size_t blockSize)
     if (!NNLSBase::initialise(channels, stepSize, blockSize)) {
         return false;
     }
-    m_chordnames = chordDictionary(&m_chorddict, &m_chordnotes, m_boostN);
+    m_chordnames = chordDictionary(&m_chorddict, &m_chordnotes, m_boostN, m_useHarte);
     return true;
 }
 

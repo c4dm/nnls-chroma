@@ -29,14 +29,14 @@ const int MIDI_basenote = 45;
 
 extern std::vector<float> SpecialConvolution(std::vector<float> convolvee, std::vector<float> kernel);
 extern void dictionaryMatrix(float* dm, float s_param);
-extern std::vector<std::string> chordDictionary(std::vector<float> *mchorddict, std::vector<std::vector<int> > *m_chordnotes, float boostN);
+extern std::vector<std::string> chordDictionary(std::vector<float> *mchorddict, std::vector<std::vector<int> > *m_chordnotes, float boostN, float useHarte);
 extern bool logFreqMatrix(int fs, int blocksize, float *outmatrix);
 
 static const char* notenames[24] = {
     "A  (bass)","Bb (bass)","B  (bass)","C  (bass)","C# (bass)","D  (bass)","Eb (bass)","E  (bass)","F  (bass)","F# (bass)","G  (bass)","Ab (bass)",
     "A","Bb","B","C","C#","D","Eb","E","F","F#","G","Ab"};
 
-static const char* bassnames[12][12] ={
+static const char* bassnames[13][12] ={
     {"A","","B","C","C#","D","","E","","F#","G","G#"},
     {"Bb","","C","Db","D","Eb","","F","","G","Ab","A"},
     {"B","","C#","D","D#","E","","F#","","G#","A","A#"},
@@ -48,7 +48,8 @@ static const char* bassnames[12][12] ={
     {"F","","G","Ab","A","Bb","","C","","D","Eb","E"},
     {"F#","","G#","A","A#","B","","C#","","D#","E","E#"},
     {"G","","A","Bb","B","C","","D","","E","F","F#"},
-    {"Ab","","Bb","Cb","C","Db","","Eb","","F","Gb","G"}
+    {"Ab","","Bb","Cb","C","Db","","Eb","","F","Gb","G"},
+	{"1","","2","b3","3","4","","5","","6","b7","7"}
 };
 
 static const float basswindow[] = {0.001769, 0.015848, 0.043608, 0.084265, 0.136670, 0.199341, 0.270509, 0.348162, 0.430105, 0.514023, 0.597545, 0.678311, 0.754038, 0.822586, 0.882019, 0.930656, 0.967124, 0.990393, 0.999803, 0.995091, 0.976388, 0.944223, 0.899505, 0.843498, 0.777785, 0.704222, 0.624888, 0.542025, 0.457975, 0.375112, 0.295778, 0.222215, 0.156502, 0.100495, 0.055777, 0.023612, 0.004909, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000};

@@ -51,6 +51,7 @@ NNLSBase::NNLSBase(float inputSampleRate) :
     m_rollon(0.0),
     m_boostN(0.1),
 	m_s(0.7),
+	m_useHarte(0),
 	sinvalues(0),
 	cosvalues(0)
 {
@@ -260,6 +261,10 @@ NNLSBase::getParameter(string identifier) const
         return m_useHMM;
     }
     
+	if (identifier == "usehartesyntax") {
+		return m_useHarte;
+	}
+
     return 0;
     
 }
@@ -318,6 +323,10 @@ NNLSBase::setParameter(string identifier, float value)
     if (identifier == "rollon") {
         m_rollon = value;
     }
+
+	if (identifier == "usehartesyntax") {
+		m_useHarte = value;
+	}
 }
 
 NNLSBase::ProgramList

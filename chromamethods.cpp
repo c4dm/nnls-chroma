@@ -285,8 +285,8 @@ static vector<string> staticChordnames() {
     chordnames.push_back("");// =0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,0
     chordnames.push_back("m");//=1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,1,0,0,0,0
     chordnames.push_back("m");//=0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,1,0,0,0,0
-    chordnames.push_back("dim7");//=0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,1,0,0,1,0,0,0,1,0
-    chordnames.push_back("dim7");//=1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,1,0,0,0,1,0
+    chordnames.push_back("hdim7");//=0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,1,0,0,1,0,0,0,1,0
+    chordnames.push_back("hdim7");//=1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,1,0,0,0,1,0
     chordnames.push_back("6");//=1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,1,0,0
     chordnames.push_back("7");//=1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,1,0
     chordnames.push_back("maj7");//=1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,1
@@ -299,6 +299,26 @@ static vector<string> staticChordnames() {
     chordnames.push_back("");//=0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,0
     chordnames.push_back("");//=0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,1,0,0,1,0,0,0,0 
     chordnames.push_back("7");//=0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,1,0
+	// from here: Harte syntax
+    chordnames.push_back("");//=1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,0
+    chordnames.push_back("");// =0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,0
+    chordnames.push_back(":min");//=1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,1,0,0,0,0
+    chordnames.push_back(":min");//=0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,1,0,0,0,0
+    chordnames.push_back(":hdim7");//=0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,1,0,0,1,0,0,0,1,0
+    chordnames.push_back(":hdim7");//=1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,1,0,0,0,1,0
+    chordnames.push_back(":maj6");//=1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,1,0,0
+    chordnames.push_back(":7");//=1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,1,0
+    chordnames.push_back(":maj7");//=1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,1
+    chordnames.push_back(":min7");//=1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,1,0,0,1,0
+    chordnames.push_back(":min6");//=1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,1,0,1,0,0
+    chordnames.push_back("");//=0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,0
+    chordnames.push_back("");//=0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,0
+    chordnames.push_back("");//=1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,1,0,0,0,0,0
+    chordnames.push_back(":aug");//=1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0
+    chordnames.push_back("");//=0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,0
+    chordnames.push_back("");//=0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,1,0,0,1,0,0,0,0 
+    chordnames.push_back(":7");//=0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,1,0
+	// TODO: what about a dim chord?
     return chordnames;
 }
 
@@ -330,7 +350,7 @@ static vector<float> staticChordvalues() {
     return chordvalues;
 }
 
-vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *m_chordnotes, float boostN) {    
+vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *m_chordnotes, float boostN, float useHarte) {    
     
     typedef tokenizer<char_separator<char> > Tok;
     char_separator<char> sep(",; ","=");
@@ -366,8 +386,14 @@ vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *
     // int iElement = 0;
     int nChord = 0;
 	
+	vector<float> tempChordDict = staticChordvalues();
     vector<string> tempChordNames = staticChordnames();
-    vector<float> tempChordDict = staticChordvalues();
+	if (useHarte == 1.0) {
+		tempChordNames.erase(tempChordNames.begin(),tempChordNames.begin()+tempChordNames.size()/2);
+	} else {
+		tempChordNames.erase(tempChordNames.begin()+tempChordNames.size()/2,tempChordNames.begin()+tempChordNames.size());
+	}
+
     vector<string> loadedChordNames;
     vector<float> loadedChordDict;
     if (hasExternalDictinoary && chordDictFile.is_open()) {
@@ -409,7 +435,11 @@ vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *
             string slashNotation = "";
             for (int kSemitone = 1; kSemitone < 12; kSemitone++) {
                 if (tempChordDict[24*iType+(kSemitone) % 12] > 0.99) {
-                    slashNotation = bassnames[iSemitone][kSemitone];
+					if (useHarte == 0.0) {
+						slashNotation = bassnames[iSemitone][kSemitone];
+					} else {
+						slashNotation = bassnames[12][kSemitone];
+					}                    
                 }
             }
             if (slashNotation=="") tempchordnotes.push_back(MIDI_basenote + (iSemitone+12) % 12);
