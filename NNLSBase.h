@@ -76,7 +76,7 @@ protected:
     float m_rollon;
     float m_boostN;
     float m_s;
-	float m_useHarte;
+	float m_harte_syntax;
     vector<float> hw;
     vector<float> sinvalues;
     vector<float> cosvalues;

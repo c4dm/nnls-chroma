@@ -29,7 +29,7 @@ const int MIDI_basenote = 45;
 
 extern std::vector<float> SpecialConvolution(std::vector<float> convolvee, std::vector<float> kernel);
 extern void dictionaryMatrix(float* dm, float s_param);
-extern std::vector<std::string> chordDictionary(std::vector<float> *mchorddict, std::vector<std::vector<int> > *m_chordnotes, float boostN, float useHarte);
+extern std::vector<std::string> chordDictionary(std::vector<float> *mchorddict, std::vector<std::vector<int> > *m_chordnotes, float boostN, float harte_syntax);
 extern bool logFreqMatrix(int fs, int blocksize, float *outmatrix);
 
 static const char* notenames[24] = {

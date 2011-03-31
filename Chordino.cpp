@@ -36,8 +36,6 @@ Chordino::Chordino(float inputSampleRate) :
     m_chordnames(0)    
 {
     if (debug_on) cerr << "--> Chordino" << endl;
-    // get the *chord* dictionary from file (if the file exists)
-    
 }
 
 Chordino::~Chordino()
@@ -259,7 +257,7 @@ Chordino::initialise(size_t channels, size_t stepSize, size_t blockSize)
     if (!NNLSBase::initialise(channels, stepSize, blockSize)) {
         return false;
     }
-    m_chordnames = chordDictionary(&m_chorddict, &m_chordnotes, m_boostN, m_useHarte);
+    m_chordnames = chordDictionary(&m_chorddict, &m_chordnotes, m_boostN, m_harte_syntax);
     return true;
 }
 
@@ -315,10 +313,6 @@ Chordino::getRemainingFeatures()
     **/
     cerr << endl << "[Chordino Plugin] Tuning Log-Frequency Spectrogram ... ";
 					
-    float tempValue = 0;
-    float dbThreshold = 0; // relative to the background spectrum
-    float thresh = pow(10,dbThreshold/20);
-    // cerr << "tune local ? " << m_tuneLocal << endl;
     int count = 0;
 		
     FeatureList tunedSpec;
@@ -342,7 +336,7 @@ Chordino::getRemainingFeatures()
         // cerr << intShift << " " << floatShift << endl;
 		        
         for (int k = 2; k < (int)currentLogSpectrum.values.size() - 3; ++k) { // interpolate all inner bins
-            tempValue = currentLogSpectrum.values[k + intShift] * (1-floatShift) + currentLogSpectrum.values[k+intShift+1] * floatShift;
+            float tempValue = currentLogSpectrum.values[k + intShift] * (1-floatShift) + currentLogSpectrum.values[k+intShift+1] * floatShift;
             currentTunedSpec.values.push_back(tempValue);
         }
 		        

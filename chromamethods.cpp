@@ -38,9 +38,11 @@ using namespace boost;
 
 
 /** Special Convolution
-    special convolution is as long as the convolvee, i.e. the first argument. in the valid core part of the 
-    convolution it contains the usual convolution values, but the pads at the beginning (ending) have the same values
-    as the first (last) valid convolution bin.
+    Special convolution is as long as the convolvee, i.e. the first argument. 
+	In the "valid" core part of the convolution it contains the usual convolution 
+	values, but the parts at the beginning (ending) that would normally be 
+	calculated using zero padding simply have the same values as the first 
+	(last) valid convolution bin.
 **/
 
 vector<float> SpecialConvolution(vector<float> convolvee, vector<float> kernel)
@@ -71,15 +73,6 @@ vector<float> SpecialConvolution(vector<float> convolvee, vector<float> kernel)
     return Z;
 }
 
-// vector<float> FftBin2Frequency(vector<float> binnumbers, int fs, int blocksize)
-// {
-// 	vector<float> freq(binnumbers.size, 0.0);
-// 	for (unsigned i = 0; i < binnumbers.size; ++i) {
-// 		freq[i] = (binnumbers[i]-1.0) * fs * 1.0 / blocksize;	
-// 	}
-// 	return freq;
-// }
-
 float cospuls(float x, float centre, float width) 
 {
     float recipwidth = 1.0/width;
@@ -103,7 +96,13 @@ float pitchCospuls(float x, float centre, int binsperoctave)
     return out;
 }
 
+/**
+ * Calculates a matrix that can be used to linearly map from the magnitude spectrum to a pitch-scale spectrum.
+ * @return this always returns true, which is a bit stupid, really. The main purpose of the function is to change the values in the "matrix" pointed to by *outmatrix
+ */
 bool logFreqMatrix(int fs, int blocksize, float *outmatrix) {
+	// TODO: rewrite so that everyone understands what is done here.
+	// TODO: make this more general, such that it works with all minoctave, maxoctave and whatever nBPS (or check if it already does)
 	
     int binspersemitone = nBPS; 
     int minoctave = 0; // this must be 0
@@ -128,8 +127,6 @@ bool logFreqMatrix(int fs, int blocksize, float *outmatrix) {
     int maxMIDI = 21 + maxoctave * 12; // this includes one additional semitone!
     vector<float> cq_f;
     float oob = 1.0/binspersemitone; // one over binspersemitone
-    // cq_f.push_back(440 * pow(2.0,0.083333 * (minMIDI-69))); // 0.083333 is approx 1/12
-    // cq_f.push_back(440 * pow(2.0,0.083333 * (minMIDI+oob-69)));
     for (int i = minMIDI; i < maxMIDI; ++i) {
         for (int k = 0; k < binspersemitone; ++k)	 {
             cq_f.push_back(440 * pow(2.0,0.083333333333 * (i+oob*k-69)));
@@ -161,34 +158,28 @@ bool logFreqMatrix(int fs, int blocksize, float *outmatrix) {
                     // cerr << oversampled_f[iOS] << " " << cq_f[iCQ] << " " << cq_activation << endl;
                     outmatrix[iFFT + nFFT * iCQ] += cq_activation * fft_activation[iOS-curr_start];
                 }				
-                // if (iCQ == 1 || iCQ == 2) {
-                // 	cerr << " " << outmatrix[iFFT + nFFT * iCQ] << endl;
-                // }
-            }
+             }
         }
     }
     return true;	
 }
 
 void dictionaryMatrix(float* dm, float s_param) {
+	// TODO: make this more general, such that it works with all minoctave, maxoctave and even more than one note per semitone
     int binspersemitone = nBPS;
     int minoctave = 0; // this must be 0
     int maxoctave = 7; // this must be 7
-    // float s_param = 0.7;
 	
     // pitch-spaced frequency vector
     int minMIDI = 21 + minoctave * 12 - 1; // this includes one additional semitone!
     int maxMIDI = 21 + maxoctave * 12; // this includes one additional semitone!
     vector<float> cq_f;
     float oob = 1.0/binspersemitone; // one over binspersemitone
-    // cq_f.push_back(440 * pow(2.0,0.083333 * (minMIDI-69))); // 0.083333 is approx 1/12
-    // cq_f.push_back(440 * pow(2.0,0.083333 * (minMIDI+oob-69)));
     for (int i = minMIDI; i < maxMIDI; ++i) {
         for (int k = 0; k < binspersemitone; ++k)	 {
             cq_f.push_back(440 * pow(2.0,0.083333333333 * (i+oob*k-69)));
         }
     }
-    // cq_f.push_back(440 * pow(2.0,0.083333 * (minMIDI-oob-69)));
     cq_f.push_back(440 * pow(2.0,0.083333 * (maxMIDI-69)));
 
     float curr_f;
@@ -212,8 +203,6 @@ void dictionaryMatrix(float* dm, float s_param) {
             }
         }
     }
-
-
 }
 
 static
@@ -350,7 +339,7 @@ static vector<float> staticChordvalues() {
     return chordvalues;
 }
 
-vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *m_chordnotes, float boostN, float useHarte) {    
+vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *m_chordnotes, float boostN, float harte_syntax) {    
     
     typedef tokenizer<char_separator<char> > Tok;
     char_separator<char> sep(",; ","=");
@@ -388,7 +377,7 @@ vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *
 	
 	vector<float> tempChordDict = staticChordvalues();
     vector<string> tempChordNames = staticChordnames();
-	if (useHarte == 1.0) {
+	if (harte_syntax == 1.0) {
 		tempChordNames.erase(tempChordNames.begin(),tempChordNames.begin()+tempChordNames.size()/2);
 	} else {
 		tempChordNames.erase(tempChordNames.begin()+tempChordNames.size()/2,tempChordNames.begin()+tempChordNames.size());
@@ -435,7 +424,7 @@ vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *
             string slashNotation = "";
             for (int kSemitone = 1; kSemitone < 12; kSemitone++) {
                 if (tempChordDict[24*iType+(kSemitone) % 12] > 0.99) {
-					if (useHarte == 0.0) {
+					if (harte_syntax == 0.0) {
 						slashNotation = bassnames[iSemitone][kSemitone];
 					} else {
 						slashNotation = bassnames[12][kSemitone];

@@ -51,7 +51,7 @@ NNLSBase::NNLSBase(float inputSampleRate) :
     m_rollon(0.0),
     m_boostN(0.1),
 	m_s(0.7),
-	m_useHarte(0),
+	m_harte_syntax(0),
 	sinvalues(0),
 	cosvalues(0)
 {
@@ -153,8 +153,8 @@ NNLSBase::getParameterDescriptors() const
 
     ParameterDescriptor d0;
     d0.identifier = "rollon";
-    d0.name = "spectral roll-on";
-    d0.description = "Consider the cumulative energy spectrum (from low to high frequencies). All bins below the first bin whose cumulative energy exceeds the quantile [spectral roll on] x [total energy] will be set to 0. A value of 0 means that no bins will be changed.";
+    d0.name = "bass noise threshold";
+    d0.description = "Consider the cumulative energy spectrum (from low to high frequencies). All bins below the first bin whose cumulative energy exceeds the quantile [bass noise threshold] x [total energy] will be set to 0. A threshold value of 0 means that no bins will be changed.";
     d0.unit = "%";
     d0.minValue = 0;
     d0.maxValue = 5;
@@ -262,7 +262,7 @@ NNLSBase::getParameter(string identifier) const
     }
     
 	if (identifier == "usehartesyntax") {
-		return m_useHarte;
+		return m_harte_syntax;
 	}
 
     return 0;
@@ -325,7 +325,7 @@ NNLSBase::setParameter(string identifier, float value)
     }
 
 	if (identifier == "usehartesyntax") {
-		m_useHarte = value;
+		m_harte_syntax = value;
 	}
 }
 
