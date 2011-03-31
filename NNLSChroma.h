@@ -44,12 +44,12 @@ public:
     void reset();
 
 protected:
-    mutable int m_outputLogSpec;
-    mutable int m_outputTunedSpec;
-    mutable int m_outputSemiSpec;
+    mutable int m_outputLogfreqspec;
+    mutable int m_outputTunedlogfreqspec;
+    mutable int m_outputSemitonespectrum;
     mutable int m_outputChroma;
-    mutable int m_outputBassChroma;
-    mutable int m_outputBothChroma;
+    mutable int m_outputBasschroma;
+    mutable int m_outputBothchroma;
     mutable int m_outputConsonance;
     mutable int m_outputMonophonicness;
 };

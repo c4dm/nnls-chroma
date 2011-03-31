@@ -78,65 +78,65 @@ NNLSChroma::getOutputDescriptors() const
     
     int index = 0;
 
-    OutputDescriptor d1;
-    d1.identifier = "logfreqspec";
-    d1.name = "Log-Frequency Spectrum";
-    d1.description = "A Log-Frequency Spectrum (constant Q) that is obtained by cosine filter mapping.";
-    d1.unit = "";
-    d1.hasFixedBinCount = true;
-    d1.binCount = nNote;
-    d1.hasKnownExtents = false;
-    d1.isQuantized = false;
-    d1.sampleType = OutputDescriptor::FixedSampleRate;
-    d1.hasDuration = false;
-    d1.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
-    list.push_back(d1);
-    m_outputLogSpec = index++;
+    OutputDescriptor logfreqspecOutput;
+    logfreqspecOutput.identifier = "logfreqspec";
+    logfreqspecOutput.name = "Log-Frequency Spectrum";
+    logfreqspecOutput.description = "A Log-Frequency Spectrum (constant Q) that is obtained by cosine filter mapping.";
+    logfreqspecOutput.unit = "";
+    logfreqspecOutput.hasFixedBinCount = true;
+    logfreqspecOutput.binCount = nNote;
+    logfreqspecOutput.hasKnownExtents = false;
+    logfreqspecOutput.isQuantized = false;
+    logfreqspecOutput.sampleType = OutputDescriptor::FixedSampleRate;
+    logfreqspecOutput.hasDuration = false;
+    logfreqspecOutput.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
+    list.push_back(logfreqspecOutput);
+    m_outputLogfreqspec = index++;
 
-    OutputDescriptor d2;
-    d2.identifier = "tunedlogfreqspec";
-    d2.name = "Tuned Log-Frequency Spectrum";
-    d2.description = "A Log-Frequency Spectrum (constant Q) that is obtained by cosine filter mapping, then its tuned using the estimated tuning frequency.";
-    d2.unit = "";
-    d2.hasFixedBinCount = true;
-    d2.binCount = nNote;
-    d2.hasKnownExtents = false;
-    d2.isQuantized = false;
-    d2.sampleType = OutputDescriptor::FixedSampleRate;
-    d2.hasDuration = false;
-    d2.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
-    list.push_back(d2);
-    m_outputTunedSpec = index++;
+    OutputDescriptor tunedlogfreqspecOutput;
+    tunedlogfreqspecOutput.identifier = "tunedlogfreqspec";
+    tunedlogfreqspecOutput.name = "Tuned Log-Frequency Spectrum";
+    tunedlogfreqspecOutput.description = "A Log-Frequency Spectrum (constant Q) that is obtained by cosine filter mapping, then its tuned using the estimated tuning frequency.";
+    tunedlogfreqspecOutput.unit = "";
+    tunedlogfreqspecOutput.hasFixedBinCount = true;
+    tunedlogfreqspecOutput.binCount = nNote;
+    tunedlogfreqspecOutput.hasKnownExtents = false;
+    tunedlogfreqspecOutput.isQuantized = false;
+    tunedlogfreqspecOutput.sampleType = OutputDescriptor::FixedSampleRate;
+    tunedlogfreqspecOutput.hasDuration = false;
+    tunedlogfreqspecOutput.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
+    list.push_back(tunedlogfreqspecOutput);
+    m_outputTunedlogfreqspec = index++;
     
-    OutputDescriptor d3;
-    d3.identifier = "semitonespectrum";
-    d3.name = "Semitone Spectrum";
-    d3.description = "A semitone-spaced log-frequency spectrum derived from the third-of-a-semitone-spaced tuned log-frequency spectrum.";
-    d3.unit = "";
-    d3.hasFixedBinCount = true;
-    d3.binCount = 84;
-    d3.hasKnownExtents = false;
-    d3.isQuantized = false;
-    d3.sampleType = OutputDescriptor::FixedSampleRate;
-    d3.hasDuration = false;
-    d3.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
-    list.push_back(d3);
-    m_outputSemiSpec = index++;
+    OutputDescriptor semitonespectrumOutput;
+    semitonespectrumOutput.identifier = "semitonespectrum";
+    semitonespectrumOutput.name = "Semitone Spectrum";
+    semitonespectrumOutput.description = "A semitone-spaced log-frequency spectrum derived from the third-of-a-semitone-spaced tuned log-frequency spectrum.";
+    semitonespectrumOutput.unit = "";
+    semitonespectrumOutput.hasFixedBinCount = true;
+    semitonespectrumOutput.binCount = 84;
+    semitonespectrumOutput.hasKnownExtents = false;
+    semitonespectrumOutput.isQuantized = false;
+    semitonespectrumOutput.sampleType = OutputDescriptor::FixedSampleRate;
+    semitonespectrumOutput.hasDuration = false;
+    semitonespectrumOutput.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
+    list.push_back(semitonespectrumOutput);
+    m_outputSemitonespectrum = index++;
     
-    OutputDescriptor d4;
-    d4.identifier = "chroma";
-    d4.name = "Chromagram";
-    d4.description = "Tuning-adjusted chromagram from NNLS approximate transcription, with an emphasis on the medium note range.";
-    d4.unit = "";
-    d4.hasFixedBinCount = true;
-    d4.binCount = 12;
-    d4.binNames = chromanames;
-    d4.hasKnownExtents = false;
-    d4.isQuantized = false;
-    d4.sampleType = OutputDescriptor::FixedSampleRate;
-    d4.hasDuration = false;
-    d4.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
-    list.push_back(d4);
+    OutputDescriptor chromaOutput;
+    chromaOutput.identifier = "chroma";
+    chromaOutput.name = "Chromagram";
+    chromaOutput.description = "Tuning-adjusted chromagram from NNLS approximate transcription, with an emphasis on the medium note range.";
+    chromaOutput.unit = "";
+    chromaOutput.hasFixedBinCount = true;
+    chromaOutput.binCount = 12;
+    chromaOutput.binNames = chromanames;
+    chromaOutput.hasKnownExtents = false;
+    chromaOutput.isQuantized = false;
+    chromaOutput.sampleType = OutputDescriptor::FixedSampleRate;
+    chromaOutput.hasDuration = false;
+    chromaOutput.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
+    list.push_back(chromaOutput);
     m_outputChroma = index++;
     
     OutputDescriptor basschromaOutput;
@@ -153,7 +153,7 @@ NNLSChroma::getOutputDescriptors() const
     basschromaOutput.hasDuration = false;
     basschromaOutput.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
     list.push_back(basschromaOutput);
-    m_outputBassChroma = index++;
+    m_outputBasschroma = index++;
     
     OutputDescriptor bothchromaOutput;
     bothchromaOutput.identifier = "bothchroma";
@@ -169,7 +169,7 @@ NNLSChroma::getOutputDescriptors() const
     bothchromaOutput.hasDuration = false;
     bothchromaOutput.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
     list.push_back(bothchromaOutput);
-    m_outputBothChroma = index++;
+    m_outputBothchroma = index++;
   
     OutputDescriptor consonanceOutput;
     consonanceOutput.identifier = "consonance";
@@ -236,7 +236,7 @@ NNLSChroma::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
     NNLSBase::baseProcess(inputBuffers, timestamp);
 	
     FeatureSet fs;
-    fs[m_outputLogSpec].push_back(m_logSpectrum[m_logSpectrum.size()-1]);
+    fs[m_outputLogfreqspec].push_back(m_logSpectrum[m_logSpectrum.size()-1]);
     return fs;	
 }
 
@@ -333,7 +333,7 @@ NNLSChroma::getRemainingFeatures()
                 cerr << "ERROR: negative value in logfreq spectrum" << endl;
             }
         }
-        fsOut[m_outputTunedSpec].push_back(f2);
+        fsOut[m_outputTunedlogfreqspec].push_back(f2);
         count++;
     }
     cerr << "done." << endl;
@@ -355,7 +355,7 @@ NNLSChroma::getRemainingFeatures()
     vector<float> oldbasschroma = vector<float>(12,0);
     count = 0;
 
-    for (FeatureList::iterator it = fsOut[m_outputTunedSpec].begin(); it != fsOut[m_outputTunedSpec].end(); ++it) {
+    for (FeatureList::iterator it = fsOut[m_outputTunedlogfreqspec].begin(); it != fsOut[m_outputTunedlogfreqspec].end(); ++it) {
         Feature f2 = *it; // logfreq spectrum
         Feature f3; // semitone spectrum
         Feature f4; // treble chromagram
@@ -555,10 +555,10 @@ NNLSChroma::getRemainingFeatures()
             }
         }
 	
-        fsOut[m_outputSemiSpec].push_back(f3);
+        fsOut[m_outputSemitonespectrum].push_back(f3);
         fsOut[m_outputChroma].push_back(f4);
-        fsOut[m_outputBassChroma].push_back(f5);
-        fsOut[m_outputBothChroma].push_back(f6);
+        fsOut[m_outputBasschroma].push_back(f5);
+        fsOut[m_outputBothchroma].push_back(f6);
         fsOut[m_outputConsonance].push_back(consonance);
         fsOut[m_outputMonophonicness].push_back(monophonicness);
         count++;
