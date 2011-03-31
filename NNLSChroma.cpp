@@ -250,15 +250,14 @@ NNLSChroma::getRemainingFeatures()
         consonancemean += consonancepattern[i]/nConsonance;
     }
     
-    // cerr << "consonancemean = " << consonancemean << endl;
-    
     for (int i = 0; i< nConsonance; ++i) {
         consonancepattern[i] -= consonancemean;
     }
-    if (debug_on) cerr << "--> getRemainingFeatures" << endl;
+    
+	if (debug_on) cerr << "--> getRemainingFeatures" << endl;
     FeatureSet fsOut;
     if (m_logSpectrum.size() == 0) return fsOut;
-    // 
+
     /**  Calculate Tuning
          calculate tuning from (using the angle of the complex number defined by the 
          cumulative mean real and imag values)
@@ -277,9 +276,7 @@ NNLSChroma::getRemainingFeatures()
     char buffer0 [50];
 		
     sprintf(buffer0, "estimated tuning: %0.1f Hz", cumulativetuning);
-		    
-    // cerr << "normalisedtuning: " << normalisedtuning << '\n';
-		    
+		    		    
     /** Tune Log-Frequency Spectrogram
         calculate a tuned log-frequency spectrogram (f2): use the tuning estimated above (kinda f0) to 
         perform linear interpolation on the existing log-frequency spectrogram (kinda f1).
@@ -289,7 +286,6 @@ NNLSChroma::getRemainingFeatures()
     float tempValue = 0;
     float dbThreshold = 0; // relative to the background spectrum
     float thresh = pow(10,dbThreshold/20);
-    // cerr << "tune local ? " << m_tuneLocal << endl;
     int count = 0;
 
 		
