@@ -404,7 +404,7 @@ NNLSBase::initialise(size_t channels, size_t stepSize, size_t blockSize)
     m_kernelNoteIndex.clear();
     int countNonzero = 0;
     for (int iNote = 0; iNote < nNote; ++iNote) { // I don't know if this is wise: manually making a sparse matrix
-        for (int iFFT = 0; iFFT < blockSize/2; ++iFFT) {
+        for (size_t iFFT = 0; iFFT < blockSize/2; ++iFFT) {
             if (tempkernel[iFFT + blockSize/2 * iNote] > 0) {
                 m_kernelValue.push_back(tempkernel[iFFT + blockSize/2 * iNote]);
                 if (tempkernel[iFFT + blockSize/2 * iNote] > 0) {

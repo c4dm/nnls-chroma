@@ -67,6 +67,12 @@ NNLSChroma::getOutputDescriptors() const
     OutputList list;
     
     // Make chroma names for the binNames property
+
+	const char* notenames[24] = {
+	    "A  (bass)","Bb (bass)","B  (bass)","C  (bass)","C# (bass)","D  (bass)","Eb (bass)","E  (bass)","F  (bass)","F# (bass)","G  (bass)","Ab (bass)",
+	    "A","Bb","B","C","C#","D","Eb","E","F","F#","G","Ab"};
+
+	
     vector<string> chromanames;
     vector<string> bothchromanames;
     for (int iNote = 0; iNote < 24; iNote++) {
@@ -284,8 +290,7 @@ NNLSChroma::getRemainingFeatures()
     cerr << endl << "[NNLS Chroma Plugin] Tuning Log-Frequency Spectrogram ... ";
 					
     float tempValue = 0;
-    float dbThreshold = 0; // relative to the background spectrum
-    float thresh = pow(10,dbThreshold/20);
+
     int count = 0;
 
 		

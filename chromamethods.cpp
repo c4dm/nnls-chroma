@@ -274,8 +274,8 @@ static vector<string> staticChordnames() {
     chordnames.push_back("");// =0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,0
     chordnames.push_back("m");//=1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,1,0,0,0,0
     chordnames.push_back("m");//=0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,1,0,0,0,0
-    chordnames.push_back("hdim7");//=0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,1,0,0,1,0,0,0,1,0
-    chordnames.push_back("hdim7");//=1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,1,0,0,0,1,0
+    chordnames.push_back("m7b5");//=0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,1,0,0,1,0,0,0,1,0
+    chordnames.push_back("m7b5");//=1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,1,0,0,0,1,0
     chordnames.push_back("6");//=1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,1,0,0
     chordnames.push_back("7");//=1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,1,0
     chordnames.push_back("maj7");//=1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,1
@@ -349,6 +349,26 @@ vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *
 
     vector<string> ppath = getPluginPath();
     
+	const char* notenames[24] = {
+	    "A  (bass)","Bb (bass)","B  (bass)","C  (bass)","C# (bass)","D  (bass)","Eb (bass)","E  (bass)","F  (bass)","F# (bass)","G  (bass)","Ab (bass)",
+	    "A","Bb","B","C","C#","D","Eb","E","F","F#","G","Ab"};
+
+	const char* bassnames[13][12] ={
+	    {"A","","B","C","C#","D","","E","","F#","G","G#"},
+	    {"Bb","","C","Db","D","Eb","","F","","G","Ab","A"},
+	    {"B","","C#","D","D#","E","","F#","","G#","A","A#"},
+	    {"C","","D","Eb","E","F","","G","","A","Bb","B"},
+	    {"C#","","D#","E","E#","F#","","G#","","A#","B","B#"},
+	    {"D","","E","F","F#","G","","A","","B","C","C#"},
+	    {"Eb","","F","Gb","G","Ab","","Bb","","C","Db","D"},
+	    {"E","","F#","G","G#","A","","B","","C#","D","D#"},
+	    {"F","","G","Ab","A","Bb","","C","","D","Eb","E"},
+	    {"F#","","G#","A","A#","B","","C#","","D#","E","E#"},
+	    {"G","","A","Bb","B","C","","D","","E","F","F#"},
+	    {"Ab","","Bb","Cb","C","Db","","Eb","","F","Gb","G"},
+		{"1","","2","b3","3","4","","5","","6","b7","7"}
+	};
+
     bool hasExternalDictinoary = true;
     
     for (size_t i = 0; i < ppath.size(); ++i) {
