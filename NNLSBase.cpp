@@ -26,7 +26,7 @@
 
 #include <algorithm>
 
-const bool debug_on = false;
+static bool debug_on = false;
 
 NNLSBase::NNLSBase(float inputSampleRate) :
     Plugin(inputSampleRate),
@@ -58,7 +58,7 @@ NNLSBase::NNLSBase(float inputSampleRate) :
     if (debug_on) cerr << "--> NNLSBase" << endl;
     // make the *note* dictionary matrix
     m_dict = new float[nNote * 84];
-    for (unsigned i = 0; i < nNote * 84; ++i) m_dict[i] = 0.0;    
+    for (int i = 0; i < nNote * 84; ++i) m_dict[i] = 0.0;    
 }
 
 
@@ -404,7 +404,7 @@ NNLSBase::initialise(size_t channels, size_t stepSize, size_t blockSize)
     m_kernelNoteIndex.clear();
     int countNonzero = 0;
     for (int iNote = 0; iNote < nNote; ++iNote) { // I don't know if this is wise: manually making a sparse matrix
-        for (size_t iFFT = 0; iFFT < blockSize/2; ++iFFT) {
+        for (int iFFT = 0; iFFT < static_cast<int>(blockSize/2); ++iFFT) {
             if (tempkernel[iFFT + blockSize/2 * iNote] > 0) {
                 m_kernelValue.push_back(tempkernel[iFFT + blockSize/2 * iNote]);
                 if (tempkernel[iFFT + blockSize/2 * iNote] > 0) {
@@ -455,7 +455,7 @@ NNLSBase::baseProcess(const float *const *inputBuffers, Vamp::RealTime timestamp
     float energysum = 0;
     // make magnitude
     float maxmag = -10000;
-    for (size_t iBin = 0; iBin < m_blockSize/2; iBin++) {
+    for (int iBin = 0; iBin < static_cast<int>(m_blockSize/2); iBin++) {
         magnitude[iBin] = sqrt(fbuf[2 * iBin] * fbuf[2 * iBin] + 
                                fbuf[2 * iBin + 1] * fbuf[2 * iBin + 1]);
         if (magnitude[iBin]>m_blockSize*1.0) magnitude[iBin] = m_blockSize; // a valid audio signal (between -1 and 1) should not be limited here.
@@ -467,7 +467,7 @@ NNLSBase::baseProcess(const float *const *inputBuffers, Vamp::RealTime timestamp
 	
     float cumenergy = 0;
     if (m_rollon > 0) {
-        for (size_t iBin = 2; iBin < m_blockSize/2; iBin++) {
+        for (int iBin = 2; iBin < static_cast<int>(m_blockSize/2); iBin++) {
             cumenergy +=  pow(magnitude[iBin],2);
             if (cumenergy < energysum * m_rollon / 100) magnitude[iBin-2] = 0;
             else break;
@@ -476,7 +476,7 @@ NNLSBase::baseProcess(const float *const *inputBuffers, Vamp::RealTime timestamp
 	
     if (maxmag < 2) {
         // cerr << "timestamp " << timestamp << ": very low magnitude, setting magnitude to all zeros" << endl;
-        for (size_t iBin = 0; iBin < m_blockSize/2; iBin++) {
+        for (int iBin = 0; iBin < static_cast<int>(m_blockSize/2); iBin++) {
             magnitude[iBin] = 0;
         }
     }

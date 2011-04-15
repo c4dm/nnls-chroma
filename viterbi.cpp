@@ -4,11 +4,11 @@
 
 std::vector<int> ViterbiPath(std::vector<double> init, std::vector<vector<double> > trans, std::vector<vector<double> > obs, double *delta, vector<double> *scale) {
     
-    unsigned nState = init.size();
-    unsigned nFrame = obs.size();
+    int nState = init.size();
+    int nFrame = obs.size();
     
     // check for consistency
-    if (trans[0].size() != nState || trans.size() != nState || obs[0].size() != nState) {
+    if ((int)trans[0].size() != nState || (int)trans.size() != nState || (int)obs[0].size() != nState) {
         cerr << "ERROR: matrix sizes inconsistent." << endl;
     }
 
@@ -18,24 +18,24 @@ std::vector<int> ViterbiPath(std::vector<double> init, std::vector<vector<double
     double deltasum = 0;
     
     /* initialise first frame */
-    for (unsigned iState = 0; iState < nState; ++iState) {
+    for (int iState = 0; iState < nState; ++iState) {
         delta[iState] = init[iState] * obs[0][iState];
         deltasum += delta[iState];
     }
-    for (unsigned iState = 0; iState < nState; ++iState) delta[iState] /= deltasum; // normalise (scale)
+    for (int iState = 0; iState < nState; ++iState) delta[iState] /= deltasum; // normalise (scale)
     scale->push_back(1.0/deltasum);
     psi.push_back(vector<int>(nState,0));
     
     /* rest of the forward step */
-    for (unsigned iFrame = 1; iFrame < nFrame; ++iFrame) {
+    for (int iFrame = 1; iFrame < nFrame; ++iFrame) {
         deltasum = 0;
         psi.push_back(vector<int>(nState,0));
         /* every state wants to know which previous state suits it best */
-        for (unsigned jState = 0; jState < nState; ++jState) {            
+        for (int jState = 0; jState < nState; ++jState) {            
             int bestState = nState - 1;
             double bestValue = 0;
             if (obs[iFrame][jState] > 0) {
-                for (unsigned iState = 0; iState < nState; ++iState) {
+                for (int iState = 0; iState < nState; ++iState) {
                     double currentValue = delta[(iFrame-1) * nState + iState] * trans[iState][jState];
                     if (currentValue > bestValue) {
                         bestValue = currentValue;
@@ -49,12 +49,12 @@ std::vector<int> ViterbiPath(std::vector<double> init, std::vector<vector<double
             psi[iFrame][jState] = bestState;
         }
         if (deltasum > 0) {
-            for (unsigned iState = 0; iState < nState; ++iState) {            
+            for (int iState = 0; iState < nState; ++iState) {            
                 delta[iFrame * nState + iState] /= deltasum; // normalise (scale)
             }
             scale->push_back(1.0/deltasum);
         } else {
-            for (unsigned iState = 0; iState < nState; ++iState) {            
+            for (int iState = 0; iState < nState; ++iState) {            
                 delta[iFrame * nState + iState] = 1.0/nState;
             }
             scale->push_back(1.0);
@@ -64,7 +64,7 @@ std::vector<int> ViterbiPath(std::vector<double> init, std::vector<vector<double
     
     /* initialise backward step */
     double bestValue = 0;
-    for (unsigned iState = 0; iState < nState; ++iState) {
+    for (int iState = 0; iState < nState; ++iState) {
         double currentValue = delta[(nFrame-1) * nState + iState];
         if (currentValue > bestValue) {
             bestValue = currentValue;            

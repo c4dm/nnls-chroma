@@ -309,7 +309,7 @@ NNLSChroma::getRemainingFeatures()
 		        
         // cerr << intShift << " " << floatShift << endl;
 		        
-        for (unsigned k = 2; k < f1.values.size() - 3; ++k) { // interpolate all inner bins
+        for (int k = 2; k < (int)f1.values.size() - 3; ++k) { // interpolate all inner bins
             tempValue = f1.values[k + intShift] * (1-floatShift) + f1.values[k+intShift+1] * floatShift;
             f2.values.push_back(tempValue);
         }
@@ -401,11 +401,11 @@ NNLSChroma::getRemainingFeatures()
         vector<float> chroma = vector<float>(12, 0);
         vector<float> basschroma = vector<float>(12, 0);
         float currval;
-        unsigned iSemitone = 0;
+        int iSemitone = 0;
 			
         if (some_b_greater_zero) {
             if (m_useNNLS == 0) {
-                for (unsigned iNote = nBPS/2 + 2; iNote < nNote - nBPS/2; iNote += nBPS) {
+                for (int iNote = nBPS/2 + 2; iNote < nNote - nBPS/2; iNote += nBPS) {
                     currval = 0;
                     for (int iBPS = -nBPS/2; iBPS < nBPS/2+1; ++iBPS) {
                         currval += b[iNote + iBPS] * (1-abs(iBPS*1.0/(nBPS/2+1)));						
@@ -422,7 +422,7 @@ NNLSChroma::getRemainingFeatures()
                 vector<int> signifIndex;
                 int index=0;
                 sumb /= 84.0;
-                for (unsigned iNote = nBPS/2 + 2; iNote < nNote - nBPS/2; iNote += nBPS) {
+                for (int iNote = nBPS/2 + 2; iNote < nNote - nBPS/2; iNote += nBPS) {
                     float currval = 0;
                     for (int iBPS = -nBPS/2; iBPS < nBPS/2+1; ++iBPS) {
                         currval += b[iNote + iBPS]; 
@@ -540,17 +540,17 @@ NNLSChroma::getRemainingFeatures()
                 break;
             }
             if (chromanorm[0] > 0) {
-                for (size_t i = 0; i < f4.values.size(); i++) {
+                for (int i = 0; i < (int)f4.values.size(); i++) {
                     f4.values[i] /= chromanorm[0];
                 }
             }
             if (chromanorm[1] > 0) {
-                for (size_t i = 0; i < f5.values.size(); i++) {
+                for (int i = 0; i < (int)f5.values.size(); i++) {
                     f5.values[i] /= chromanorm[1];
                 }
             }
             if (chromanorm[2] > 0) {
-                for (size_t i = 0; i < f6.values.size(); i++) {
+                for (int i = 0; i < (int)f6.values.size(); i++) {
                     f6.values[i] /= chromanorm[2];
                 }
             }

@@ -150,7 +150,7 @@ bool logFreqMatrix(int fs, int blocksize, float *outmatrix) {
         int curr_start = oversampling * iFFT - oversampling;
         int curr_end = oversampling * iFFT + oversampling; // don't know if I should add "+1" here
         // cerr << oversampled_f[curr_start] << " " << fft_f[iFFT] << " " << oversampled_f[curr_end] << endl;
-        for (unsigned iCQ = 0; iCQ < cq_f.size(); ++iCQ) {
+        for (int iCQ = 0; iCQ < (int)cq_f.size(); ++iCQ) {
             outmatrix[iFFT + nFFT * iCQ] = 0;
             if (cq_f[iCQ] * pow(2.0, 0.084) + fft_width > fft_f[iFFT] && cq_f[iCQ] * pow(2.0, -0.084 * 2) - fft_width < fft_f[iFFT]) { // within a generous neighbourhood
                 for (int iOS = curr_start; iOS < curr_end; ++iOS) {
@@ -370,8 +370,8 @@ vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *
 	};
 
     bool hasExternalDictinoary = true;
-    
-    for (size_t i = 0; i < ppath.size(); ++i) {
+	int ppathsize = static_cast<int>(ppath.size());
+    for (int i = 0; i < ppathsize; ++i) {
     	chordDictFilename = ppath[i] + "/" + chordDictBase;
     	cerr << "Looking for chord.dict in " << chordDictFilename << "..." ;
     	fstream fin;
@@ -382,7 +382,7 @@ vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *
     	    cerr << " success." << endl;
     	    break;
         } else {
-            if (i+1 < ppath.size()) cerr << " (not found yet) ..." << endl;
+            if (i+1 < ppathsize) cerr << " (not found yet) ..." << endl;
             else {
                 cerr << "* WARNING: failed to find chord dictionary, using default chord dictionary." << endl;
                 hasExternalDictinoary = false;                
@@ -487,8 +487,8 @@ vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *
 
     // N type
     loadedChordNames.push_back("N");
-    for (unsigned kSemitone = 0; kSemitone < 12; kSemitone++) loadedChordDict.push_back(0.5);
-    for (unsigned kSemitone = 0; kSemitone < 12; kSemitone++) loadedChordDict.push_back(1.0);
+    for (int kSemitone = 0; kSemitone < 12; kSemitone++) loadedChordDict.push_back(0.5);
+    for (int kSemitone = 0; kSemitone < 12; kSemitone++) loadedChordDict.push_back(1.0);
     vector<int> tempchordvector;
     m_chordnotes->push_back(tempchordvector);
     float exponent = 2.0;
