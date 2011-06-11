@@ -220,19 +220,16 @@ Chordino::getOutputDescriptors() const
     d8.hasFixedBinCount = true;
     d8.binCount = 1;
     d8.hasKnownExtents = false;
-    // d8.minValue = 0.0;
-    // d8.maxValue = 0.999;
     d8.isQuantized = false;
     d8.sampleType = OutputDescriptor::FixedSampleRate;
     d8.hasDuration = false;
-    // d8.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
     list.push_back(d8);
     m_outputHarmonicChange = index++;
   
     OutputDescriptor loglikelihood;
     loglikelihood.identifier = "loglikelihood";
-    loglikelihood.name = "chord estimate log-likelihood";
-    loglikelihood.description = ".";
+    loglikelihood.name = "Simple Chord Log-likelihood";
+    loglikelihood.description = "Logarithm of the likelihood value of the simple chord estimate.";
     loglikelihood.unit = "";
     loglikelihood.hasFixedBinCount = true;
     loglikelihood.binCount = 1;
@@ -240,7 +237,6 @@ Chordino::getOutputDescriptors() const
     loglikelihood.isQuantized = false;
     loglikelihood.sampleType = OutputDescriptor::FixedSampleRate;
     loglikelihood.hasDuration = false;
-    // loglikelihood.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
     list.push_back(loglikelihood);
     m_outputLoglikelihood = index++;
   
@@ -494,12 +490,6 @@ Chordino::getRemainingFeatures()
                 }
             }
         }
-
-		if (*max_element(origchroma.begin(), origchroma.end()) == 0) {
-			for (int i = 0; i < (int)chroma.size(); i++) {
-                chroma[i] = 1;
-            }
-		}
 
         chromaList.push_back(currentChromas);
 
