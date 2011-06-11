@@ -495,11 +495,11 @@ Chordino::getRemainingFeatures()
             }
         }
 
-		if (*max_element(origchroma.begin(), origchroma.end()) == 0) {
-			for (int i = 0; i < (int)chroma.size(); i++) {
+        if (*max_element(origchroma.begin(), origchroma.end()) == 0) {
+            for (int i = 0; i < (int)chroma.size(); i++) {
                 chroma[i] = 1;
             }
-		}
+        }
 
         chromaList.push_back(currentChromas);
 
