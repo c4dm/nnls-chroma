@@ -231,8 +231,8 @@ Chordino::getOutputDescriptors() const
   
     OutputDescriptor loglikelihood;
     loglikelihood.identifier = "loglikelihood";
-    loglikelihood.name = "chord estimate log-likelihood";
-    loglikelihood.description = ".";
+    loglikelihood.name = "Log-Likelihood of Chord Estimate";
+    loglikelihood.description = "Logarithm of the likelihood value of the simple chord estimate.";
     loglikelihood.unit = "";
     loglikelihood.hasFixedBinCount = true;
     loglikelihood.binCount = 1;
@@ -240,7 +240,6 @@ Chordino::getOutputDescriptors() const
     loglikelihood.isQuantized = false;
     loglikelihood.sampleType = OutputDescriptor::FixedSampleRate;
     loglikelihood.hasDuration = false;
-    // loglikelihood.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
     list.push_back(loglikelihood);
     m_outputLoglikelihood = index++;
   
