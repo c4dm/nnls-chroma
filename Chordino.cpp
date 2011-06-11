@@ -228,7 +228,7 @@ Chordino::getOutputDescriptors() const
   
     OutputDescriptor loglikelihood;
     loglikelihood.identifier = "loglikelihood";
-    loglikelihood.name = "Simple Chord Log-likelihood";
+    loglikelihood.name = "Log-Likelihood of Chord Estimate";
     loglikelihood.description = "Logarithm of the likelihood value of the simple chord estimate.";
     loglikelihood.unit = "";
     loglikelihood.hasFixedBinCount = true;
