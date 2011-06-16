@@ -212,8 +212,6 @@ plugbase:nnls-chroma a   vamp:Plugin ;
     vamp:output      plugbase:nnls-chroma_output_chroma ;
     vamp:output      plugbase:nnls-chroma_output_basschroma ;
     vamp:output      plugbase:nnls-chroma_output_bothchroma ;
-    vamp:output      plugbase:nnls-chroma_output_consonance ;
-    vamp:output      plugbase:nnls-chroma_output_monophonicness ;
     .
 plugbase:nnls-chroma_param_useNNLS a  vamp:QuantizedParameter ;
     vamp:identifier     "useNNLS" ;
@@ -347,31 +345,6 @@ plugbase:nnls-chroma_output_bothchroma a  vamp:DenseOutput ;
 #   vamp:computes_event_type   <Place event type URI here and uncomment> ;
 #   vamp:computes_feature      <Place feature attribute URI here and uncomment> ;
     vamp:computes_signal_type  af:Chromagram ;
-    .
-plugbase:nnls-chroma_output_consonance a  vamp:DenseOutput ;
-    vamp:identifier       "consonance" ;
-    dc:title              "Consonance estimate." ;
-    dc:description        """A simple consonance value based on the convolution of a consonance profile with the semitone spectrum."""  ;
-    vamp:fixed_bin_count  "true" ;
-    vamp:unit             "" ;
-    vamp:bin_count        1 ;
-#   vamp:computes_event_type   <Place event type URI here and uncomment> ;
-#   vamp:computes_feature      <Place feature attribute URI here and uncomment> ;
-#   vamp:computes_signal_type  <Place signal type URI here and uncomment> ;
-    .
-plugbase:nnls-chroma_output_monophonicness a  vamp:DenseOutput ;
-    vamp:identifier       "monophonicness" ;
-    dc:title              "Monophonicness estimate." ;
-    dc:description        """."""  ;
-    vamp:fixed_bin_count  "true" ;
-    vamp:unit             "" ;
-    a                 vamp:KnownExtentsOutput ;
-    vamp:min_value    0  ;
-    vamp:max_value    1  ;
-    vamp:bin_count        1 ;
-#   vamp:computes_event_type   <Place event type URI here and uncomment> ;
-#   vamp:computes_feature      <Place feature attribute URI here and uncomment> ;
-#   vamp:computes_signal_type  <Place signal type URI here and uncomment> ;
     .
 plugbase:tuning a   vamp:Plugin ;
     dc:title              "Tuning" ;
