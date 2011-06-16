@@ -61,7 +61,7 @@ string
 Chordino::getDescription() const
 {
     if (debug_on) cerr << "--> getDescription" << endl;
-    return "Chordino provides a simple chord transcription based on NNLS Chroma (as in the NNLS Chroma plugin). Chord profiles given by the user in the file chord.dict are used to calculate frame-wise chord similarities. Two simple (non-state-of-the-art!) algorithms are available that smooth these to provide a chord transcription: a simple chord change method, and a standard HMM/Viterbi approach.";
+    return "Chordino provides a simple chord transcription based on NNLS Chroma (as in the NNLS Chroma plugin). Chord profiles given by the user in the file chord.dict are used to calculate frame-wise chord similarities. A simple (non-state-of-the-art!) algorithm smoothes these to provide a chord transcription using a standard HMM/Viterbi approach.";
 }
 
 Chordino::ParameterList
@@ -170,7 +170,7 @@ Chordino::getOutputDescriptors() const
     OutputDescriptor d7;
     d7.identifier = "simplechord";
     d7.name = "Chord Estimate";
-    d7.description = "Estimated chord times and labels. Two simple (non-state-of-the-art!) algorithms are available that smooth these to provide a chord transcription: a simple chord change method, and a standard HMM/Viterbi approach.";
+    d7.description = "Estimated chord times and labels.";
     d7.unit = "";
     d7.hasFixedBinCount = true;
     d7.binCount = 0;

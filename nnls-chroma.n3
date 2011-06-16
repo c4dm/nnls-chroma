@@ -24,7 +24,7 @@
 plugbase:chordino a   vamp:Plugin ;
     dc:title              "Chordino" ;
     vamp:name             "Chordino" ;
-    dc:description        """Chordino provides a simple chord transcription based on NNLS Chroma (as in the NNLS Chroma plugin). Chord profiles given by the user in the file chord.dict are used to calculate frame-wise chord similarities. Two simple (non-state-of-the-art!) algorithms are available that smooth these to provide a chord transcription: a simple chord change method, and a standard HMM/Viterbi approach.""" ;
+    dc:description        """Chordino provides a simple chord transcription based on NNLS Chroma (as in the NNLS Chroma plugin). Chord profiles given by the user in the file chord.dict are used to calculate frame-wise chord similarities. A simple (non-state-of-the-art!) algorithm smoothes these to provide a chord transcription using a standard HMM/Viterbi approach.""" ;
     foaf:maker            [ foaf:name "Matthias Mauch" ] ; # FIXME could give plugin author's URI here
     dc:rights             """GPL""" ;
 #   cc:license            <Place plugin license URI here and uncomment> ; 
@@ -35,7 +35,6 @@ plugbase:chordino a   vamp:Plugin ;
 
 
     vamp:parameter   plugbase:chordino_param_useNNLS ;
-    vamp:parameter   plugbase:chordino_param_useHMM ;
     vamp:parameter   plugbase:chordino_param_rollon ;
     vamp:parameter   plugbase:chordino_param_tuningmode ;
     vamp:parameter   plugbase:chordino_param_whitening ;
@@ -51,17 +50,6 @@ plugbase:chordino a   vamp:Plugin ;
 plugbase:chordino_param_useNNLS a  vamp:QuantizedParameter ;
     vamp:identifier     "useNNLS" ;
     dc:title            "use approximate transcription (NNLS)" ;
-    dc:format           "" ;
-    vamp:min_value       0 ;
-    vamp:max_value       1 ;
-    vamp:unit           "" ;
-    vamp:quantize_step   1  ;
-    vamp:default_value   1 ;
-    vamp:value_names     ();
-    .
-plugbase:chordino_param_useHMM a  vamp:QuantizedParameter ;
-    vamp:identifier     "useHMM" ;
-    dc:title            "HMM (Viterbi decoding)" ;
     dc:format           "" ;
     vamp:min_value       0 ;
     vamp:max_value       1 ;
@@ -136,7 +124,7 @@ plugbase:chordino_param_usehartesyntax a  vamp:QuantizedParameter ;
 plugbase:chordino_output_simplechord a  vamp:SparseOutput ;
     vamp:identifier       "simplechord" ;
     dc:title              "Chord Estimate" ;
-    dc:description        """Estimated chord times and labels. Two simple (non-state-of-the-art!) algorithms are available that smooth these to provide a chord transcription: a simple chord change method, and a standard HMM/Viterbi approach."""  ;
+    dc:description        """Estimated chord times and labels."""  ;
     vamp:fixed_bin_count  "true" ;
     vamp:unit             "" ;
     vamp:bin_count        0 ;
