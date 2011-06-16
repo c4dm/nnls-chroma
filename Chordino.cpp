@@ -82,18 +82,6 @@ Chordino::getParameterDescriptors() const
 	useNNLSParam.quantizeStep = 1.0;
     list.push_back(useNNLSParam);
 
-    ParameterDescriptor useHMMParam;
-    useHMMParam.identifier = "useHMM";
-    useHMMParam.name = "HMM (Viterbi decoding)";
-    useHMMParam.description = "Turns on Viterbi decoding (when off, the simple chord estimator is used).";
-    useHMMParam.unit = "";
-    useHMMParam.minValue = 0.0;
-    useHMMParam.maxValue = 1.0;
-    useHMMParam.defaultValue = 1.0;
-    useHMMParam.isQuantized = true;
-	useHMMParam.quantizeStep = 1.0;
-    list.push_back(useHMMParam);
-
     ParameterDescriptor rollonParam;
     rollonParam.identifier = "rollon";
     rollonParam.name = "bass noise threshold";
@@ -527,245 +515,77 @@ Chordino::getRemainingFeatures()
 		
     vector<Feature> oldnotes;
 
-    // bool m_useHMM = true; // this will go into the chordino header file.
-	if (m_useHMM == 1.0) {
-        cerr << "[Chordino Plugin] HMM Chord Estimation ... ";
-        int oldchord = nChord-1;
-        double selftransprob = 0.99;
-	    
-        // vector<double> init = vector<double>(nChord,1.0/nChord);
-        vector<double> init = vector<double>(nChord,0); init[nChord-1] = 1;
-        
-        double *delta;
-        delta = (double *)malloc(sizeof(double)*nFrame*nChord);                
-        
-        vector<vector<double> > trans;
-        for (int iChord = 0; iChord < nChord; iChord++) {
-            vector<double> temp = vector<double>(nChord,(1-selftransprob)/(nChord-1));            
-            temp[iChord] = selftransprob;
-            trans.push_back(temp);
-        }
-        vector<double> scale;
-        vector<int> chordpath = ViterbiPath(init, trans, chordogram, delta, &scale);
-        
+    cerr << "[Chordino Plugin] HMM Chord Estimation ... ";
+    int oldchord = nChord-1;
+    double selftransprob = 0.99;
+ 
+    // vector<double> init = vector<double>(nChord,1.0/nChord);
+    vector<double> init = vector<double>(nChord,0); init[nChord-1] = 1;
+    
+    double *delta;
+    delta = (double *)malloc(sizeof(double)*nFrame*nChord);                
+    
+    vector<vector<double> > trans;
+    for (int iChord = 0; iChord < nChord; iChord++) {
+        vector<double> temp = vector<double>(nChord,(1-selftransprob)/(nChord-1));            
+        temp[iChord] = selftransprob;
+        trans.push_back(temp);
+    }
+    vector<double> scale;
+    vector<int> chordpath = ViterbiPath(init, trans, chordogram, delta, &scale);
+    
 
-        Feature chord_feature; // chord estimate
-        chord_feature.hasTimestamp = true;
-        chord_feature.timestamp = timestamps[0];
-        chord_feature.label = m_chordnames[chordpath[0]];
-        fsOut[m_outputChords].push_back(chord_feature);
-        
-        chordchange[0] = 0;
-        for (int iFrame = 1; iFrame < (int)chordpath.size(); ++iFrame) {
-            // cerr << chordpath[iFrame] << endl;
-            if (chordpath[iFrame] != oldchord ) {
-                // chord
-                Feature chord_feature; // chord estimate
-                chord_feature.hasTimestamp = true;
-                chord_feature.timestamp = timestamps[iFrame];
-                chord_feature.label = m_chordnames[chordpath[iFrame]];
-                fsOut[m_outputChords].push_back(chord_feature);
-                oldchord = chordpath[iFrame];         
-                // chord notes
-                for (int iNote = 0; iNote < (int)oldnotes.size(); ++iNote) { // finish duration of old chord
-                    oldnotes[iNote].duration = oldnotes[iNote].duration + timestamps[iFrame];
-                    fsOut[m_outputChordnotes].push_back(oldnotes[iNote]);
-                }
-                oldnotes.clear();
-                for (int iNote = 0; iNote < (int)m_chordnotes[chordpath[iFrame]].size(); ++iNote) { // prepare notes of current chord
-                    Feature chordnote_feature;
-                    chordnote_feature.hasTimestamp = true;
-                    chordnote_feature.timestamp = timestamps[iFrame];
-                    chordnote_feature.values.push_back(m_chordnotes[chordpath[iFrame]][iNote]);
-                    chordnote_feature.hasDuration = true;
-                    chordnote_feature.duration = -timestamps[iFrame]; // this will be corrected at the next chord
-                    oldnotes.push_back(chordnote_feature);
-                }
-            }
-            /* calculating simple chord change prob */            
-            for (int iChord = 0; iChord < nChord; iChord++) {
-                chordchange[iFrame-1] += delta[(iFrame-1)*nChord + iChord] * log(delta[(iFrame-1)*nChord + iChord]/delta[iFrame*nChord + iChord]);
-            }
-        }
-        
-        float logscale = 0;
-        for (int iFrame = 0; iFrame < nFrame; ++iFrame) {
-            logscale -= log(scale[iFrame]);
-            Feature loglikelihood;
-            loglikelihood.hasTimestamp = true;
-            loglikelihood.timestamp = timestamps[iFrame];
-            loglikelihood.values.push_back(-log(scale[iFrame]));
-            // cerr << chordchange[iFrame] << endl;
-            fsOut[m_outputLoglikelihood].push_back(loglikelihood);
-        }
-        logscale /= nFrame;
-        // cerr << "loglik" << logscale << endl;
-        
-        
-        // cerr << chordpath[0] << endl;
-	} else {
-        /* Simple chord estimation
-           I just take the local chord estimates ("currentChordSalience") and average them over time, then
-           take the maximum. Very simple, don't do this at home...
-        */
-        cerr << "[Chordino Plugin] Simple Chord Estimation ... ";
-        count = 0; 
-        int halfwindowlength = m_inputSampleRate / m_stepSize;
-        vector<int> chordSequence;
-        for (vector<Vamp::RealTime>::iterator it = timestamps.begin(); it != timestamps.end(); ++it) { // initialise the score chordogram
-            vector<int> temp = vector<int>(nChord,0);
-            scoreChordogram.push_back(temp);
-        }
-        for (vector<Vamp::RealTime>::iterator it = timestamps.begin(); it < timestamps.end()-2*halfwindowlength-1; ++it) {		
-            int startIndex = count + 1;
-            int endIndex = count + 2 * halfwindowlength;
-
-            float chordThreshold = 2.5/nChord;//*(2*halfwindowlength+1);
-
-            vector<int> chordCandidates;
-            for (int iChord = 0; iChord+1 < nChord; iChord++) {
-                // float currsum = 0;
-                // for (int iFrame = startIndex; iFrame < endIndex; ++iFrame) {
-                //  currsum += chordogram[iFrame][iChord];
-                // }
-                //                 if (currsum > chordThreshold) chordCandidates.push_back(iChord);
-                for (int iFrame = startIndex; iFrame < endIndex; ++iFrame) {
-                    if (chordogram[iFrame][iChord] > chordThreshold) {
-                        chordCandidates.push_back(iChord);
-                        break;
-                    }                    
-                }
-            }
-            chordCandidates.push_back(nChord-1);
-            // cerr << chordCandidates.size() << endl;          
-
-            float maxval = 0; // will be the value of the most salient *chord change* in this frame
-            float maxindex = 0; //... and the index thereof
-            int bestchordL = nChord-1; // index of the best "left" chord
-            int bestchordR = nChord-1; // index of the best "right" chord
-
-            for (int iWF = 1; iWF < 2*halfwindowlength; ++iWF) {
-                // now find the max values on both sides of iWF
-                // left side:
-                float maxL = 0;
-                int maxindL = nChord-1;
-                for (int kChord = 0; kChord < (int)chordCandidates.size(); kChord++) {
-                    int iChord = chordCandidates[kChord];
-                    float currsum = 0;
-                    for (int iFrame = 0; iFrame < iWF-1; ++iFrame) {
-                        currsum += chordogram[count+iFrame][iChord];
-                    }
-                    if (iChord == nChord-1) currsum *= 0.8;
-                    if (currsum > maxL) {
-                        maxL = currsum;
-                        maxindL = iChord;
-                    }
-                }				
-                // right side:
-                float maxR = 0;
-                int maxindR = nChord-1;
-                for (int kChord = 0; kChord < (int)chordCandidates.size(); kChord++) {
-                    int iChord = chordCandidates[kChord];
-                    float currsum = 0;
-                    for (int iFrame = iWF-1; iFrame < 2*halfwindowlength; ++iFrame) {
-                        currsum += chordogram[count+iFrame][iChord];
-                    }
-                    if (iChord == nChord-1) currsum *= 0.8;
-                    if (currsum > maxR) {
-                        maxR = currsum;
-                        maxindR = iChord;
-                    }
-                }
-                if (maxL+maxR > maxval) {					
-                    maxval = maxL+maxR;
-                    maxindex = iWF;
-                    bestchordL = maxindL;
-                    bestchordR = maxindR;
-                }
-
-            }
-            // cerr << "maxindex: " << maxindex << ", bestchordR is " << bestchordR << ", of frame " << count << endl;
-            // add a score to every chord-frame-point that was part of a maximum 
-            for (int iFrame = 0; iFrame < maxindex-1; ++iFrame) {
-                scoreChordogram[iFrame+count][bestchordL]++;
-            }
-            for (int iFrame = maxindex-1; iFrame < 2*halfwindowlength; ++iFrame) {
-                scoreChordogram[iFrame+count][bestchordR]++;
-            }
-            if (bestchordL != bestchordR) {
-                chordchange[maxindex+count] += (halfwindowlength - abs(maxindex-halfwindowlength)) * 2.0 / halfwindowlength;
-            }
-            count++;	
-        }
-        // cerr << "*******  agent finished   *******" << endl;
-        count = 0;
-        for (vector<Vamp::RealTime>::iterator it = timestamps.begin(); it != timestamps.end(); ++it) { 
-            float maxval = 0; // will be the value of the most salient chord in this frame
-            float maxindex = 0; //... and the index thereof
-            for (int iChord = 0; iChord < nChord; iChord++) {
-                if (scoreChordogram[count][iChord] > maxval) {
-                    maxval = scoreChordogram[count][iChord];
-                    maxindex = iChord;
-                    // cerr << iChord << endl;
-                }
-            }
-            chordSequence.push_back(maxindex);    
-            count++;
-        }
-
-
-        // mode filter on chordSequence
-        count = 0;
-        string oldChord = "";
-        for (vector<Vamp::RealTime>::iterator it = timestamps.begin(); it != timestamps.end(); ++it) {
+    Feature chord_feature; // chord estimate
+    chord_feature.hasTimestamp = true;
+    chord_feature.timestamp = timestamps[0];
+    chord_feature.label = m_chordnames[chordpath[0]];
+    fsOut[m_outputChords].push_back(chord_feature);
+    
+    chordchange[0] = 0;
+    for (int iFrame = 1; iFrame < (int)chordpath.size(); ++iFrame) {
+        // cerr << chordpath[iFrame] << endl;
+        if (chordpath[iFrame] != oldchord ) {
+            // chord
             Feature chord_feature; // chord estimate
             chord_feature.hasTimestamp = true;
-            chord_feature.timestamp = *it;
-            // Feature currentChord; // chord estimate
-            // currentChord.hasTimestamp = true;
-            // currentChord.timestamp = currentChromas.timestamp;
-
-            vector<int> chordCount = vector<int>(nChord,0);
-            int maxChordCount = 0;
-            int maxChordIndex = nChord-1;
-            string maxChord;
-            int startIndex = max(count - halfwindowlength/2,0);
-            int endIndex = min(int(chordogram.size()), count + halfwindowlength/2);
-            for (int i = startIndex; i < endIndex; i++) {				
-                chordCount[chordSequence[i]]++;
-                if (chordCount[chordSequence[i]] > maxChordCount) {
-                    // cerr << "start index " << startIndex << endl;
-                    maxChordCount++;
-                    maxChordIndex = chordSequence[i];
-                    maxChord = m_chordnames[maxChordIndex];
-                }
+            chord_feature.timestamp = timestamps[iFrame];
+            chord_feature.label = m_chordnames[chordpath[iFrame]];
+            fsOut[m_outputChords].push_back(chord_feature);
+            oldchord = chordpath[iFrame];         
+            // chord notes
+            for (int iNote = 0; iNote < (int)oldnotes.size(); ++iNote) { // finish duration of old chord
+                oldnotes[iNote].duration = oldnotes[iNote].duration + timestamps[iFrame];
+                fsOut[m_outputChordnotes].push_back(oldnotes[iNote]);
             }
-            // chordSequence[count] = maxChordIndex;
-            // cerr << maxChordIndex << endl;
-            // cerr << chordchange[count] << endl;            
-            if (oldChord != maxChord) {
-                oldChord = maxChord;
-                chord_feature.label = m_chordnames[maxChordIndex];
-                fsOut[m_outputChords].push_back(chord_feature);
-                for (int iNote = 0; iNote < (int)oldnotes.size(); ++iNote) { // finish duration of old chord
-                    oldnotes[iNote].duration = oldnotes[iNote].duration + chord_feature.timestamp;
-                    fsOut[m_outputChordnotes].push_back(oldnotes[iNote]);
-                }
-                oldnotes.clear();
-                for (int iNote = 0; iNote < (int)m_chordnotes[maxChordIndex].size(); ++iNote) { // prepare notes of current chord
-                    Feature chordnote_feature;
-                    chordnote_feature.hasTimestamp = true;
-                    chordnote_feature.timestamp = chord_feature.timestamp;
-                    chordnote_feature.values.push_back(m_chordnotes[maxChordIndex][iNote]);
-                    chordnote_feature.hasDuration = true;
-                    chordnote_feature.duration = -chord_feature.timestamp; // this will be corrected at the next chord
-                    oldnotes.push_back(chordnote_feature);
-                }
+            oldnotes.clear();
+            for (int iNote = 0; iNote < (int)m_chordnotes[chordpath[iFrame]].size(); ++iNote) { // prepare notes of current chord
+                Feature chordnote_feature;
+                chordnote_feature.hasTimestamp = true;
+                chordnote_feature.timestamp = timestamps[iFrame];
+                chordnote_feature.values.push_back(m_chordnotes[chordpath[iFrame]][iNote]);
+                chordnote_feature.hasDuration = true;
+                chordnote_feature.duration = -timestamps[iFrame]; // this will be corrected at the next chord
+                oldnotes.push_back(chordnote_feature);
             }
-            count++;
+        }
+        /* calculating simple chord change prob */            
+        for (int iChord = 0; iChord < nChord; iChord++) {
+            chordchange[iFrame-1] += delta[(iFrame-1)*nChord + iChord] * log(delta[(iFrame-1)*nChord + iChord]/delta[iFrame*nChord + iChord]);
         }
     }
-    Feature chord_feature; // last chord estimate
+    
+    float logscale = 0;
+    for (int iFrame = 0; iFrame < nFrame; ++iFrame) {
+        logscale -= log(scale[iFrame]);
+        Feature loglikelihood;
+        loglikelihood.hasTimestamp = true;
+        loglikelihood.timestamp = timestamps[iFrame];
+        loglikelihood.values.push_back(-log(scale[iFrame]));
+        // cerr << chordchange[iFrame] << endl;
+        fsOut[m_outputLoglikelihood].push_back(loglikelihood);
+    }
+    logscale /= nFrame;
+
     chord_feature.hasTimestamp = true;
     chord_feature.timestamp = timestamps[timestamps.size()-1];
     chord_feature.label = "N";

@@ -40,7 +40,6 @@ NNLSBase::NNLSBase(float inputSampleRate) :
     m_whitening(1.0),
     m_preset(0.0),
     m_useNNLS(1.0),
-	m_useHMM(1.0),
     m_localTuning(0.0),
     m_kernelValue(0),
     m_kernelFftIndex(0),
@@ -257,10 +256,6 @@ NNLSBase::getParameter(string identifier) const
         return m_doNormalizeChroma;
     }
     
-    if (identifier == "useHMM") {
-        return m_useHMM;
-    }
-    
 	if (identifier == "usehartesyntax") {
 		return m_harte_syntax;
 	}
@@ -285,10 +280,6 @@ NNLSBase::setParameter(string identifier, float value)
         m_s = value;
     }
 
-    if (identifier == "useHMM") {
-        m_useHMM = value;
-    }
-    
     if (identifier == "boostn") {
         m_boostN = value;
     }

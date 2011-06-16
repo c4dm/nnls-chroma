@@ -65,7 +65,6 @@ protected:
     float m_whitening;
     float m_preset;
 	float m_useNNLS;
-    float m_useHMM;
     vector<float> m_localTuning;
     vector<float> m_kernelValue;
     vector<int> m_kernelFftIndex;
