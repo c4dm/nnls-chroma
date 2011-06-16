@@ -175,40 +175,7 @@ NNLSChroma::getOutputDescriptors() const
     bothchromaOutput.hasDuration = false;
     bothchromaOutput.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
     list.push_back(bothchromaOutput);
-    m_outputBothchroma = index++;
-  
-    OutputDescriptor consonanceOutput;
-    consonanceOutput.identifier = "consonance";
-    consonanceOutput.name = "Consonance estimate.";
-    consonanceOutput.description = "A simple consonance value based on the convolution of a consonance profile with the semitone spectrum.";
-    consonanceOutput.unit = "";
-    consonanceOutput.hasFixedBinCount = true;
-    consonanceOutput.binCount = 1;
-    consonanceOutput.hasKnownExtents = false;
-    consonanceOutput.isQuantized = false;
-    consonanceOutput.sampleType = OutputDescriptor::FixedSampleRate;
-    consonanceOutput.hasDuration = false;
-    consonanceOutput.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
-    list.push_back(consonanceOutput);
-    m_outputConsonance = index++;
-  
-    OutputDescriptor monophonicnessOutput;
-    monophonicnessOutput.identifier = "monophonicness";
-    monophonicnessOutput.name = "Monophonicness estimate.";
-    monophonicnessOutput.description = ".";
-    monophonicnessOutput.unit = "";
-    monophonicnessOutput.hasFixedBinCount = true;
-    monophonicnessOutput.binCount = 1;
-    monophonicnessOutput.hasKnownExtents = true;
-    monophonicnessOutput.minValue = 0;
-    monophonicnessOutput.maxValue = 1;
-    monophonicnessOutput.isQuantized = false;
-    monophonicnessOutput.sampleType = OutputDescriptor::FixedSampleRate;
-    monophonicnessOutput.hasDuration = false;
-    monophonicnessOutput.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
-    list.push_back(monophonicnessOutput);
-    m_outputMonophonicness = index++;
-    
+    m_outputBothchroma = index++;    
     return list;
 }
 
@@ -249,16 +216,6 @@ NNLSChroma::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
 NNLSChroma::FeatureSet
 NNLSChroma::getRemainingFeatures()
 {
-    static const int nConsonance = 24;
-    float consonancepattern[nConsonance] = {0,-1,-1,1,1,1,-1,1,1,1,-1,-1,1,-1,-1,1,1,1,-1,1,1,1,-1,-1};
-    float consonancemean = 0;
-    for (int i = 0; i< nConsonance; ++i) {
-        consonancemean += consonancepattern[i]/nConsonance;
-    }
-    
-    for (int i = 0; i< nConsonance; ++i) {
-        consonancepattern[i] -= consonancemean;
-    }
     
 	if (debug_on) cerr << "--> getRemainingFeatures" << endl;
     FeatureSet fsOut;
@@ -362,8 +319,6 @@ NNLSChroma::getRemainingFeatures()
         Feature f4; // treble chromagram
         Feature f5; // bass chromagram
         Feature f6; // treble and bass chromagram
-	    Feature consonance;
-        Feature monophonicness;
 	    
         f3.hasTimestamp = true;
         f3.timestamp = f2.timestamp;
@@ -377,12 +332,6 @@ NNLSChroma::getRemainingFeatures()
         f6.hasTimestamp = true;
         f6.timestamp = f2.timestamp;
 	        
-        consonance.hasTimestamp = true;
-        consonance.timestamp = f2.timestamp;
-        
-        monophonicness.hasTimestamp = true;
-        monophonicness.timestamp = f2.timestamp;
-	    
         float b[nNote];
 	
         bool some_b_greater_zero = false;
@@ -457,47 +406,7 @@ NNLSChroma::getRemainingFeatures()
             for (int i = 0; i < 84; ++i) f3.values.push_back(0);
         }
 		
-        float notesum = 0;
-        
-        consonance.values.push_back(0);
-        
-        float note_max = 0;
-        float note_runnerup = 0;
-        // float note_sum = 0;
-        for (int iSemitone = 0; iSemitone < 84; iSemitone++) {
-            float currvalue = f3.values[iSemitone] * treblewindow[iSemitone];
-            if (currvalue > note_max) {
-                note_runnerup = note_max;
-                note_max = currvalue;                
-            } else if (currvalue > note_runnerup) {
-                note_runnerup = currvalue;
-            }
-            // note_sum += note[iPitchClass];
-        }
-        // float note_monophonicness = 12*note_max/(12*note_max+note_sum);
-        // cerr << note_max << endl;
-        // cerr << note_runnerup << endl << endl;
-        float note_monophonicness = 0.5;
-        if (note_max > 0) {
-            note_monophonicness = (note_max / (note_max+note_runnerup) - 0.5) * 2;
-        }
-        monophonicness.values.push_back(note_monophonicness);
-        
-        for (int iSemitone = 0; iSemitone < 84; ++iSemitone) {            
-            float tempconsonance = 0;            
-            int sumlength = 1;
-            for (int jSemitone = 1; jSemitone < 24; ++jSemitone) {
-                if (iSemitone+jSemitone > 84-1) break;
-                sumlength++;
-                tempconsonance += f3.values[iSemitone+jSemitone] * (consonancepattern[jSemitone]) * treblewindow[iSemitone+jSemitone];
-            }
-            notesum += f3.values[iSemitone] * f3.values[iSemitone] * treblewindow[iSemitone] * treblewindow[iSemitone] * sumlength;
-            consonance.values[0] += (f3.values[iSemitone] * tempconsonance * treblewindow[iSemitone]) * sumlength;
-        }
-        // cerr << consonance.values[0] << " " << f3.timestamp << " "<< notesum << endl;
-        if (notesum > 0) consonance.values[0] /= notesum;
-        
-		
+
         f4.values = chroma; 
         f5.values = basschroma;
         chroma.insert(chroma.begin(), basschroma.begin(), basschroma.end()); // just stack the both chromas 
@@ -560,8 +469,6 @@ NNLSChroma::getRemainingFeatures()
         fsOut[m_outputChroma].push_back(f4);
         fsOut[m_outputBasschroma].push_back(f5);
         fsOut[m_outputBothchroma].push_back(f6);
-        fsOut[m_outputConsonance].push_back(consonance);
-        fsOut[m_outputMonophonicness].push_back(monophonicness);
         count++;
     }
     cerr << "done." << endl;
