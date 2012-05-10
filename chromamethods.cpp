@@ -143,6 +143,10 @@ bool logFreqMatrix(int fs, int blocksize, float *outmatrix) {
         fft_activation.push_back(cosp);
         // cerr << cosp << endl;
     }
+
+    for (int i = 0; i < nFFT * cq_f.size(); ++i) {
+        outmatrix[i] = 0.f;
+    }
 	
     float cq_activation;
     for (int iFFT = 1; iFFT < nFFT; ++iFFT) {
@@ -151,7 +155,6 @@ bool logFreqMatrix(int fs, int blocksize, float *outmatrix) {
         int curr_end = oversampling * iFFT + oversampling; // don't know if I should add "+1" here
         // cerr << oversampled_f[curr_start] << " " << fft_f[iFFT] << " " << oversampled_f[curr_end] << endl;
         for (int iCQ = 0; iCQ < (int)cq_f.size(); ++iCQ) {
-            outmatrix[iFFT + nFFT * iCQ] = 0;
             if (cq_f[iCQ] * pow(2.0, 0.084) + fft_width > fft_f[iFFT] && cq_f[iCQ] * pow(2.0, -0.084 * 2) - fft_width < fft_f[iFFT]) { // within a generous neighbourhood
                 for (int iOS = curr_start; iOS < curr_end; ++iOS) {
                     cq_activation = pitchCospuls(oversampled_f[iOS],cq_f[iCQ],binspersemitone*12);
