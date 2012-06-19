@@ -353,7 +353,7 @@ vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *
 	    "A  (bass)","Bb (bass)","B  (bass)","C  (bass)","C# (bass)","D  (bass)","Eb (bass)","E  (bass)","F  (bass)","F# (bass)","G  (bass)","Ab (bass)",
 	    "A","Bb","B","C","C#","D","Eb","E","F","F#","G","Ab"};
 
-	const char* bassnames[12][12] ={
+	const char* bassnames[13][12] ={
 	    {"A","","B","C","C#","D","","E","","F#","G","G#"},
 	    {"Bb","","C","Db","D","Eb","","F","","G","Ab","A"},
 	    {"B","","C#","D","D#","E","","F#","","G#","A","A#"},
@@ -365,7 +365,8 @@ vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *
 	    {"F","","G","Ab","A","Bb","","C","","D","Eb","E"},
 	    {"F#","","G#","A","A#","B","","C#","","D#","E","E#"},
 	    {"G","","A","Bb","B","C","","D","","E","F","F#"},
-	    {"Ab","","Bb","Cb","C","Db","","Eb","","F","Gb","G"}
+	    {"Ab","","Bb","Cb","C","Db","","Eb","","F","Gb","G"},
+            {"1","","2","b3","3","4","","5","","6","b7","7"}
 	};
 
     bool hasExternalDictinoary = true;
@@ -445,7 +446,9 @@ vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *
                 if (tempChordDict[24*iType+(kSemitone) % 12] > 0.99) {
 					if (harte_syntax == 0.0) {
 						slashNotation = bassnames[iSemitone][kSemitone];
-					}                    
+					} else {
+					        slashNotation = bassnames[12][kSemitone]; 
+                                        }
                 }
             }
             if (slashNotation=="") tempchordnotes.push_back(MIDI_basenote + (iSemitone+12) % 12);
