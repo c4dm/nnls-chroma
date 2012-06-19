@@ -8,7 +8,7 @@ PLUGIN_CODE_OBJECTS = NNLSBase.o NNLSChroma.o Chordino.o Tuning.o plugins.o nnls
 # project directory
 #
 VAMP_SDK_DIR = ../vamp-plugin-sdk
-BOOST_ROOT = ../boost_1_44_0
+BOOST_ROOT = ../boost_1_48_0
 
 
 ##  Uncomment these for an OS/X native build using command-line tools:
@@ -32,7 +32,7 @@ clean:
 
 nnls.o: nnls.h
 Chordino.o: Chordino.h NNLSBase.h chromamethods.h nnls.h
-chromamethods.o: chromamethods.h nnls.h chorddict.cpp
+chromamethods.o: chromamethods.h nnls.h 
 NNLSBase.o: NNLSBase.h chromamethods.h nnls.h
 NNLSChroma.o: NNLSChroma.h NNLSBase.h chromamethods.h nnls.h
 plugins.o: NNLSChroma.h NNLSBase.h Chordino.h Tuning.h
