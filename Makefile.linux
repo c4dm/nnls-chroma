@@ -26,14 +26,10 @@ clean:
 
 # DO NOT DELETE
 
-nnls.o: nnls.h
-Chordino.o: Chordino.h NNLSBase.h chromamethods.h nnls.h
-chromamethods.o: chromamethods.h nnls.h chorddict.cpp
+Chordino.o: Chordino.h NNLSBase.h chromamethods.h nnls.h viterbi.h
+chromamethods.o: chromamethods.h nnls.h
 NNLSBase.o: NNLSBase.h chromamethods.h nnls.h
 NNLSChroma.o: NNLSChroma.h NNLSBase.h chromamethods.h nnls.h
 plugins.o: NNLSChroma.h NNLSBase.h Chordino.h Tuning.h
 Tuning.o: Tuning.h NNLSBase.h chromamethods.h nnls.h
-Chordino.o: NNLSBase.h
-chromamethods.o: nnls.h
-NNLSChroma.o: NNLSBase.h
-Tuning.o: NNLSBase.h
+viterbi.o: viterbi.h
