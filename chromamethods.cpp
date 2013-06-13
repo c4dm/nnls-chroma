@@ -142,7 +142,7 @@ bool logFreqMatrix(int fs, int blocksize, float *outmatrix) {
         // cerr << cosp << endl;
     }
 
-    for (int i = 0; i < nFFT * cq_f.size(); ++i) {
+    for (int i = 0; i < nFFT * (int)cq_f.size(); ++i) {
         outmatrix[i] = 0.f;
     }
 	
@@ -183,14 +183,14 @@ void dictionaryMatrix(float* dm, float s_param) {
     }
     cq_f.push_back(440 * pow(2.0,0.083333 * (maxMIDI-69)));
 
-    float curr_f;
+//    float curr_f;
     float floatbin;
     float curr_amp;
     // now for every combination calculate the matrix element
     for (int iOut = 0; iOut < 12 * (maxoctave - minoctave); ++iOut) {
         // cerr << iOut << endl;
         for (int iHarm = 1; iHarm <= 20; ++iHarm) {
-            curr_f = 440 * pow(2,(minMIDI-69+iOut)*1.0/12) * iHarm;
+//            curr_f = 440 * pow(2,(minMIDI-69+iOut)*1.0/12) * iHarm;
             // if (curr_f > cq_f[nNote-1])  break;
             floatbin = ((iOut + 1) * binspersemitone + 1) + binspersemitone * 12 * log2(iHarm);
             // cerr << floatbin << endl;
