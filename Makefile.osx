@@ -12,9 +12,9 @@ BOOST_ROOT = ../boost_1_48_0
 
 
 ##  Uncomment these for an OS/X native build using command-line tools:
-ARCHFLAGS = -isysroot /Developer/SDKs/MacOSX10.6.sdk -mmacosx-version-min=10.6 -arch i386
+ARCHFLAGS = -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk -mmacosx-version-min=10.5 -arch i386 -arch x86_64 
 CFLAGS = $(ARCHFLAGS) -Wall -fPIC -g -O3
-CXXFLAGS = $(CFLAGS) -I$(VAMP_SDK_DIR) -I$(BOOST_ROOT)
+CXXFLAGS = $(CFLAGS) -I$(VAMP_SDK_DIR) -I$(BOOST_ROOT) -I.
 PLUGIN_EXT = .dylib
 PLUGIN = $(PLUGIN_LIBRARY_NAME)$(PLUGIN_EXT)
 LDFLAGS = $(ARCHFLAGS) -dynamiclib -install_name $(PLUGIN) $(VAMP_SDK_DIR)/libvamp-sdk.a  -exported_symbols_list vamp-plugin.list -framework Accelerate
