@@ -61,7 +61,7 @@ string
 Chordino::getDescription() const
 {
     if (debug_on) cerr << "--> getDescription" << endl;
-    return "Chordino provides a simple chord transcription based on NNLS Chroma (as in the NNLS Chroma plugin). Chord profiles given by the user in the file chord.dict are used to calculate frame-wise chord similarities. A simple (non-state-of-the-art!) algorithm smoothes these to provide a chord transcription using a standard HMM/Viterbi approach.";
+    return "Chordino provides a simple chord transcription based on NNLS Chroma (as in the NNLS Chroma plugin). Chord profiles given by the user in the file chord.dict are used to calculate frame-wise chord similarities. A simple (non-state-of-the-art!) algorithm smooths these to provide a chord transcription using a standard HMM/Viterbi approach.";
 }
 
 Chordino::ParameterList
@@ -185,7 +185,7 @@ Chordino::getOutputDescriptors() const
     OutputDescriptor chordnotes;
     chordnotes.identifier = "chordnotes";
     chordnotes.name = "Note Representation of Chord Estimate";
-    chordnotes.description = "A simple represenation of the estimated chord with bass note (if applicable) and chord notes.";
+    chordnotes.description = "A simple representation of the estimated chord with bass note (if applicable) and chord notes.";
     chordnotes.unit = "MIDI units";
     chordnotes.hasFixedBinCount = true;
     chordnotes.binCount = 1;
