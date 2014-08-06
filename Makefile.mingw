@@ -18,12 +18,12 @@ CXXFLAGS += $(OPTFLAGS) -I$(VAMP_SDK_DIR) -I../boost_1_44_0 -Wall
 PLUGIN_EXT = .dll
 PLUGIN = $(PLUGIN_LIBRARY_NAME)$(PLUGIN_EXT)
 
-LDFLAGS += -shared -fno-exceptions -static-libgcc -Wl,-soname=$(PLUGIN) $(VAMP_SDK_DIR)/libvamp-sdk.a -Wl,--version-script=vamp-plugin.map 
+LDFLAGS += -shared -static -fno-exceptions -static-libgcc -Wl,-soname=$(PLUGIN) $(VAMP_SDK_DIR)/libvamp-sdk.a -Wl,--retain-symbols-file=vamp-plugin.list
 
 
 $(PLUGIN): $(PLUGIN_CODE_OBJECTS)
 	   $(CXX) -o $@ $^ $(LDFLAGS)
 
 clean:
-	del *.o
+	$(RM) *.o
 
