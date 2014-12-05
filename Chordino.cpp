@@ -185,7 +185,7 @@ Chordino::getOutputDescriptors() const
     OutputDescriptor chordnotes;
     chordnotes.identifier = "chordnotes";
     chordnotes.name = "Note Representation of Chord Estimate";
-    chordnotes.description = "A simple represenation of the estimated chord with bass note (if applicable) and chord notes.";
+    chordnotes.description = "A simple representation of the estimated chord with bass note (if applicable) and chord notes.";
     chordnotes.unit = "MIDI units";
     chordnotes.hasFixedBinCount = true;
     chordnotes.binCount = 1;
@@ -534,7 +534,6 @@ Chordino::getRemainingFeatures()
     vector<double> scale;
     vector<int> chordpath = ViterbiPath(init, trans, chordogram, delta, &scale);
     
-
     Feature chord_feature; // chord estimate
     chord_feature.hasTimestamp = true;
     chord_feature.timestamp = timestamps[0];
@@ -543,7 +542,6 @@ Chordino::getRemainingFeatures()
     
     chordchange[0] = 0;
     for (int iFrame = 1; iFrame < (int)chordpath.size(); ++iFrame) {
-        // cerr << chordpath[iFrame] << endl;
         if (chordpath[iFrame] != oldchord ) {
             // chord
             Feature chord_feature; // chord estimate
@@ -597,7 +595,7 @@ Chordino::getRemainingFeatures()
     }
     
     cerr << "done." << endl;
-    
+
     for (int iFrame = 0; iFrame < nFrame; iFrame++) {
         Feature chordchange_feature;
         chordchange_feature.hasTimestamp = true;
@@ -608,7 +606,6 @@ Chordino::getRemainingFeatures()
     }
     
     // for (int iFrame = 0; iFrame < nFrame; iFrame++) cerr << fsOut[m_outputHarmonicChange][iFrame].values[0] << endl;
-    
     
     return fsOut;     
 }
