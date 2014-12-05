@@ -137,7 +137,7 @@ int main(int argc, char **argv)
 			 fs[chordFeatureNo].end());
 
     for (int i = 0; i < (int)chordFeatures.size(); ++i) {
-	cerr << chordFeatures[i].timestamp.toString() << ": "
+	cout << chordFeatures[i].timestamp.toString() << ": "
 	     << chordFeatures[i].label << endl;
     }
 
