@@ -141,6 +141,9 @@ int main(int argc, char **argv)
 	     << chordFeatures[i].label << endl;
     }
 
+    delete[] filebuf;
+    delete[] mixbuf;
+    
     delete adapter;
 }
 
