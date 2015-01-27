@@ -604,6 +604,8 @@ Chordino::getRemainingFeatures()
         // cerr << chordchange[iFrame] << endl;
         fsOut[m_outputHarmonicChange].push_back(chordchange_feature);
     }
+
+    free(delta);
     
     // for (int iFrame = 0; iFrame < nFrame; iFrame++) cerr << fsOut[m_outputHarmonicChange][iFrame].values[0] << endl;
     
