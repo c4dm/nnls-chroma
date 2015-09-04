@@ -81,7 +81,7 @@ NNLSBase::getPluginVersion() const
     if (debug_on) cerr << "--> getPluginVersion" << endl;
     // Increment this each time you release a version that behaves
     // differently from the previous one
-    return 3;
+    return 4;
 }
 
 string
