@@ -244,7 +244,7 @@ NNLSChroma::getRemainingFeatures()
         calculate a tuned log-frequency spectrogram (f2): use the tuning estimated above (kinda f0) to 
         perform linear interpolation on the existing log-frequency spectrogram (kinda f1).
     **/
-    cerr << endl << "[NNLS Chroma Plugin] Tuning Log-Frequency Spectrogram ... ";
+    if (debug_on) cerr << endl << "[NNLS Chroma Plugin] Tuning Log-Frequency Spectrogram ... ";
 					
     float tempValue = 0;
 
@@ -294,7 +294,7 @@ NNLSChroma::getRemainingFeatures()
         fsOut[m_outputTunedlogfreqspec].push_back(f2);
         count++;
     }
-    cerr << "done." << endl;
+    if (debug_on) cerr << "done." << endl;
 	    
     /** Semitone spectrum and chromagrams
         Semitone-spaced log-frequency spectrum derived from the tuned log-freq spectrum above. the spectrum
@@ -303,9 +303,9 @@ NNLSChroma::getRemainingFeatures()
         bass and treble stacked onto each other).
     **/
     if (m_useNNLS == 0) {
-        cerr << "[NNLS Chroma Plugin] Mapping to semitone spectrum and chroma ... ";
+        if (debug_on) cerr << "[NNLS Chroma Plugin] Mapping to semitone spectrum and chroma ... ";
     } else {
-        cerr << "[NNLS Chroma Plugin] Performing NNLS and mapping to chroma ... ";
+        if (debug_on) cerr << "[NNLS Chroma Plugin] Performing NNLS and mapping to chroma ... ";
     }
 
 	    
@@ -471,7 +471,7 @@ NNLSChroma::getRemainingFeatures()
         fsOut[m_outputBothchroma].push_back(f6);
         count++;
     }
-    cerr << "done." << endl;
+    if (debug_on) cerr << "done." << endl;
 
     return fsOut;     
 

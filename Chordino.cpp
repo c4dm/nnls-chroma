@@ -295,7 +295,7 @@ Chordino::getRemainingFeatures()
         calculate a tuned log-frequency spectrogram (currentTunedSpec): use the tuning estimated above (kinda f0) to 
         perform linear interpolation on the existing log-frequency spectrogram (kinda currentLogSpectrum).
     **/
-    cerr << endl << "[Chordino Plugin] Tuning Log-Frequency Spectrogram ... ";
+    if (debug_on) cerr << endl << "[Chordino Plugin] Tuning Log-Frequency Spectrogram ... ";
 					
     int count = 0;
 		
@@ -346,7 +346,7 @@ Chordino::getRemainingFeatures()
         tunedSpec.push_back(currentTunedSpec);
         count++;
     }
-    cerr << "done." << endl;
+    if (debug_on) cerr << "done." << endl;
 	    
     /** Semitone spectrum and chromagrams
         Semitone-spaced log-frequency spectrum derived from the tuned log-freq spectrum above. the spectrum
@@ -355,9 +355,9 @@ Chordino::getRemainingFeatures()
         bass and treble stacked onto each other).
     **/
     if (m_useNNLS == 0) {
-        cerr << "[Chordino Plugin] Mapping to semitone spectrum and chroma ... ";
+        if (debug_on) cerr << "[Chordino Plugin] Mapping to semitone spectrum and chroma ... ";
     } else {
-        cerr << "[Chordino Plugin] Performing NNLS and mapping to chroma ... ";
+        if (debug_on) cerr << "[Chordino Plugin] Performing NNLS and mapping to chroma ... ";
     }
 
 	    
@@ -511,11 +511,11 @@ Chordino::getRemainingFeatures()
 	        
         count++;
     }
-    cerr << "done." << endl;
+    if (debug_on) cerr << "done." << endl;
 		
     vector<Feature> oldnotes;
 
-    cerr << "[Chordino Plugin] HMM Chord Estimation ... ";
+    if (debug_on) cerr << "[Chordino Plugin] HMM Chord Estimation ... ";
     int oldchord = nChord-1;
     double selftransprob = 0.99;
  
@@ -594,7 +594,7 @@ Chordino::getRemainingFeatures()
         fsOut[m_outputChordnotes].push_back(oldnotes[iNote]);
     }
     
-    cerr << "done." << endl;
+    if (debug_on) cerr << "done." << endl;
 
     for (int iFrame = 0; iFrame < nFrame; iFrame++) {
         Feature chordchange_feature;

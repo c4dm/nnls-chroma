@@ -373,18 +373,19 @@ vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *
 	int ppathsize = static_cast<int>(ppath.size());
     for (int i = 0; i < ppathsize; ++i) {
     	chordDictFilename = ppath[i] + "/" + chordDictBase;
-    	cerr << "Looking for chord.dict in " << chordDictFilename << "..." ;
+//    	cerr << "Looking for chord.dict in " << chordDictFilename << "..." ;
     	fstream fin;
         fin.open(chordDictFilename.c_str(),ios::in);
         if( fin.is_open() )
         {
             fin.close();
-    	    cerr << " success." << endl;
+//    	    cerr << " success." << endl;
     	    break;
         } else {
-            if (i+1 < ppathsize) cerr << " (not found yet) ..." << endl;
-            else {
-                cerr << "* WARNING: failed to find chord dictionary, using default chord dictionary." << endl;
+            if (i+1 < ppathsize) {
+//                cerr << " (not found yet) ..." << endl;
+            } else {
+//                cerr << "* WARNING: failed to find chord dictionary, using default chord dictionary." << endl;
                 hasExternalDictinoary = false;                
             } 
         }
