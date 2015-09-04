@@ -84,6 +84,9 @@ NNLSChroma::getOutputDescriptors() const
     
     int index = 0;
 
+    float featureRate =
+        (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
+
     OutputDescriptor logfreqspecOutput;
     logfreqspecOutput.identifier = "logfreqspec";
     logfreqspecOutput.name = "Log-Frequency Spectrum";
@@ -95,7 +98,7 @@ NNLSChroma::getOutputDescriptors() const
     logfreqspecOutput.isQuantized = false;
     logfreqspecOutput.sampleType = OutputDescriptor::FixedSampleRate;
     logfreqspecOutput.hasDuration = false;
-    logfreqspecOutput.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
+    logfreqspecOutput.sampleRate = featureRate;
     list.push_back(logfreqspecOutput);
     m_outputLogfreqspec = index++;
 
@@ -110,7 +113,7 @@ NNLSChroma::getOutputDescriptors() const
     tunedlogfreqspecOutput.isQuantized = false;
     tunedlogfreqspecOutput.sampleType = OutputDescriptor::FixedSampleRate;
     tunedlogfreqspecOutput.hasDuration = false;
-    tunedlogfreqspecOutput.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
+    tunedlogfreqspecOutput.sampleRate = featureRate;
     list.push_back(tunedlogfreqspecOutput);
     m_outputTunedlogfreqspec = index++;
     
@@ -125,7 +128,7 @@ NNLSChroma::getOutputDescriptors() const
     semitonespectrumOutput.isQuantized = false;
     semitonespectrumOutput.sampleType = OutputDescriptor::FixedSampleRate;
     semitonespectrumOutput.hasDuration = false;
-    semitonespectrumOutput.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
+    semitonespectrumOutput.sampleRate = featureRate;
     list.push_back(semitonespectrumOutput);
     m_outputSemitonespectrum = index++;
     
@@ -141,7 +144,7 @@ NNLSChroma::getOutputDescriptors() const
     chromaOutput.isQuantized = false;
     chromaOutput.sampleType = OutputDescriptor::FixedSampleRate;
     chromaOutput.hasDuration = false;
-    chromaOutput.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
+    chromaOutput.sampleRate = featureRate;
     list.push_back(chromaOutput);
     m_outputChroma = index++;
     
@@ -157,7 +160,7 @@ NNLSChroma::getOutputDescriptors() const
     basschromaOutput.isQuantized = false;
     basschromaOutput.sampleType = OutputDescriptor::FixedSampleRate;
     basschromaOutput.hasDuration = false;
-    basschromaOutput.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
+    basschromaOutput.sampleRate = featureRate;
     list.push_back(basschromaOutput);
     m_outputBasschroma = index++;
     
@@ -173,7 +176,7 @@ NNLSChroma::getOutputDescriptors() const
     bothchromaOutput.isQuantized = false;
     bothchromaOutput.sampleType = OutputDescriptor::FixedSampleRate;
     bothchromaOutput.hasDuration = false;
-    bothchromaOutput.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
+    bothchromaOutput.sampleRate = featureRate;
     list.push_back(bothchromaOutput);
     m_outputBothchroma = index++;    
     return list;

@@ -121,7 +121,7 @@ Chordino::getParameterDescriptors() const
     list.push_back(whiteningParam);
 
     ParameterDescriptor spectralShapeParam;
-    spectralShapeParam.identifier = "spectralshape";
+    spectralShapeParam.identifier = "s";
     spectralShapeParam.name = "spectral shape";
     spectralShapeParam.description = "Determines how individual notes in the note dictionary look: higher values mean more dominant higher harmonics.";
     spectralShapeParam.unit = "";
@@ -167,6 +167,9 @@ Chordino::getOutputDescriptors() const
     
     int index = 0;
 
+    float featureRate =
+        (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
+    
     OutputDescriptor d7;
     d7.identifier = "simplechord";
     d7.name = "Chord Estimate";
@@ -178,7 +181,7 @@ Chordino::getOutputDescriptors() const
     d7.isQuantized = false;
     d7.sampleType = OutputDescriptor::VariableSampleRate;
     d7.hasDuration = false;
-    d7.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
+    d7.sampleRate = featureRate;
     list.push_back(d7);
     m_outputChords = index++;
     
@@ -196,7 +199,7 @@ Chordino::getOutputDescriptors() const
     chordnotes.quantizeStep = 1;
     chordnotes.sampleType = OutputDescriptor::VariableSampleRate;
     chordnotes.hasDuration = true;
-    chordnotes.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
+    chordnotes.sampleRate = featureRate;
     list.push_back(chordnotes);
     m_outputChordnotes = index++;
     
@@ -210,6 +213,7 @@ Chordino::getOutputDescriptors() const
     d8.hasKnownExtents = false;
     d8.isQuantized = false;
     d8.sampleType = OutputDescriptor::FixedSampleRate;
+    d8.sampleRate = featureRate;
     d8.hasDuration = false;
     list.push_back(d8);
     m_outputHarmonicChange = index++;
@@ -224,6 +228,7 @@ Chordino::getOutputDescriptors() const
     loglikelihood.hasKnownExtents = false;
     loglikelihood.isQuantized = false;
     loglikelihood.sampleType = OutputDescriptor::FixedSampleRate;
+    loglikelihood.sampleRate = featureRate;
     loglikelihood.hasDuration = false;
     list.push_back(loglikelihood);
     m_outputLoglikelihood = index++;
@@ -368,7 +373,7 @@ Chordino::getRemainingFeatures()
 
     FeatureList chromaList;
     
-    
+    bool clipwarned = false;
 
     for (FeatureList::iterator it = tunedSpec.begin(); it != tunedSpec.end(); ++it) {
         Feature currentTunedSpec = *it; // logfreq spectrum
@@ -449,7 +454,7 @@ Chordino::getRemainingFeatures()
         vector<float> origchroma = chroma;
         chroma.insert(chroma.begin(), basschroma.begin(), basschroma.end()); // just stack the both chromas 
         currentChromas.values = chroma;
- 
+
         if (m_doNormalizeChroma > 0) {
             vector<float> chromanorm = vector<float>(3,0);			
             switch (int(m_doNormalizeChroma)) {
@@ -489,15 +494,22 @@ Chordino::getRemainingFeatures()
         for (int iChord = 0; iChord < nChord; iChord++) {
             tempchordvalue = 0;
             for (int iBin = 0; iBin < 12; iBin++) {
-                tempchordvalue += m_chorddict[24 * iChord + iBin] * chroma[iBin];                
+                tempchordvalue += m_chorddict[24 * iChord + iBin] * chroma[iBin];
             }
             for (int iBin = 12; iBin < 24; iBin++) {
                 tempchordvalue += m_chorddict[24 * iChord + iBin] * chroma[iBin];
             }
             if (iChord == nChord-1) tempchordvalue *= .7;
             if (tempchordvalue < 0) tempchordvalue = 0.0;
-            tempchordvalue = pow(1.3,tempchordvalue);
-            sumchordvalue+=tempchordvalue;
+            if (tempchordvalue > 20.0) {
+                if (!clipwarned) {
+                    cerr << "WARNING: interim chroma contains extreme chord value " << tempchordvalue << ", clipping this and any others that appear" << endl;
+                    clipwarned = true;
+                }
+                tempchordvalue = 10.0;
+            }
+            tempchordvalue = pow(1.3, tempchordvalue);
+            sumchordvalue += tempchordvalue;
             currentChordSalience.push_back(tempchordvalue);
         }
         if (sumchordvalue > 0) {
@@ -568,7 +580,11 @@ Chordino::getRemainingFeatures()
         }
         /* calculating simple chord change prob */            
         for (int iChord = 0; iChord < nChord; iChord++) {
-            chordchange[iFrame-1] += delta[(iFrame-1)*nChord + iChord] * log(delta[(iFrame-1)*nChord + iChord]/delta[iFrame*nChord + iChord]);
+            double num = delta[(iFrame-1) * nChord + iChord];
+            double denom = delta[iFrame * nChord + iChord];
+            double eps = 1e-7;
+            if (denom < eps) denom = eps;
+            chordchange[iFrame-1] += num * log(num / denom + eps);
         }
     }
     
@@ -601,7 +617,7 @@ Chordino::getRemainingFeatures()
         chordchange_feature.hasTimestamp = true;
         chordchange_feature.timestamp = timestamps[iFrame];
         chordchange_feature.values.push_back(chordchange[iFrame]);
-        // cerr << chordchange[iFrame] << endl;
+//        cerr << "putting value " << chordchange[iFrame] << " at time " << chordchange_feature.timestamp << endl;
         fsOut[m_outputHarmonicChange].push_back(chordchange_feature);
     }
 

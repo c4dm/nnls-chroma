@@ -267,6 +267,8 @@ NNLSBase::getParameter(string identifier) const
 void
 NNLSBase::setParameter(string identifier, float value) 
 {
+//    cerr << "setParameter (" << identifier << ") -> " << value << endl;
+    
     if (debug_on) cerr << "--> setParameter" << endl;
     if (identifier == "useNNLS") {
         m_useNNLS = (int) value;

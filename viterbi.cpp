@@ -20,11 +20,14 @@ std::vector<int> ViterbiPath(std::vector<double> init, std::vector<vector<double
     /* initialise first frame */
     for (int iState = 0; iState < nState; ++iState) {
         delta[iState] = init[iState] * obs[0][iState];
+//	cerr << "init[" << iState << "] = " << init[iState] << ", obs[0][" << iState << "] = " << obs[0][iState] << endl;
         deltasum += delta[iState];
     }
     for (int iState = 0; iState < nState; ++iState) delta[iState] /= deltasum; // normalise (scale)
     scale->push_back(1.0/deltasum);
     psi.push_back(vector<int>(nState,0));
+
+//    cerr << "nState = " << nState << ", deltasum = " << deltasum << endl;
     
     /* rest of the forward step */
     for (int iFrame = 1; iFrame < nFrame; ++iFrame) {

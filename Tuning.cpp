@@ -126,8 +126,8 @@ Tuning::getOutputDescriptors() const
     d10.maxValue = 452.89;
     d10.isQuantized = false;
     d10.sampleType = OutputDescriptor::FixedSampleRate;
+    d10.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
     d10.hasDuration = false;
-    // d10.sampleRate = (m_stepSize == 0) ? m_inputSampleRate/2048 : m_inputSampleRate/m_stepSize;
     list.push_back(d10);
     m_outputLocalTuning = index++;
   
