@@ -501,12 +501,12 @@ Chordino::getRemainingFeatures()
             }
             if (iChord == nChord-1) tempchordvalue *= .7;
             if (tempchordvalue < 0) tempchordvalue = 0.0;
-            if (tempchordvalue > 20.0) {
+            if (tempchordvalue > 40.0) {
                 if (!clipwarned) {
                     cerr << "WARNING: interim chroma contains extreme chord value " << tempchordvalue << ", clipping this and any others that appear" << endl;
                     clipwarned = true;
                 }
-                tempchordvalue = 10.0;
+                tempchordvalue = 40.0;
             }
             tempchordvalue = pow(1.3, tempchordvalue);
             sumchordvalue += tempchordvalue;
