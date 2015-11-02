@@ -111,7 +111,7 @@ plugbase:chordino_param_s a  vamp:Parameter ;
     vamp:unit           ""  ;
     vamp:default_value   0.7 ;
     vamp:value_names     ();
-
+    .
 plugbase:chordino_param_boostn a  vamp:Parameter ;
     vamp:identifier     "boostn" ;
     dc:title            "Boost likelihood of the N (no chord) label." ;
@@ -134,7 +134,7 @@ plugbase:chordino_output_simplechord a  vamp:SparseOutput ;
     vamp:sample_type      vamp:VariableSampleRate ;
     vamp:sample_rate      21.5332 ;
     vamp:computes_event_type   af:ChordSegment ;
-
+    .
 plugbase:chordino_output_chordnotes a vamp:SparseOutput ;
     vamp:identifier       "chordnotes" ;
     dc:title              "Note Representation of Chord Estimate" ;

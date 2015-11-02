@@ -438,15 +438,21 @@ NNLSChroma::getRemainingFeatures()
         float notesum = 0;
         
         consonance.values.push_back(0);
-        for (int iSemitone = 0; iSemitone < 84-24; ++iSemitone) {            
-            notesum += f3.values[iSemitone] * f3.values[iSemitone] * treblewindow[iSemitone] * treblewindow[iSemitone];
-            float tempconsonance = 0;
+        
+        for (int iSemitone = 0; iSemitone < 84; ++iSemitone) {            
+            float tempconsonance = 0;            
+            int sumlength = 1;
             for (int jSemitone = 1; jSemitone < 24; ++jSemitone) {
+                if (iSemitone+jSemitone > 84-1) break;
+                sumlength++;
                 tempconsonance += f3.values[iSemitone+jSemitone] * (consonancepattern[jSemitone]) * treblewindow[iSemitone+jSemitone];
             }
-            consonance.values[0] += (f3.values[iSemitone] * tempconsonance * treblewindow[iSemitone]);
+            notesum += f3.values[iSemitone] * f3.values[iSemitone] * treblewindow[iSemitone] * treblewindow[iSemitone] * sumlength;
+            consonance.values[0] += (f3.values[iSemitone] * tempconsonance * treblewindow[iSemitone]) * sumlength;
         }
+        // cerr << consonance.values[0] << " " << f3.timestamp << " "<< notesum << endl;
         if (notesum > 0) consonance.values[0] /= notesum;
+        
 		
         f4.values = chroma; 
         f5.values = basschroma;
