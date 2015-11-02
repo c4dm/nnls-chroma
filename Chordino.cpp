@@ -61,7 +61,7 @@ string
 Chordino::getDescription() const
 {
     if (debug_on) cerr << "--> getDescription" << endl;
-    return "Chordino provides a simple chord transcription based on NNLS Chroma (as in the NNLS Chroma plugin). Chord profiles given by the user in the file chord.dict are used to calculate frame-wise chord similarities. A simple (non-state-of-the-art!) algorithm smoothes these to provide a chord transcription using a standard HMM/Viterbi approach.";
+    return "Chordino provides a simple chord transcription based on NNLS Chroma (as in the NNLS Chroma plugin). Chord profiles given by the user in the file chord.dict are used to calculate frame-wise chord similarities. A simple (non-state-of-the-art!) algorithm smooths these to provide a chord transcription using a standard HMM/Viterbi approach.";
 }
 
 Chordino::ParameterList

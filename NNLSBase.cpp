@@ -467,7 +467,7 @@ NNLSBase::baseProcess(const float *const *inputBuffers, Vamp::RealTime timestamp
         }
     }
 	
-    if (maxmag < 2) {
+    if (maxmag < m_blockSize * 2.0 / 16384.0) { // this is not quite right, I think
         // cerr << "timestamp " << timestamp << ": very low magnitude, setting magnitude to all zeros" << endl;
         for (int iBin = 0; iBin < static_cast<int>(m_blockSize/2); iBin++) {
             magnitude[iBin] = 0;
