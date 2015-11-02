@@ -212,7 +212,7 @@ int nnls(float* a,  int mda,  int m,  int n, float* b,
   float temp, wmax;
   int i__, j, l;
   float t, alpha, asave;
-  int itmax, izmax, nsetp;
+  int itmax, izmax = 0, nsetp;
   float unorm, ztest, cc;
   float dummy[2];
   int ii, jj, ip;
