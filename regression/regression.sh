@@ -4,9 +4,9 @@ set -eu
 
 mydir=$(dirname "$0")
 
-source_url=https://code.soundsoftware.ac.uk/attachments/download/1696/Zweieck-Duell.mp3
+source_url=https://code.soundsoftware.ac.uk/attachments/download/1698/Zweieck-Duell.ogg
 
-testfile="$mydir/input.mp3"
+testfile="$mydir/input.ogg"
 outfile="$mydir/output.csv"
 expfile="$mydir/expected.csv"
 
