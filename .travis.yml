@@ -22,11 +22,8 @@ before_install:
   - ( cd ../ ; hg clone https://code.soundsoftware.ac.uk/hg/vamp-plugin-tester )
   - ( cd ../vamp-plugin-tester ; ./repoint install && make )
   - wget https://code.soundsoftware.ac.uk/attachments/download/2250/sonic-annotator_1.5_amd64.deb
-  - sudo apt install -y sonic-annotator_1.5_amd64.deb
+  - sudo apt install -y ./sonic-annotator_1.5_amd64.deb
 
 script:
   - make -f Makefile.linux test
   - VAMP_PATH=. ../vamp-plugin-tester/vamp-plugin-tester -a
-
-
-
