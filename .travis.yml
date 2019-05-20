@@ -15,6 +15,7 @@ addons:
     packages:
       - wget
       - libsndfile-dev
+      - libboost-all-dev
       - mlton
       
 before_install:
