@@ -40,7 +40,7 @@ else
     echo
     echo "*** FAIL: Result does not match expected output. Diff follows:"
     echo
-    diff "$outfile" "$expfile"
+    sdiff -w 60 "$outfile" "$expfile"
     exit 1
 fi
 
