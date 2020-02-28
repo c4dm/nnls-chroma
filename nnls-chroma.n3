@@ -45,7 +45,7 @@ plugbase:chordino a   vamp:Plugin ;
 #   cc:license            <Place plugin license URI here and uncomment> ; 
     vamp:identifier       "chordino" ;
     vamp:vamp_API_version vamp:api_version_2 ;
-    owl:versionInfo       "3" ;
+    owl:versionInfo       "5" ;
     vamp:input_domain     vamp:FrequencyDomain ;
 
 
@@ -157,7 +157,7 @@ plugbase:nnls-chroma a   vamp:Plugin ;
 #   cc:license            <Place plugin license URI here and uncomment> ; 
     vamp:identifier       "nnls-chroma" ;
     vamp:vamp_API_version vamp:api_version_2 ;
-    owl:versionInfo       "3" ;
+    owl:versionInfo       "5" ;
     vamp:input_domain     vamp:FrequencyDomain ;
 
 
@@ -305,7 +305,7 @@ plugbase:tuning a   vamp:Plugin ;
 #   cc:license            <Place plugin license URI here and uncomment> ; 
     vamp:identifier       "tuning" ;
     vamp:vamp_API_version vamp:api_version_2 ;
-    owl:versionInfo       "3" ;
+    owl:versionInfo       "5" ;
     vamp:input_domain     vamp:FrequencyDomain ;
 
 
