@@ -19,7 +19,7 @@
     foaf:logo <http://vamp-plugins.org/rdf/plugins/makers/qm.png> ;
     foaf:page <http://c4dm.eecs.qmul.ac.uk/> .
 
-:nnls-chroma a  vamp:PluginLibrary ;
+plugbase:library a  vamp:PluginLibrary ;
     vamp:identifier "nnls-chroma"  ;
     dc:title "Chordino and NNLS Chroma" ;
     dc:description "Harmony and chord extraction plugins by Matthias Mauch at C4DM" ;
