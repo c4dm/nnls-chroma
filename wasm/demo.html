@@ -1,0 +1,50 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Chordino in the browser</title>
+<style>
+  body { font: 15px/1.5 system-ui, sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; color: #222; }
+  h1 { font-size: 1.4rem; }
+  #out { white-space: pre; font-family: ui-monospace, monospace; font-size: 13px; background: #f4f4f4; padding: 1rem; border-radius: 6px; min-height: 4rem; overflow-x: auto; }
+  label { display: inline-block; margin-right: 1rem; }
+</style>
+<h1>Chordino in the browser</h1>
+<p>The Chordino chord estimator (Matthias Mauch, Queen Mary University of London) compiled to WebAssembly. Pick an audio file; it is decoded and analysed locally, nothing is uploaded. Source, plugin and command-line builds: <a href="https://github.com/keithadler/nnls-chroma">github.com/keithadler/nnls-chroma</a>.</p>
+<p>
+  <input type="file" id="file" accept="audio/*">
+  <label><input type="checkbox" id="harte"> Harte syntax</label>
+  <label><input type="checkbox" id="local"> local tuning</label>
+</p>
+<div id="out">Waiting for a file…</div>
+<script type="module">
+  import { loadChordino } from './chordino-wasm.js';
+  const out = document.getElementById('out');
+  const chordinoPromise = loadChordino();
+  document.getElementById('file').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    out.textContent = 'Decoding ' + file.name + '…';
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const buf = await ctx.decodeAudioData(await file.arrayBuffer());
+      const n = buf.length, ch = buf.numberOfChannels;
+      const mono = new Float32Array(n);
+      for (let c = 0; c < ch; c++) {
+        const d = buf.getChannelData(c);
+        for (let i = 0; i < n; i++) mono[i] += d[i] / ch;
+      }
+      out.textContent = 'Analysing ' + (n / buf.sampleRate).toFixed(1) + ' s at ' + buf.sampleRate + ' Hz…';
+      const chordino = await chordinoPromise;
+      const t0 = performance.now();
+      const result = chordino.analyze(mono, buf.sampleRate, {
+        harte: document.getElementById('harte').checked,
+        localTuning: document.getElementById('local').checked,
+      });
+      const ms = Math.round(performance.now() - t0);
+      if (result.error) { out.textContent = 'Error: ' + result.error; return; }
+      out.textContent = result.chords.map(c => c.time.toFixed(2).padStart(8) + '  ' + c.label).join('\n')
+        + '\n\n(' + result.chords.length + ' chord events in ' + ms + ' ms)';
+    } catch (err) {
+      out.textContent = 'Error: ' + err;
+    }
+  });
+</script>

@@ -200,7 +200,7 @@ Tuning::getRemainingFeatures()
 		    
     char buffer0 [50];
 		
-    sprintf(buffer0, "%0.1f Hz", cumulativetuning);
+    snprintf(buffer0, sizeof(buffer0), "%0.1f Hz", cumulativetuning);
 		    
     // push tuning to FeatureSet fsOut
     Feature f0; // tuning

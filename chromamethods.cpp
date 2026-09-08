@@ -26,13 +26,9 @@
 #include <cassert>
 #include <cstdlib>
 #include <cstdio>
-#include <boost/tokenizer.hpp>
-#include <boost/iostreams/device/file.hpp>
-#include <boost/iostreams/stream.hpp>
-#include <boost/lexical_cast.hpp>
+#include <cstdlib>
 
 using namespace std;
-using namespace boost;
 
 
 /** Special Convolution
@@ -339,10 +335,27 @@ static vector<float> staticChordvalues() {
     return chordvalues;
 }
 
+// Split a chord.dict line on ",", "=", spaces and tabs, keeping "=" as a
+// token of its own so "maj7 = 1,0,..." and "= 1,0,..." both parse.
+static vector<string> splitDictLine(const string &line)
+{
+    vector<string> tokens;
+    string current;
+    for (size_t i = 0; i < line.size(); ++i) {
+        char c = line[i];
+        if (c == ',' || c == ';' || c == ' ' || c == '\t' || c == '\r' || c == '=') {
+            if (!current.empty()) { tokens.push_back(current); current.clear(); }
+            if (c == '=') tokens.push_back("=");
+        } else {
+            current += c;
+        }
+    }
+    if (!current.empty()) tokens.push_back(current);
+    return tokens;
+}
+
 vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *m_chordnotes, float boostN, float harte_syntax) {    
     
-    typedef tokenizer<char_separator<char> > Tok;
-    char_separator<char> sep(",; ","=");
 
     string chordDictBase("chord.dict");
     string chordDictFilename;
@@ -370,6 +383,11 @@ vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *
 	};
 
     bool hasExternalDictinoary = true;
+#ifdef __EMSCRIPTEN__
+    // No file system in the WebAssembly build; use the built-in dictionary.
+    ppath.clear();
+    hasExternalDictinoary = false;
+#endif
 	int ppathsize = static_cast<int>(ppath.size());
     for (int i = 0; i < ppathsize; ++i) {
     	chordDictFilename = ppath[i] + "/" + chordDictBase;
@@ -391,7 +409,8 @@ vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *
         }
     }
 
-    iostreams::stream<iostreams::file_source> chordDictFile(chordDictFilename);
+    std::ifstream chordDictFile;
+    if (hasExternalDictinoary) chordDictFile.open(chordDictFilename.c_str());
     string line;
     // int iElement = 0;
     int nChord = 0;
@@ -407,6 +426,8 @@ vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *
     vector<string> loadedChordNames;
     vector<float> loadedChordDict;
     if (hasExternalDictinoary && chordDictFile.is_open()) {
+        vector<float> builtinChordDict = tempChordDict;
+        vector<string> builtinChordNames = tempChordNames;
         tempChordDict.clear();
         tempChordNames.clear();
         while (std::getline(chordDictFile, line)) { // loop over lines in chord.dict file	            	
@@ -415,25 +436,34 @@ vector<string> chordDictionary(vector<float> *mchorddict, vector<vector<int> > *
             vector<float> tempPCVector;			
             // cerr << line << endl;
             if (!line.empty() && line.substr(0,1) != "#") {
-                Tok tok(line, sep);			
-                for(Tok::iterator tok_iter = tok.begin(); tok_iter != tok.end(); ++tok_iter) { // loop over line elements
-                    string tempString = *tok_iter;
+                vector<string> tokens = splitDictLine(line);
+                for (size_t iTok = 0; iTok < tokens.size(); ++iTok) { // loop over line elements
+                    const string &tempString = tokens[iTok];
                     // cerr << tempString << endl;
-                    if (tok_iter == tok.begin()) { // either the chord name or a colon                        
+                    if (iTok == 0) { // either the chord name or a colon                        
                         if (tempString == "=") {
                             chordType = "";
                         } else {
                             chordType = tempString;
-                            tok_iter++;                            
+                            ++iTok; // skip the "=" that follows the name
                         }
                     } else {
-                        tempChordDict.push_back(lexical_cast<float>(*tok_iter));
+                        tempChordDict.push_back((float)atof(tempString.c_str()));
                     }
                 }                
                 tempChordNames.push_back(chordType);
             }
         }
-        cerr << "-----------------> " << tempChordNames.size() << endl;
+        // cerr << "-----------------> " << tempChordNames.size() << endl;
+        if (tempChordNames.empty() ||
+            tempChordDict.size() != tempChordNames.size() * 24) {
+            // Empty, unreadable or malformed chord.dict: fall back to the
+            // built-in dictionary rather than producing no chords at all.
+            cerr << "WARNING: chord dictionary " << chordDictFilename
+                 << " is empty or malformed, using the default chord dictionary." << endl;
+            tempChordDict = builtinChordDict;
+            tempChordNames = builtinChordNames;
+        }
     }
     
         

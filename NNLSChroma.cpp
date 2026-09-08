@@ -241,7 +241,7 @@ NNLSChroma::getRemainingFeatures()
 		    
     char buffer0 [50];
 		
-    sprintf(buffer0, "estimated tuning: %0.1f Hz", cumulativetuning);
+    snprintf(buffer0, sizeof(buffer0), "estimated tuning: %0.1f Hz", cumulativetuning);
 		    		    
     /** Tune Log-Frequency Spectrogram
         calculate a tuned log-frequency spectrogram (f2): use the tuning estimated above (kinda f0) to 

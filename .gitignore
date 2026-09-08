@@ -1,0 +1,8 @@
+build/
+build-*/
+*.o
+*.dylib
+*.so
+*.dll
+regression/input.ogg
+regression/output.csv

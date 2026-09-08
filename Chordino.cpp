@@ -293,7 +293,7 @@ Chordino::getRemainingFeatures()
 		    
     char buffer0 [50];
 		
-    sprintf(buffer0, "estimated tuning: %0.1f Hz", cumulativetuning);
+    snprintf(buffer0, sizeof(buffer0), "estimated tuning: %0.1f Hz", cumulativetuning);
 		    
 		    
     /** Tune Log-Frequency Spectrogram

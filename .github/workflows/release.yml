@@ -1,0 +1,121 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            name: linux-x86_64
+          - os: macos-latest
+            name: macos-universal
+          - os: windows-latest
+            name: windows-x64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: runner.os == 'Windows'
+        with:
+          arch: x64
+      - name: Configure (Linux)
+        if: runner.os == 'Linux'
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+      - name: Configure (macOS)
+        if: runner.os == 'macOS'
+        run: >
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" -DCMAKE_OSX_DEPLOYMENT_TARGET=10.13
+      - name: Configure (Windows)
+        if: runner.os == 'Windows'
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build -j
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+      - name: Package
+        shell: bash
+        run: |
+          set -e
+          ver="${GITHUB_REF_NAME#v}"
+          dir="nnls-chroma-${ver}-${{ matrix.name }}"
+          mkdir -p "$dir"
+          cp build/plugin/nnls-chroma.* "$dir"/
+          cp nnls-chroma.n3 nnls-chroma.cat README README.md COPYING CHANGELOG.md "$dir"/
+          if [ -f build/chordino.exe ]; then cp build/chordino.exe "$dir"/; else cp build/chordino "$dir"/; fi
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            7z a "${dir}.zip" "$dir" > /dev/null
+          elif [ "${{ runner.os }}" = "macOS" ]; then
+            zip -r "${dir}.zip" "$dir" > /dev/null
+          else
+            tar czf "${dir}.tar.gz" "$dir"
+          fi
+          ls -la "${dir}".*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}
+          path: |
+            nnls-chroma-*.zip
+            nnls-chroma-*.tar.gz
+
+  wasm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 3.1.64
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Build
+        run: |
+          emcmake cmake -S . -B build-wasm -DCMAKE_BUILD_TYPE=Release
+          cmake --build build-wasm -j
+          cd build-wasm/wasm && node test.mjs
+      - name: Package
+        run: |
+          ver="${GITHUB_REF_NAME#v}"
+          dir="chordino-${ver}-wasm"
+          mkdir -p "$dir"
+          cp build-wasm/wasm/chordino.js build-wasm/wasm/chordino.wasm build-wasm/wasm/chordino-wasm.js build-wasm/wasm/index.html "$dir"/
+          cp COPYING README.md "$dir"/
+          zip -r "${dir}.zip" "$dir" > /dev/null
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wasm
+          path: chordino-*-wasm.zip
+
+  release:
+    needs: [build, wasm]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -e
+          tag="${GITHUB_REF_NAME}"
+          notes="$(awk -v ver="${tag#v}" '
+            $0 ~ "^## " { if (found) exit; if (index($0, ver)) { found = 1; next } }
+            found { print }' CHANGELOG.md)"
+          [ -n "$notes" ] || notes="Release $tag"
+          if ! gh release view "$tag" > /dev/null 2>&1; then
+            gh release create "$tag" --title "nnls-chroma $tag" --notes "$notes"
+          fi
+          for f in dist/*; do
+            if [ -f "$f" ]; then gh release upload "$tag" "$f" --clobber; fi
+          done
